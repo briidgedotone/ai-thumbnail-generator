@@ -18,6 +18,9 @@ import {
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import React from "react";
+// import { Timeline } from "@/components/ui/timeline"; // Commented out to fix build error
+import { CreativePricing } from "@/components/ui/creative-pricing";
+import { Sparkles, Zap, Rocket } from "lucide-react";
 
 // Component for list items in navigation dropdown
 const ListItem = React.forwardRef<
@@ -49,12 +52,90 @@ ListItem.displayName = "ListItem";
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
+  const howItWorksSteps = [
+    {
+      year: "Step 1",
+      title: "Ideate",
+      content: (
+        <>
+          <p className="mb-2">
+            Brainstorm and develop your concepts with our intuitive tools and templates. 
+            Explore different possibilities and lay the groundwork for your creation.
+          </p>
+          <p>
+            Our platform provides you with the resources to effectively plan and structure your ideas before moving to the generation phase.
+          </p>
+        </>
+      ),
+    },
+    {
+      year: "Step 2",
+      title: "Generate",
+      content: (
+        <>
+          <p className="mb-2">
+            Transform your ideas into polished content with our advanced generation tools. 
+            Utilize AI assistance and powerful features to bring your vision to life.
+          </p>
+          <p>
+            Whether it's text, images, or other media, our generation engine is designed for quality and efficiency.
+          </p>
+        </>
+      ),
+    },
+    {
+      year: "Step 3",
+      title: "Post",
+      content: (
+        <>
+          <p className="mb-2">
+            Share your creations with the world through our integrated publishing platform or export them for use elsewhere. 
+            Reach your audience effortlessly.
+          </p>
+          <p>
+            Manage your content, track its performance, and engage with your community, all from one place.
+          </p>
+        </>
+      ),
+    },
+  ];
+
+  const creativePricingTiers = [
+    {
+      name: "Starter",
+      icon: <Sparkles className="h-6 w-6" />,
+      price: 9,
+      description: "Perfect for individuals just getting started.",
+      features: ["5 projects", "Basic templates", "Standard support", "1GB storage"],
+      popular: false,
+      color: "blue",
+    },
+    {
+      name: "Pro",
+      icon: <Zap className="h-6 w-6" />,
+      price: 29,
+      description: "Ideal for professionals and small teams.",
+      features: ["20 projects", "Premium templates", "Priority support", "10GB storage", "Advanced analytics"],
+      popular: true,
+      color: "purple",
+    },
+    {
+      name: "Studio",
+      icon: <Rocket className="h-6 w-6" />,
+      price: 79,
+      description: "For growing businesses and creative teams.",
+      features: ["Unlimited projects", "All templates", "24/7 dedicated support", "100GB storage", "Team collaboration", "Custom branding"],
+      popular: false,
+      color: "green",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden gradient-blur-container">
       {/* New Floating Header based on image */}
       <header className="fixed top-4 left-0 right-0 z-50 bg-opacity-90">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center justify-between rounded-full bg-[#F4F9FF] shadow-sm my-2 px-4 ring-1 ring-[#B4E2FF]">
+          <div className="flex h-14 items-center justify-between rounded-2xl bg-white shadow-sm my-2 px-4 ring-1 ring-[#18181B]">
             {/* Logo */}
             <div className="flex items-center">
               <Link href="#" className="text-2xl font-bold text-gray-900">
@@ -130,12 +211,12 @@ export default function Home() {
             <div className="hidden lg:flex items-center space-x-2">
               <Button 
                 variant="ghost" 
-                className="rounded-full bg-[#4E7FFF]/10 text-[#4E7FFF] hover:bg-[#4E7FFF]/20 px-5 py-2 text-sm font-medium shadow-sm">
+                className="rounded-lg border border-[#18181B] bg-transparent hover:bg-gray-100 text-[#18181B] px-5 py-2 text-sm font-medium shadow-sm">
                 Log in
               </Button>
               <Button 
-                className="rounded-full bg-[#4E7FFF] hover:bg-[#406AD5] text-white px-5 py-2 text-sm font-medium shadow-sm">
-                Open Account
+                className="rounded-lg bg-[#FFB900] hover:bg-[#FFB900]/90 text-black px-5 py-2 text-sm font-medium shadow-sm">
+                Sign Up
               </Button>
             </div>
 
@@ -160,12 +241,12 @@ export default function Home() {
               <div className="flex flex-col items-center space-y-2 px-4">
                 <Button 
                   variant="ghost" 
-                  className="w-full rounded-full bg-[#4E7FFF]/10 text-[#4E7FFF] hover:bg-[#4E7FFF]/20 px-5 py-2 text-sm font-medium shadow-sm">
+                  className="w-full rounded-lg border border-[#18181B] bg-transparent hover:bg-gray-100 text-[#18181B] px-5 py-2 text-sm font-medium shadow-sm">
                   Log in
                 </Button>
                 <Button 
-                  className="w-full rounded-full bg-[#4E7FFF] hover:bg-[#406AD5] text-white px-5 py-2 text-sm font-medium shadow-sm">
-                  Open Account
+                  className="w-full rounded-lg bg-[#FFB900] hover:bg-[#FFB900]/90 text-black px-5 py-2 text-sm font-medium shadow-sm">
+                  Sign Up
                 </Button>
               </div>
             </div>
@@ -188,19 +269,22 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Button size="lg" className="gap-1 rounded-full bg-[#4E7FFF] hover:bg-[#406AD5] text-white shadow-sm">
+                <Button size="lg" className="gap-1 rounded-full bg-[#FFB900] hover:bg-[#FFB900]/90 text-black shadow-sm">
                   Start Now <ArrowRight className="h-4 w-4" />
                 </Button>
-                <Button size="lg" className="rounded-full bg-[#4E7FFF]/10 text-[#4E7FFF] hover:bg-[#4E7FFF]/20 shadow-sm">
+                <Button size="lg" className="rounded-full bg-[#FFB900]/10 text-[#FFB900] hover:bg-[#FFB900]/20 shadow-sm">
                   Learn More
                 </Button>
               </div>
             </div>
             <div className="mt-16 flex justify-center">
-              <div className="relative h-[300px] w-full max-w-[700px] overflow-hidden rounded-lg border border-border/40 bg-muted">
-                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                  Image Placeholder
-                </div>
+              <div className="relative aspect-[16/9] w-full max-w-[700px] overflow-hidden rounded-lg border border-border/40 bg-muted">
+                <Image 
+                  src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
+                  alt="Hero section image showing charts and graphs" 
+                  fill={true} 
+                  objectFit="cover" 
+                />
               </div>
             </div>
           </div>
@@ -299,7 +383,7 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <Button className="mt-6 w-full justify-between rounded-full bg-[#4E7FFF]/10 text-[#4E7FFF] hover:bg-[#4E7FFF]/20 shadow-sm">
+                  <Button className="mt-6 w-full justify-between rounded-full bg-[#FFB900]/10 text-[#FFB900] hover:bg-[#FFB900]/20 shadow-sm">
                     Learn more <ChevronRight className="h-4 w-4" />
                   </Button>
                 </CardContent>
@@ -326,7 +410,7 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <Button className="mt-6 w-full justify-between rounded-full bg-[#4E7FFF]/10 text-[#4E7FFF] hover:bg-[#4E7FFF]/20 shadow-sm">
+                  <Button className="mt-6 w-full justify-between rounded-full bg-[#FFB900]/10 text-[#FFB900] hover:bg-[#FFB900]/20 shadow-sm">
                     Learn more <ChevronRight className="h-4 w-4" />
                   </Button>
                 </CardContent>
@@ -355,7 +439,7 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <Button className="mt-6 w-full justify-between rounded-full bg-[#4E7FFF]/10 text-[#4E7FFF] hover:bg-[#4E7FFF]/20 shadow-sm">
+                  <Button className="mt-6 w-full justify-between rounded-full bg-[#FFB900]/10 text-[#FFB900] hover:bg-[#FFB900]/20 shadow-sm">
                     Learn more <ChevronRight className="h-4 w-4" />
                   </Button>
                 </CardContent>
@@ -364,150 +448,14 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Pricing Section */}
-        <section className="py-16 md:py-24 bg-muted/40">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <div className="inline-flex items-center rounded-full border border-border/40 bg-background px-3 py-1 text-sm">
-                  <span>Pricing</span>
-                </div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">
-                  Choose Your Plan
-                </h2>
-                <p className="mx-auto max-w-[700px] text-muted-foreground md:text-lg">
-                  Flexible pricing options to match your needs and scale with your growth
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {/* Basic Plan */}
-              <Card className="flex flex-col border border-border/40">
-                <CardContent className="flex flex-1 flex-col p-6">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold">Basic</h3>
-                    <div className="mt-4 flex items-baseline">
-                      <span className="text-3xl font-bold">$9</span>
-                      <span className="ml-1 text-muted-foreground">/month</span>
-                    </div>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      Perfect for individuals just getting started
-                    </p>
-                    <ul className="mt-6 space-y-3">
-                      {["5 projects", "Basic templates", "Standard support", "1GB storage"].map((feature) => (
-                        <li key={feature} className="flex items-center gap-2 text-sm">
-                          <CheckCircle className="h-4 w-4 text-primary" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <Button className="mt-6 w-full rounded-full bg-[#4E7FFF] hover:bg-[#406AD5] text-white shadow-sm">
-                    Get Started
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Premium Plan */}
-              <Card className="flex flex-col border border-border/40">
-                <CardContent className="flex flex-1 flex-col p-6">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold">Premium</h3>
-                    <div className="mt-4 flex items-baseline">
-                      <span className="text-3xl font-bold">$29</span>
-                      <span className="ml-1 text-muted-foreground">/month</span>
-                    </div>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      Ideal for professionals and small teams
-                    </p>
-                    <ul className="mt-6 space-y-3">
-                      {["20 projects", "Premium templates", "Priority support", "10GB storage", "Advanced analytics"].map((feature) => (
-                        <li key={feature} className="flex items-center gap-2 text-sm">
-                          <CheckCircle className="h-4 w-4 text-primary" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <Button className="mt-6 w-full rounded-full bg-[#4E7FFF] hover:bg-[#406AD5] text-white shadow-sm">
-                    Get Started
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Studio Plan */}
-              <Card className="flex flex-col border border-border/40 bg-primary text-primary-foreground">
-                <CardContent className="flex flex-1 flex-col p-6">
-                  <div className="flex-1">
-                    <div className="inline-flex items-center rounded-full bg-primary-foreground/10 px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">
-                      Popular
-                    </div>
-                    <h3 className="mt-2 text-lg font-bold">Studio</h3>
-                    <div className="mt-4 flex items-baseline">
-                      <span className="text-3xl font-bold">$79</span>
-                      <span className="ml-1 opacity-80">/month</span>
-                    </div>
-                    <p className="mt-2 text-sm opacity-90">
-                      For growing businesses and creative teams
-                    </p>
-                    <ul className="mt-6 space-y-3">
-                      {[
-                        "Unlimited projects",
-                        "All templates",
-                        "24/7 dedicated support",
-                        "100GB storage",
-                        "Team collaboration",
-                        "Custom branding"
-                      ].map((feature) => (
-                        <li key={feature} className="flex items-center gap-2 text-sm">
-                          <CheckCircle className="h-4 w-4" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <Button className="mt-6 w-full rounded-full bg-[#4E7FFF] hover:bg-[#406AD5] text-white shadow-sm">
-                    Get Started
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Enterprise Plan */}
-              <Card className="flex flex-col border border-border/40">
-                <CardContent className="flex flex-1 flex-col p-6">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold">Enterprise</h3>
-                    <div className="mt-4 flex items-baseline">
-                      <span className="text-3xl font-bold">Custom</span>
-                    </div>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      Tailored solutions for large organizations
-                    </p>
-                    <ul className="mt-6 space-y-3">
-                      {[
-                        "Custom solutions",
-                        "Enterprise-grade security",
-                        "Dedicated account manager",
-                        "Unlimited storage",
-                        "API access",
-                        "On-site training",
-                        "SLA guarantee"
-                      ].map((feature) => (
-                        <li key={feature} className="flex items-center gap-2 text-sm">
-                          <CheckCircle className="h-4 w-4 text-primary" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <Button className="mt-6 w-full rounded-full bg-[#4E7FFF]/10 text-[#4E7FFF] hover:bg-[#4E7FFF]/20 shadow-sm">
-                    Contact Sales
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+        {/* Pricing Section - Replaced with CreativePricing */}
+        <section id="pricing" className="py-16 md:py-24 bg-muted/40">
+          <CreativePricing
+            tag="Flexible Plans"
+            title="Choose Your Perfect Fit"
+            description="Simple, transparent pricing for businesses of all sizes. No hidden fees, ever."
+            tiers={creativePricingTiers}
+          />
         </section>
 
         {/* FAQ Section */}
@@ -655,7 +603,7 @@ export default function Home() {
               </p>
               <div className="mt-4 flex gap-2">
                 <Input placeholder="Enter your email" className="max-w-[240px]" />
-                <Button className="rounded-full bg-[#4E7FFF] hover:bg-[#406AD5] text-white shadow-sm">
+                <Button className="rounded-full bg-[#FFB900] hover:bg-[#FFB900]/90 text-black shadow-sm">
                   Subscribe
                 </Button>
               </div>
