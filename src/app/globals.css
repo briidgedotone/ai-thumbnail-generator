@@ -6,7 +6,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: "Rethink Sans", var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -41,6 +41,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --grid-bg-color: #FAFAFB;
 }
 
 @layer base {
@@ -74,16 +75,22 @@
     --ring: 240 10% 3.9%;
 
     --radius: 0.5rem;
+    --grid-bg-color: #FAFAFB;
   }
-}
 
-@layer base {
-  * {
-    @apply border-border;
-  }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    /* font-feature-settings: "rlig" 1, "calt" 1; */ /* next/font handles this */
+    background-image:
+      linear-gradient(to right, var(--grid-bg-color) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-bg-color) 1px, transparent 1px);
+    background-size: 25px 25px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  * {
+    @apply border-border;
   }
 }
 
@@ -118,4 +125,30 @@
 .container {
   max-width: 1200px;
   margin: 0 auto;
+}
+
+/* Added styles for gradient blur background */
+.gradient-blur-container::before,
+.gradient-blur-container::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(100px);
+}
+
+.gradient-blur-container::before {
+  width: 85vw;
+  height: 85vw;
+  top: -45vw;
+  left: -15vw;
+  background-color: rgba(175, 225, 255, 0.18);
+}
+
+.gradient-blur-container::after {
+  width: 70vw;
+  height: 70vw;
+  bottom: -35vw;
+  right: -20vw;
+  background-color: rgba(190, 210, 255, 0.20);
 }

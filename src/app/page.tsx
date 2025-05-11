@@ -1,45 +1,180 @@
+"use client"; // Added directive for client component
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowRight, CheckCircle, ChevronRight } from "lucide-react";
+import { ArrowRight, CheckCircle, ChevronDown, ChevronRight, Menu as MenuIcon } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
+import React from "react";
+
+// Component for list items in navigation dropdown
+const ListItem = React.forwardRef<
+  React.ElementRef<"a">,
+  React.ComponentPropsWithoutRef<"a">
+>(({ className, title, children, ...props }, ref) => {
+  return (
+    <li>
+      <NavigationMenuLink asChild>
+        <a
+          ref={ref}
+          className={cn(
+            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+            className
+          )}
+          {...props}
+        >
+          <div className="text-sm font-medium leading-none">{title}</div>
+          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+            {children}
+          </p>
+        </a>
+      </NavigationMenuLink>
+    </li>
+  );
+});
+ListItem.displayName = "ListItem";
 
 export default function Home() {
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border/40 bg-background py-4">
-        <div className="container flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center">
-              <span className="font-bold text-primary-foreground">B</span>
+    <div className="min-h-screen bg-background relative overflow-hidden gradient-blur-container">
+      {/* New Floating Header based on image */}
+      <header className="fixed top-4 left-0 right-0 z-50 bg-opacity-90">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-14 items-center justify-between rounded-full bg-[#F4F9FF] shadow-sm my-2 px-4 ring-1 ring-[#B4E2FF]">
+            {/* Logo */}
+            <div className="flex items-center">
+              <Link href="#" className="text-2xl font-bold text-gray-900">
+                LOGO
+              </Link>
             </div>
-            <span className="font-semibold">Brand</span>
-          </div>
-          <div className="hidden md:flex items-center gap-6">
-            <nav className="flex items-center gap-6">
-              <a href="#" className="text-sm font-medium text-muted-foreground hover:text-foreground">Features</a>
-              <a href="#" className="text-sm font-medium text-muted-foreground hover:text-foreground">Pricing</a>
-              <a href="#" className="text-sm font-medium text-muted-foreground hover:text-foreground">Resources</a>
-              <a href="#" className="text-sm font-medium text-muted-foreground hover:text-foreground">FAQ</a>
-            </nav>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm">Log in</Button>
-              <Button size="sm">Sign up</Button>
+
+            {/* Desktop Navigation */}
+            <NavigationMenu className="hidden lg:flex">
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-transparent text-sm font-medium text-gray-600 hover:text-gray-900">Product</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                      <li className="row-span-3">
+                        <NavigationMenuLink asChild>
+                          <a
+                            className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+                            href="/"
+                          >
+                            {/* Optional: Icon or Image here */}
+                            <div className="mb-2 mt-4 text-lg font-medium">
+                              Our Product Suite
+                            </div>
+                            <p className="text-sm leading-tight text-muted-foreground">
+                              Discover the tools that will revolutionize your workflow.
+                            </p>
+                          </a>
+                        </NavigationMenuLink>
+                      </li>
+                      <ListItem href="/docs/primitives/alert-dialog" title="Feature One">
+                        Description for feature one.
+                      </ListItem>
+                      <ListItem href="/docs/primitives/hover-card" title="Feature Two">
+                        Description for feature two.
+                      </ListItem>
+                      <ListItem href="/docs/primitives/progress" title="Feature Three">
+                        Description for feature three.
+                      </ListItem>
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-transparent text-sm font-medium text-gray-600 hover:text-gray-900">Resource</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+                      <ListItem href="/docs" title="Documentation">
+                        Explore our comprehensive guides.
+                      </ListItem>
+                      <ListItem href="/blog" title="Blog">
+                        Read our latest articles and insights.
+                      </ListItem>
+                       <ListItem href="/community" title="Community">
+                        Join the conversation with other users.
+                      </ListItem>
+                       <ListItem href="/support" title="Support Center">
+                        Get help from our support team.
+                      </ListItem>
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link href="#pricing" legacyBehavior passHref>
+                    <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "bg-transparent text-sm font-medium text-gray-600 hover:text-gray-900")}>
+                      Pricing
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+
+            {/* Auth Buttons Desktop */}
+            <div className="hidden lg:flex items-center space-x-2">
+              <Button 
+                variant="ghost" 
+                className="rounded-full bg-[#4E7FFF]/10 text-[#4E7FFF] hover:bg-[#4E7FFF]/20 px-5 py-2 text-sm font-medium shadow-sm">
+                Log in
+              </Button>
+              <Button 
+                className="rounded-full bg-[#4E7FFF] hover:bg-[#406AD5] text-white px-5 py-2 text-sm font-medium shadow-sm">
+                Open Account
+              </Button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="lg:hidden">
+              <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                <MenuIcon className="h-6 w-6 text-gray-600" />
+              </Button>
             </div>
           </div>
-          <button className="block md:hidden">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="4" x2="20" y1="12" y2="12" />
-              <line x1="4" x2="20" y1="6" y2="6" />
-              <line x1="4" x2="20" y1="18" y2="18" />
-            </svg>
-          </button>
         </div>
+
+        {/* Mobile Menu Panel */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden bg-[#F4F9FF] shadow-lg rounded-b-xl mx-2 border border-t-0 border-[#B4E2FF]">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              <Link href="#" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Product</Link>
+              <Link href="#" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Resource</Link>
+              <Link href="#pricing" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Pricing</Link>
+            </div>
+            <div className="pt-4 pb-3 border-t border-gray-200">
+              <div className="flex flex-col items-center space-y-2 px-4">
+                <Button 
+                  variant="ghost" 
+                  className="w-full rounded-full bg-[#4E7FFF]/10 text-[#4E7FFF] hover:bg-[#4E7FFF]/20 px-5 py-2 text-sm font-medium shadow-sm">
+                  Log in
+                </Button>
+                <Button 
+                  className="w-full rounded-full bg-[#4E7FFF] hover:bg-[#406AD5] text-white px-5 py-2 text-sm font-medium shadow-sm">
+                  Open Account
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
-      <main>
+      {/* Add padding to main content to offset fixed header */}
+      <main className="pt-24">
         {/* Hero Section */}
         <section className="py-16 md:py-24 lg:py-32">
           <div className="container px-4 md:px-6">
@@ -53,10 +188,10 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Button size="lg" className="gap-1">
+                <Button size="lg" className="gap-1 rounded-full bg-[#4E7FFF] hover:bg-[#406AD5] text-white shadow-sm">
                   Start Now <ArrowRight className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="lg">
+                <Button size="lg" className="rounded-full bg-[#4E7FFF]/10 text-[#4E7FFF] hover:bg-[#4E7FFF]/20 shadow-sm">
                   Learn More
                 </Button>
               </div>
@@ -164,7 +299,7 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <Button variant="ghost" className="mt-6 w-full justify-between">
+                  <Button className="mt-6 w-full justify-between rounded-full bg-[#4E7FFF]/10 text-[#4E7FFF] hover:bg-[#4E7FFF]/20 shadow-sm">
                     Learn more <ChevronRight className="h-4 w-4" />
                   </Button>
                 </CardContent>
@@ -191,7 +326,7 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <Button variant="ghost" className="mt-6 w-full justify-between">
+                  <Button className="mt-6 w-full justify-between rounded-full bg-[#4E7FFF]/10 text-[#4E7FFF] hover:bg-[#4E7FFF]/20 shadow-sm">
                     Learn more <ChevronRight className="h-4 w-4" />
                   </Button>
                 </CardContent>
@@ -220,7 +355,7 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <Button variant="ghost" className="mt-6 w-full justify-between">
+                  <Button className="mt-6 w-full justify-between rounded-full bg-[#4E7FFF]/10 text-[#4E7FFF] hover:bg-[#4E7FFF]/20 shadow-sm">
                     Learn more <ChevronRight className="h-4 w-4" />
                   </Button>
                 </CardContent>
@@ -268,7 +403,9 @@ export default function Home() {
                       ))}
                     </ul>
                   </div>
-                  <Button className="mt-6 w-full">Get Started</Button>
+                  <Button className="mt-6 w-full rounded-full bg-[#4E7FFF] hover:bg-[#406AD5] text-white shadow-sm">
+                    Get Started
+                  </Button>
                 </CardContent>
               </Card>
 
@@ -293,7 +430,9 @@ export default function Home() {
                       ))}
                     </ul>
                   </div>
-                  <Button className="mt-6 w-full" variant="default">Get Started</Button>
+                  <Button className="mt-6 w-full rounded-full bg-[#4E7FFF] hover:bg-[#406AD5] text-white shadow-sm">
+                    Get Started
+                  </Button>
                 </CardContent>
               </Card>
 
@@ -328,7 +467,7 @@ export default function Home() {
                       ))}
                     </ul>
                   </div>
-                  <Button className="mt-6 w-full bg-primary-foreground text-primary hover:bg-primary-foreground/90">
+                  <Button className="mt-6 w-full rounded-full bg-[#4E7FFF] hover:bg-[#406AD5] text-white shadow-sm">
                     Get Started
                   </Button>
                 </CardContent>
@@ -362,7 +501,7 @@ export default function Home() {
                       ))}
                     </ul>
                   </div>
-                  <Button variant="outline" className="mt-6 w-full">
+                  <Button className="mt-6 w-full rounded-full bg-[#4E7FFF]/10 text-[#4E7FFF] hover:bg-[#4E7FFF]/20 shadow-sm">
                     Contact Sales
                   </Button>
                 </CardContent>
@@ -516,7 +655,9 @@ export default function Home() {
               </p>
               <div className="mt-4 flex gap-2">
                 <Input placeholder="Enter your email" className="max-w-[240px]" />
-                <Button variant="default">Subscribe</Button>
+                <Button className="rounded-full bg-[#4E7FFF] hover:bg-[#406AD5] text-white shadow-sm">
+                  Subscribe
+                </Button>
               </div>
             </div>
           </div>
