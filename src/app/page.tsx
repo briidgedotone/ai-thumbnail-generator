@@ -135,7 +135,7 @@ export default function Home() {
       {/* New Floating Header based on image */}
       <header className="fixed top-4 left-0 right-0 z-50 bg-opacity-90">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center justify-between rounded-2xl bg-white shadow-sm my-2 px-4 ring-1 ring-[#18181B]">
+          <div className="flex h-14 items-center justify-between rounded-2xl bg-white shadow-sm my-2 px-4 border-2 border-[#18181B]">
             {/* Logo */}
             <div className="flex items-center">
               <Link href="#" className="text-2xl font-bold text-gray-900">
@@ -149,7 +149,7 @@ export default function Home() {
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="bg-transparent text-sm font-medium text-gray-600 hover:text-gray-900">Product</NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                    <ul className="grid gap-3 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white rounded-md shadow-lg">
                       <li className="row-span-3">
                         <NavigationMenuLink asChild>
                           <a
@@ -181,7 +181,7 @@ export default function Home() {
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="bg-transparent text-sm font-medium text-gray-600 hover:text-gray-900">Resource</NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-white rounded-md shadow-lg">
                       <ListItem href="/docs" title="Documentation">
                         Explore our comprehensive guides.
                       </ListItem>
@@ -211,11 +211,11 @@ export default function Home() {
             <div className="hidden lg:flex items-center space-x-2">
               <Button 
                 variant="ghost" 
-                className="rounded-lg border border-[#18181B] bg-transparent hover:bg-gray-100 text-[#18181B] px-5 py-2 text-sm font-medium shadow-sm">
+                className="rounded-lg border-2 border-[#18181B] bg-transparent hover:bg-gray-100 text-[#18181B] px-5 py-2 text-sm font-medium shadow-sm">
                 Log in
               </Button>
               <Button 
-                className="rounded-lg bg-[#FFB900] hover:bg-[#FFB900]/90 text-black px-5 py-2 text-sm font-medium shadow-sm">
+                className="rounded-lg border-2 border-[#18181B] bg-[#FFB900] hover:bg-[#FFB900]/90 text-black px-5 py-2 text-sm font-medium shadow-sm">
                 Sign Up
               </Button>
             </div>
@@ -241,11 +241,11 @@ export default function Home() {
               <div className="flex flex-col items-center space-y-2 px-4">
                 <Button 
                   variant="ghost" 
-                  className="w-full rounded-lg border border-[#18181B] bg-transparent hover:bg-gray-100 text-[#18181B] px-5 py-2 text-sm font-medium shadow-sm">
+                  className="w-full rounded-lg border-2 border-[#18181B] bg-transparent hover:bg-gray-100 text-[#18181B] px-5 py-2 text-sm font-medium shadow-sm">
                   Log in
                 </Button>
                 <Button 
-                  className="w-full rounded-lg bg-[#FFB900] hover:bg-[#FFB900]/90 text-black px-5 py-2 text-sm font-medium shadow-sm">
+                  className="w-full rounded-lg border-2 border-[#18181B] bg-[#FFB900] hover:bg-[#FFB900]/90 text-black px-5 py-2 text-sm font-medium shadow-sm">
                   Sign Up
                 </Button>
               </div>
@@ -261,29 +261,30 @@ export default function Home() {
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
+                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl/none">
                   Transform Your Ideas into Reality
                 </h1>
                 <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
                   The all-in-one platform for creators, designers, and innovators. Bring your vision to life with our powerful tools.
                 </p>
               </div>
-              <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Button size="lg" className="gap-1 rounded-full bg-[#FFB900] hover:bg-[#FFB900]/90 text-black shadow-sm">
-                  Start Now <ArrowRight className="h-4 w-4" />
-                </Button>
-                <Button size="lg" className="rounded-full bg-[#FFB900]/10 text-[#FFB900] hover:bg-[#FFB900]/20 shadow-sm">
-                  Learn More
+              <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center">
+                <Button 
+                  size="lg" 
+                  className="rounded-lg border-2 border-[#18181B] bg-[#FFB900] text-black shadow-[4px_4px_0px_0px_#18181B] hover:shadow-[6px_6px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-300 px-8 py-6 text-lg">
+                  Get Started <ArrowRight className="h-5 w-5" />
                 </Button>
               </div>
             </div>
             <div className="mt-16 flex justify-center">
-              <div className="relative aspect-[16/9] w-full max-w-[700px] overflow-hidden rounded-lg border border-border/40 bg-muted">
-                <Image 
-                  src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
-                  alt="Hero section image showing charts and graphs" 
-                  fill={true} 
-                  objectFit="cover" 
+              <div className="relative aspect-video w-full max-w-6xl overflow-hidden rounded-lg border border-border/40 bg-muted">
+                <Image
+                  src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                  alt="Abstract data visualization with charts and graphs"
+                  layout="fill"
+                  objectFit="cover"
+                  priority
+                  className="rounded-lg" // Ensure image corners match container if needed
                 />
               </div>
             </div>
