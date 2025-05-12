@@ -291,55 +291,149 @@ export default function Home() {
           </div>
         </section>
 
-        {/* How It Works */}
+        {/* How It Works - Redesigned with Vertical Timeline */}
         <section className="py-16 md:py-24 bg-muted/40">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <div className="inline-flex items-center rounded-full border border-border/40 bg-background px-3 py-1 text-sm">
+                <div className="inline-flex items-center rounded-full border-2 border-[#18181B]/20 bg-background px-3 py-1 text-sm">
                   <span>How It Works</span>
                 </div>
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">
-                  Simple Three-Step Process
+                  From Concept to Reality
                 </h2>
                 <p className="mx-auto max-w-[700px] text-muted-foreground md:text-lg">
-                  Our streamlined workflow helps you go from concept to completion in no time
+                  Our streamlined workflow helps you bring your vision to life in three simple steps
                 </p>
               </div>
             </div>
 
-            <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-3">
+            <div className="mt-16 max-w-5xl mx-auto">
               {/* Step 1 */}
-              <div className="flex flex-col items-center text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
-                  1
+              <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-16 md:mb-24">
+                {/* Step Number & Content */}
+                <div className="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left order-2 md:order-1">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-xl border-2 border-[#18181B] bg-[#FFB900] text-xl font-bold text-[#18181B] shadow-[3px_3px_0px_0px_#18181B]">
+                      01
+                    </div>
+                    <h3 className="text-2xl font-bold tracking-tight">Ideate</h3>
+                  </div>
+                  <p className="text-base md:text-lg text-muted-foreground mb-6">
+                    Brainstorm and develop your concepts with our intuitive tools and templates. Explore different creative possibilities with AI-powered suggestions.
+                  </p>
+                  <ul className="space-y-2">
+                    {["Real-time collaboration", "AI-powered suggestions", "Built-in templates"].map((feature) => (
+                      <li key={feature} className="flex items-center gap-2 text-sm">
+                        <CheckCircle className="h-5 w-5 text-[#FFB900]" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <h3 className="mt-4 text-xl font-bold">Ideate</h3>
-                <p className="mt-2 text-muted-foreground">
-                  Brainstorm and develop your concepts with our intuitive tools and templates
-                </p>
+                
+                {/* Media Placeholder */}
+                <div className="w-full md:w-1/2 aspect-video md:aspect-square order-1 md:order-2">
+                  <div className="h-full w-full overflow-hidden rounded-xl border-2 border-[#18181B] bg-muted shadow-[6px_6px_0px_0px_#18181B]">
+                    <div className="relative h-full w-full">
+                      <Image
+                        src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop"
+                        alt="Ideation process with sticky notes and whiteboard"
+                        layout="fill"
+                        objectFit="cover"
+                        className="rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Connector Line */}
+              <div className="hidden md:flex justify-center my-4">
+                <div className="h-16 w-0.5 bg-[#18181B]/20"></div>
               </div>
 
               {/* Step 2 */}
-              <div className="flex flex-col items-center text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
-                  2
+              <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-16 md:mb-24">
+                {/* Media Placeholder */}
+                <div className="w-full md:w-1/2 aspect-video md:aspect-square">
+                  <div className="h-full w-full overflow-hidden rounded-xl border-2 border-[#18181B] bg-muted shadow-[6px_6px_0px_0px_#18181B]">
+                    <div className="relative h-full w-full">
+                      <Image
+                        src="https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?q=80&w=2070&auto=format&fit=crop"
+                        alt="Content generation with AI tools"
+                        layout="fill"
+                        objectFit="cover"
+                        className="rounded-lg"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <h3 className="mt-4 text-xl font-bold">Generate</h3>
-                <p className="mt-2 text-muted-foreground">
-                  Transform your ideas into polished content with our advanced generation tools
-                </p>
+                
+                {/* Step Number & Content */}
+                <div className="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-xl border-2 border-[#18181B] bg-[#FFB900] text-xl font-bold text-[#18181B] shadow-[3px_3px_0px_0px_#18181B]">
+                      02
+                    </div>
+                    <h3 className="text-2xl font-bold tracking-tight">Generate</h3>
+                  </div>
+                  <p className="text-base md:text-lg text-muted-foreground mb-6">
+                    Transform your ideas into polished content with our advanced generation tools. Utilize AI assistance to create high-quality materials in minutes, not hours.
+                  </p>
+                  <ul className="space-y-2">
+                    {["One-click generation", "Multi-format output", "Style customization"].map((feature) => (
+                      <li key={feature} className="flex items-center gap-2 text-sm">
+                        <CheckCircle className="h-5 w-5 text-[#FFB900]" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Connector Line */}
+              <div className="hidden md:flex justify-center my-4">
+                <div className="h-16 w-0.5 bg-[#18181B]/20"></div>
               </div>
 
               {/* Step 3 */}
-              <div className="flex flex-col items-center text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
-                  3
+              <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+                {/* Step Number & Content */}
+                <div className="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left order-2 md:order-1">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-xl border-2 border-[#18181B] bg-[#FFB900] text-xl font-bold text-[#18181B] shadow-[3px_3px_0px_0px_#18181B]">
+                      03
+                    </div>
+                    <h3 className="text-2xl font-bold tracking-tight">Publish</h3>
+                  </div>
+                  <p className="text-base md:text-lg text-muted-foreground mb-6">
+                    Share your creations with the world through our integrated publishing platform or export them for use elsewhere. Schedule posts and track performance metrics.
+                  </p>
+                  <ul className="space-y-2">
+                    {["Multi-channel publishing", "Engagement analytics", "Scheduled releases"].map((feature) => (
+                      <li key={feature} className="flex items-center gap-2 text-sm">
+                        <CheckCircle className="h-5 w-5 text-[#FFB900]" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <h3 className="mt-4 text-xl font-bold">Post</h3>
-                <p className="mt-2 text-muted-foreground">
-                  Share your creations with the world through our integrated publishing platform
-                </p>
+                
+                {/* Media Placeholder */}
+                <div className="w-full md:w-1/2 aspect-video md:aspect-square order-1 md:order-2">
+                  <div className="h-full w-full overflow-hidden rounded-xl border-2 border-[#18181B] bg-muted shadow-[6px_6px_0px_0px_#18181B]">
+                    <div className="relative h-full w-full">
+                      <Image
+                        src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop"
+                        alt="Publishing and analytics dashboard"
+                        layout="fill"
+                        objectFit="cover"
+                        className="rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
