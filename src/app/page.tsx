@@ -165,7 +165,7 @@ export default function Home() {
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
                 <h1 className="text-7xl font-medium tracking-tight sm:text-4xl md:text-5xl lg:text-6xl mx-auto max-w-screen-lg text-neutral-900 leading-tight">
-                  Generate <span style={{ color: '#02ADD2' }}>Beast</span> Thumbnails in{" "}
+                  Generate <span style={{ color: '#02ADD2' }}>Beast</span> <img src="/beast-thunder.svg" alt="" className="inline-block w-[1.4em] h-auto align-middle -rotate-60 scale-y-[1.32] mx-[-0.1em]" /> Thumbnails in{" "}
                   <span className="hero-underline-curve">Seconds</span>—Not Hours
                 </h1>
                 <p className="mx-auto max-w-screen-md text-lg text-neutral-900 my-[33px]">
