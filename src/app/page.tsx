@@ -131,7 +131,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden gradient-blur-container">
+    <div className="min-h-screen bg-background relative overflow-hidden grainy-background">
       {/* New Floating Header based on image */}
       <header className="fixed top-4 left-0 right-0 z-50 bg-opacity-90">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
