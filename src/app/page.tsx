@@ -161,10 +161,10 @@ export default function Home() {
       <main>
         {/* Hero Section */}
         <section className="py-12">
-          <div className="container px-4 md:px-6">
+          <div className="max-w-7xl mx-auto px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <h1 className="text-7xl font-medium tracking-tight sm:text-4xl md:text-5xl lg:text-6xl mx-auto max-w-screen-lg text-neutral-900 leading-tight">
+                <h1 className="text-7xl font-medium tracking-tight sm:text-4xl md:text-5xl lg:text-6xl mx-auto max-w-screen-lg text-neutral-900 leading-[1.375]">
                   Generate <span style={{ color: '#02ADD2' }}>Beast</span> <img src="/beast-thunder.svg" alt="" className="inline-block w-[1.4em] h-auto align-middle -rotate-60 scale-y-[1.32] mx-[-0.1em]" /> Thumbnails in{" "}
                   <span className="hero-underline-curve">Seconds</span>—Not Hours
                 </h1>
@@ -185,15 +185,15 @@ export default function Home() {
                 </Button>
               </div>
             </div>
-            <div className="mt-16 flex justify-center">
-              <div className="relative aspect-video w-full max-w-6xl overflow-hidden rounded-lg border border-border/40 bg-muted">
+            <div className="mt-24 flex justify-center">
+              <div className="relative w-full max-w-7xl overflow-hidden rounded-2xl border border-2 border-border/40 bg-muted">
                 <Image
-                  src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                  src="/placeholder.png"
                   alt="Abstract data visualization with charts and graphs"
-                  layout="fill"
-                  objectFit="cover"
+                  width={1280}
+                  height={665}
                   priority
-                  className="rounded-lg" // Ensure image corners match container if needed
+                  className="rounded-lg"
                 />
               </div>
             </div>
