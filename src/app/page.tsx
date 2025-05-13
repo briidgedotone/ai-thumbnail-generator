@@ -132,130 +132,33 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden grainy-background">
-      {/* New Floating Header based on image */}
-      <header className="fixed top-4 left-0 right-0 z-50 bg-opacity-90">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center justify-between rounded-2xl bg-white shadow-sm my-2 px-4 border-2 border-[#18181B]">
-            {/* Logo */}
-            <div className="flex items-center">
-              <Link href="#" className="text-2xl font-bold text-gray-900">
-                LOGO
-              </Link>
-            </div>
+      {/* Modified Header */}
+      <header className="h-[90px]">
+        <div className="w-full px-10 flex h-full items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center">
+            <Link href="#" className="text-2xl font-bold text-gray-900 h-[44px] flex items-center">
+              LOGO
+            </Link>
+          </div>
 
-            {/* Desktop Navigation */}
-            <NavigationMenu className="hidden lg:flex">
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-sm font-medium text-gray-600 hover:text-gray-900">Product</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid gap-3 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white rounded-md shadow-lg">
-                      <li className="row-span-3">
-                        <NavigationMenuLink asChild>
-                          <a
-                            className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
-                            href="/"
-                          >
-                            {/* Optional: Icon or Image here */}
-                            <div className="mb-2 mt-4 text-lg font-medium">
-                              Our Product Suite
-                            </div>
-                            <p className="text-sm leading-tight text-muted-foreground">
-                              Discover the tools that will revolutionize your workflow.
-                            </p>
-                          </a>
-                        </NavigationMenuLink>
-                      </li>
-                      <ListItem href="/docs/primitives/alert-dialog" title="Feature One">
-                        Description for feature one.
-                      </ListItem>
-                      <ListItem href="/docs/primitives/hover-card" title="Feature Two">
-                        Description for feature two.
-                      </ListItem>
-                      <ListItem href="/docs/primitives/progress" title="Feature Three">
-                        Description for feature three.
-                      </ListItem>
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-sm font-medium text-gray-600 hover:text-gray-900">Resource</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-white rounded-md shadow-lg">
-                      <ListItem href="/docs" title="Documentation">
-                        Explore our comprehensive guides.
-                      </ListItem>
-                      <ListItem href="/blog" title="Blog">
-                        Read our latest articles and insights.
-                      </ListItem>
-                       <ListItem href="/community" title="Community">
-                        Join the conversation with other users.
-                      </ListItem>
-                       <ListItem href="/support" title="Support Center">
-                        Get help from our support team.
-                      </ListItem>
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link href="#pricing" legacyBehavior passHref>
-                    <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "bg-transparent text-sm font-medium text-gray-600 hover:text-gray-900")}>
-                      Pricing
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-
-            {/* Auth Buttons Desktop */}
-            <div className="hidden lg:flex items-center space-x-2">
-              <Button 
-                variant="ghost" 
-                className="rounded-lg border-2 border-[#18181B] bg-transparent hover:bg-gray-100 text-[#18181B] px-5 py-2 text-sm font-medium shadow-sm">
-                Log in
-              </Button>
-              <Button 
-                className="rounded-lg border-2 border-[#18181B] bg-[#FFB900] hover:bg-[#FFB900]/90 text-black px-5 py-2 text-sm font-medium shadow-sm">
-                Sign Up
-              </Button>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <div className="lg:hidden">
-              <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-                <MenuIcon className="h-6 w-6 text-gray-600" />
-              </Button>
-            </div>
+          {/* Auth Buttons Desktop - Simplified */}
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              className="rounded-lg border-2 border-black bg-transparent hover:bg-gray-100 text-black px-5 text-base font-medium shadow-sm h-[44px]">
+              Log in
+            </Button>
+            <Button
+              className="rounded-lg border-2 border-black bg-black hover:bg-black/90 text-white px-5 text-base font-medium shadow-sm h-[44px]">
+              Start for free
+            </Button>
           </div>
         </div>
-
-        {/* Mobile Menu Panel */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden bg-[#F4F9FF] shadow-lg rounded-b-xl mx-2 border border-t-0 border-[#B4E2FF]">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              <Link href="#" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Product</Link>
-              <Link href="#" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Resource</Link>
-              <Link href="#pricing" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Pricing</Link>
-            </div>
-            <div className="pt-4 pb-3 border-t border-gray-200">
-              <div className="flex flex-col items-center space-y-2 px-4">
-                <Button 
-                  variant="ghost" 
-                  className="w-full rounded-lg border-2 border-[#18181B] bg-transparent hover:bg-gray-100 text-[#18181B] px-5 py-2 text-sm font-medium shadow-sm">
-                  Log in
-                </Button>
-                <Button 
-                  className="w-full rounded-lg border-2 border-[#18181B] bg-[#FFB900] hover:bg-[#FFB900]/90 text-black px-5 py-2 text-sm font-medium shadow-sm">
-                  Sign Up
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
       </header>
 
-      {/* Add padding to main content to offset fixed header */}
-      <main className="pt-24">
+      {/* Remove padding from main content */}
+      <main>
         {/* Hero Section */}
         <section className="py-16 md:py-24 lg:py-32">
           <div className="container px-4 md:px-6">
