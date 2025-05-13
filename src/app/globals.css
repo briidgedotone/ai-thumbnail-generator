@@ -163,3 +163,21 @@
   pointer-events: none;
   z-index: -1;
 }
+
+.hero-backdrop-circle-container::after {
+  content: "";
+  position: absolute;
+  width: 500px; /* Adjusted width for new layout */
+  height: 600px; /* Height to position circles vertically */
+  background-image: 
+    radial-gradient(circle 165px at 370px 260px, #FF0000 100%, transparent 100.1%),   /* Red circle (full internal opacity) */
+    radial-gradient(circle 121px at 250px 310px, #FFA600 100%, transparent 100.1%), /* Orange circle (full internal opacity) */
+    radial-gradient(circle 143px at 250px 160px, rgba(30, 30, 30, 0.95) 100%, transparent 100.1%);  /* Black circle (95% internal opacity) */
+  background-repeat: no-repeat;
+  top: 200px; /* Shifted down by 100px */
+  left: 100px; /* Shifted right by 100px */
+  transform: translateX(-50%);
+  z-index: -1;
+  filter: blur(120px); /* Increased blur to 120px */
+  opacity: 0.8;
+}

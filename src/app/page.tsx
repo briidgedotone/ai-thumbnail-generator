@@ -131,7 +131,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden grainy-background">
+    <div className="min-h-screen bg-background relative overflow-hidden grainy-background hero-backdrop-circle-container">
       {/* Modified Header */}
       <header className="h-[90px]">
         <div className="w-full px-10 flex h-full items-center justify-between">
@@ -160,22 +160,27 @@ export default function Home() {
       {/* Remove padding from main content */}
       <main>
         {/* Hero Section */}
-        <section className="py-16 md:py-24 lg:py-32">
+        <section className="py-12">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl/none">
-                  Transform Your Ideas into Reality
+                <h1 className="text-7xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl/none">
+                  Generate <span style={{ color: '#02ADD2' }}>Beast</span> Thumbnails in Seconds—Not Hours
                 </h1>
                 <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
                   The all-in-one platform for creators, designers, and innovators. Bring your vision to life with our powerful tools.
                 </p>
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center">
-                <Button 
-                  size="lg" 
-                  className="rounded-lg border-2 border-[#18181B] bg-[#FFB900] text-black shadow-[4px_4px_0px_0px_#18181B] hover:shadow-[6px_6px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-300 px-8 py-6 text-lg">
-                  Get Started <ArrowRight className="h-5 w-5" />
+                <Button
+                  size="lg"
+                  className="rounded-lg border-2 border-[#d70e36] bg-[#FF0032] text-white h-[54px] py-4 px-8 text-lg transition-all duration-300 hover:bg-[#FF0032]/90">
+                  Try it Free <ArrowRight className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="rounded-lg border-2 border-black bg-transparent text-black h-[54px] py-4 px-8 text-lg transition-all duration-300 hover:bg-gray-100">
+                  See it in Action
                 </Button>
               </div>
             </div>
