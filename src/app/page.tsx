@@ -164,17 +164,18 @@ export default function Home() {
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <h1 className="text-7xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl/none">
-                  Generate <span style={{ color: '#02ADD2' }}>Beast</span> Thumbnails in Seconds—Not Hours
+                <h1 className="text-7xl font-medium tracking-tight sm:text-4xl md:text-5xl lg:text-6xl mx-auto max-w-screen-lg text-neutral-900 leading-tight">
+                  Generate <span style={{ color: '#02ADD2' }}>Beast</span> Thumbnails in{" "}
+                  <span className="hero-underline-curve">Seconds</span>—Not Hours
                 </h1>
-                <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-                  The all-in-one platform for creators, designers, and innovators. Bring your vision to life with our powerful tools.
+                <p className="mx-auto max-w-screen-md text-lg text-neutral-900 my-[33px]">
+                  Create studio-grade YouTube packaging with AI. No team. No waiting.
                 </p>
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center">
                 <Button
                   size="lg"
-                  className="rounded-lg border-2 border-[#d70e36] bg-[#FF0032] text-white h-[54px] py-4 px-8 text-lg transition-all duration-300 hover:bg-[#FF0032]/90">
+                  className="rounded-lg border-2 border-[#121212] bg-[#121212] text-white h-[54px] py-4 px-8 text-lg transition-all duration-300 hover:bg-[#FF0032]/90">
                   Try it Free <ArrowRight className="h-5 w-5" />
                 </Button>
                 <Button
