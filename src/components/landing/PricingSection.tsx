@@ -7,15 +7,17 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
-// Define Tier type locally based on usage in page.tsx
+// Update CreativePricingTier interface to match page.tsx
 export interface CreativePricingTier {
   name: string;
   icon: React.ReactNode;
-  price: number;
+  price: number; // -1 indicates Custom Pricing
   description: string;
   features: string[];
   popular: boolean;
   color: string;
+  ctaText: string;
+  ctaLink: string;
 }
 
 interface PricingSectionProps {
@@ -57,11 +59,16 @@ export function PricingSection({ tiers }: PricingSectionProps) {
                 index === 2 && "rotate-[-2deg]"
               )}
             >
-              {/* Outer Glow for Popular Card */}
               {tier.popular && (
-                <div className="absolute -inset-1.5 rounded-xl bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] blur-xl opacity-70 group-hover:opacity-80 transition-opacity duration-300 z-0" />
+                <div
+                  aria-hidden="true"
+                  className={cn(
+                    "absolute -inset-2 rounded-lg blur-xl -z-10",
+                    "bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600]",
+                    "opacity-50 group-hover:opacity-75 transition-all duration-300"
+                  )}
+                />
               )}
-
               <div className={cn(
                 "absolute inset-0 bg-white",
                 "border-2 border-black",
@@ -69,15 +76,13 @@ export function PricingSection({ tiers }: PricingSectionProps) {
                 "transition-all duration-300",
                 "group-hover:shadow-[8px_8px_0px_0px_#18181B]",
                 "group-hover:translate-x-[-4px]",
-                "group-hover:translate-y-[-4px]",
-                "relative z-10" // Ensure this is above the glow
+                "group-hover:translate-y-[-4px]"
               )} />
 
               <div className={cn(
                 "relative p-6 transition-all duration-300 h-full flex flex-col",
                 "group-hover:translate-x-[-4px]",
-                "group-hover:translate-y-[-4px]",
-                "relative z-20" // Ensure this is above the background and glow
+                "group-hover:translate-y-[-4px]"
               )}>
                 {tier.popular && (
                   <div className="absolute -top-2 -right-2 bg-[#FFA600] text-black font-bold px-3 py-1 rounded-full rotate-12 text-sm border-2 border-black">
@@ -107,12 +112,20 @@ export function PricingSection({ tiers }: PricingSectionProps) {
 
                   {/* Price */}
                   <div className="mb-6">
-                    <span className="text-4xl font-bold text-zinc-900">
-                      ${tier.price}
-                    </span>
-                    <span className="text-zinc-600">
-                      /month
-                    </span>
+                    {tier.price === -1 ? (
+                      <span className="text-4xl font-bold text-zinc-900">
+                        Custom Pricing
+                      </span>
+                    ) : (
+                      <>
+                        <span className="text-4xl font-bold text-zinc-900">
+                          ${tier.price}
+                        </span>
+                        <span className="text-zinc-600">
+                          /month
+                        </span>
+                      </>
+                    )}
                   </div>
 
                   <div className="space-y-3 mb-6">
@@ -145,7 +158,7 @@ export function PricingSection({ tiers }: PricingSectionProps) {
                     "hover:bg-gradient-to-br hover:from-[#FF5C8D] hover:via-[#FF0000] hover:to-[#FFA600]"
                   )}
                 >
-                  <Link href="/auth">Get Started</Link>
+                  <Link href={tier.ctaLink}>{tier.ctaText}</Link>
                 </Button>
               </div>
             </motion.div>

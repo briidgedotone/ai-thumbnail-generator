@@ -49,19 +49,12 @@ export function HowItWorksSection({ steps: stepsFromProps }: HowItWorksSectionPr
       "Publishing and analytics dashboard",
     ];
     
-    // Use a simplified description for now. Original propStep.content (JSX) could be used directly.
-    const descriptions = [
-        "Brainstorm and develop your concepts with our intuitive tools and templates. Explore different creative possibilities with AI-powered suggestions.",
-        "Transform your ideas into polished content with our advanced generation tools. Utilize AI assistance to create high-quality materials in minutes, not hours.",
-        "Share your creations with the world through our integrated publishing platform or export them for use elsewhere. Schedule posts and track performance metrics."
-    ];
-
     return {
       id: propStep.title, // Assuming title is unique for key
       numericLabel: `0${index + 1}`,
       title: propStep.title,
-      description: descriptions[index] || propStep.content, // Fallback to propStep.content
-      features: hardcodedFeatures[index] || [],
+      description: propStep.content, // Always use propStep.content which now contains subheading and UL
+      features: [], // Clear this, as features are now part of the description
       imageSrc: hardcodedImageUrls[index] || "",
       imageAlt: hardcodedImageAlts[index] || "Image",
     };
@@ -147,19 +140,9 @@ export function HowItWorksSection({ steps: stepsFromProps }: HowItWorksSectionPr
                   ) : (
                     <div className="text-base md:text-lg text-muted-foreground mb-6">
                          {/* Render if step.description is JSX node (original prop value) */}
-                         {step.description}
+                         {step.description} {/* This will now render the subheading and the UL from page.tsx */}
                     </div>
                   )}
-                  <ul className="space-y-2">
-                    {step.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-3 text-sm">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#18181B] bg-white shadow-[2px_2px_0px_0px_#18181B]">
-                          <Check className="h-4 w-4 text-[#18181B]" />
-                        </div>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               ))}
             </div>

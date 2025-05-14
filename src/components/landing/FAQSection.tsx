@@ -14,33 +14,33 @@ import React from "react";
 const faqItems = [
   {
     value: "item-1",
-    trigger: "How does the free trial work?",
+    trigger: "What exactly does YTZA do?",
     content:
-      "Our free trial gives you full access to all features for 14 days with no credit card required. At the end of the trial, you can choose the plan that best fits your needs or continue with the free basic version with limited features.",
+      "YTZA instantly generates viral-level YouTube thumbnails, titles, descriptions, and tags—based on just your video idea. It's like having MrBeast's entire creative team in one click.",
   },
   {
     value: "item-2",
-    trigger: "Can I change my plan later?",
+    trigger: "Do I need any design experience?",
     content:
-      "Yes, you can upgrade, downgrade, or cancel your plan at any time. If you upgrade, the new pricing will be prorated for the remainder of your billing cycle. If you downgrade, the new pricing will take effect at the start of your next billing cycle.",
+      "Nope. If you can describe your video in one sentence, YTZA does the rest. No Photoshop, no editing, no stress.",
   },
   {
     value: "item-3",
-    trigger: "What payment methods do you accept?",
+    trigger: "Can I use my face in the thumbnails?",
     content:
-      "We accept all major credit cards (Visa, Mastercard, American Express), PayPal, and bank transfers for annual plans. Enterprise customers can also pay by invoice with net-30 terms.",
+      "Yes! You can upload a photo of yourself, and we'll integrate it into your thumbnail using your selected style.",
   },
   {
     value: "item-4",
-    trigger: "How secure is my data?",
+    trigger: "What makes YTZA special?",
     content:
-      "We take security seriously. All data is encrypted both in transit and at rest. We use industry-standard security measures and regular security audits to ensure your data remains protected. Our platform is GDPR compliant and we offer data processing agreements for Enterprise customers.",
+      "We're not just generating pretty thumbnails—we study what actually goes viral. Our AI is trained on high-performing content, so your package is built to win clicks.",
   },
   {
     value: "item-5",
-    trigger: "Do you offer refunds?",
+    trigger: "Can I generate titles, descriptions, and tags too?",
     content:
-      "We offer a 30-day money-back guarantee for all paid plans. If you're not satisfied with our service within the first 30 days, contact our support team for a full refund, no questions asked.",
+      "Absolutely. Every thumbnail comes with a full YouTube package—so you're ready to upload instantly.",
   },
 ];
 

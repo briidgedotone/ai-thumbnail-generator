@@ -17,13 +17,10 @@ export function FeaturesSection() {
               </span>
             </div>
             <h3 className="text-3xl md:text-4xl font-semibold text-black mb-4 leading-tight">
-              Focus on your video content, we'll help with the rest.
+              Skyrocket Your Channel's Growth
             </h3>
             <p className="text-gray-700 mb-8 text-base leading-relaxed">
-              Spend less time fiddling with design tools or worrying about
-              your thumbnails looking unprofessional. Our fine-tuned
-              platform ensures every thumbnail grabs attention, so you
-              can stay focused on creating great videos.
+              Craft professional thumbnails in seconds to boost your views and build a loyal audience. Focus on creating content while our AI handles the visuals.
             </p>
             <div className="flex-grow bg-gray-200/50 border border-gray-300 rounded-lg p-6 flex items-center justify-center min-h-[300px]">
               <p className="text-gray-500">Thumbnail Customization UI Placeholder</p>
@@ -38,10 +35,10 @@ export function FeaturesSection() {
               </span>
             </div>
             <h3 className="text-3xl md:text-4xl font-semibold text-black mb-4 leading-tight">
-              Amplify your reach, effortlessly.
+              Amplify Your Campaign Results
             </h3>
             <p className="text-gray-700 mb-8 text-base leading-relaxed">
-              Craft compelling campaigns and track their performance. Our tools help you connect with your audience and grow your brand with data-driven insights.
+              Our AI creates data-driven thumbnails that fit your marketing strategy, helping you engage audiences and hit campaign goals.
             </p>
             <div className="flex-grow bg-gray-200/50 border border-gray-300 rounded-lg p-6 flex items-center justify-center min-h-[300px]">
               <p className="text-gray-500">Marketing Campaign UI Placeholder</p>
@@ -59,10 +56,10 @@ export function FeaturesSection() {
               {/* Text content on the left */}
               <div className="md:w-1/2 flex flex-col">
                 <h3 className="text-3xl md:text-4xl font-semibold text-black mb-4 leading-tight">
-                  Build your vision, backed by data.
+                  Scale Your Content Empire
                 </h3>
                 <p className="text-gray-700 text-base leading-relaxed mb-auto">
-                  From concept to launch, get the insights and tools you need to build a successful brand. Streamline your workflow and focus on growth.
+                  Manage high-volume thumbnail needs effortlessly, saving time and ensuring quality across your portfolio or agency.
                 </p>
               </div>
               {/* Image placeholder on the right */}
