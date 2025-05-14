@@ -21,14 +21,17 @@ export function HeroSection() {
           </div>
           <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center">
             <Button
-              size="lg"
-              className="rounded-lg border-2 border-[#121212] bg-[#121212] text-white h-[54px] py-4 px-8 text-lg transition-all duration-300 hover:bg-[#FF0032]/90">
-              Try it Free <ArrowRight className="h-5 w-5" />
+              asChild
+              className="rounded-lg border-2 border-[#121212] bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white h-[54px] py-4 px-8 text-lg transition-all duration-300 shadow-[3px_3px_0px_0px_#18181B] hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+            >
+              <Link href="/auth">Try it Free <ArrowRight className="h-5 w-5" /></Link>
             </Button>
             <Button
+              asChild
               variant="outline"
-              className="rounded-lg border-2 border-black bg-transparent text-black h-[54px] py-4 px-8 text-lg transition-all duration-300 hover:bg-gray-100">
-              See it in Action
+              className="rounded-lg border-2 border-black bg-transparent text-black h-[54px] py-4 px-8 text-lg transition-all duration-300 hover:bg-gray-100 shadow-[3px_3px_0px_0px_#18181B] hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+            >
+              <Link href="#">See it in Action</Link>
             </Button>
           </div>
         </div>

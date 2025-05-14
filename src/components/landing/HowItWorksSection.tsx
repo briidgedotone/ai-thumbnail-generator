@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Check } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface HowItWorksStepFromProps {
   year: string; // Corresponds to "01", "02" etc. for display
@@ -38,9 +39,9 @@ export function HowItWorksSection({ steps: stepsFromProps }: HowItWorksSectionPr
       ["Multi-channel publishing", "Engagement analytics", "Scheduled releases"],
     ];
     const hardcodedImageUrls = [
-      "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?q=80&w=2070&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop",
+      "/placeholder1.png",
+      "/placeholder2.png",
+      "/placeholder3.png",
     ];
     const hardcodedImageAlts = [
       "Ideation process with sticky notes and whiteboard",
@@ -120,7 +121,7 @@ export function HowItWorksSection({ steps: stepsFromProps }: HowItWorksSectionPr
       <div className="container px-4 md:px-6">
         <div className="flex flex-col md:flex-row md:gap-12 lg:gap-20 xl:gap-24 min-h-[150vh] md:min-h-[180vh]"> {/* Ensure enough scroll height */} 
           {/* Left Column: Scrolling Text Content */}
-          <div className="md:w-1/2 py-8"> {/* Added py-8 for some initial spacing */} 
+          <div className="md:flex-1 py-8"> {/* Changed from md:w-1/2 */}
             <div className="space-y-32 md:space-y-48 lg:space-y-64 xl:space-y-80"> {/* Increased spacing for scroll effect */} 
               {stepDetails.map((step, index) => (
                 <div
@@ -134,10 +135,10 @@ export function HowItWorksSection({ steps: stepsFromProps }: HowItWorksSectionPr
                   }`}
                 >
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-xl border-2 border-[#18181B] bg-[#FFB900] text-xl font-bold text-[#18181B] shadow-[3px_3px_0px_0px_#18181B]">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-xl border-2 border-[#18181B] bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white text-xl font-bold shadow-[3px_3px_0px_0px_#18181B]">
                       {step.numericLabel}
                     </div>
-                    <h3 className="text-2xl font-bold tracking-tight">{step.title}</h3>
+                    <h3 className="text-5xl font-normal tracking-tight">{step.title}</h3>
                   </div>
                   {typeof step.description === 'string' ? (
                     <p className="text-base md:text-lg text-muted-foreground mb-6">
@@ -151,8 +152,10 @@ export function HowItWorksSection({ steps: stepsFromProps }: HowItWorksSectionPr
                   )}
                   <ul className="space-y-2">
                     {step.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="h-5 w-5 text-[#FFB900]" />
+                      <li key={feature} className="flex items-center gap-3 text-sm">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#18181B] bg-white shadow-[2px_2px_0px_0px_#18181B]">
+                          <Check className="h-4 w-4 text-[#18181B]" />
+                        </div>
                         <span>{feature}</span>
                       </li>
                     ))}
@@ -163,19 +166,28 @@ export function HowItWorksSection({ steps: stepsFromProps }: HowItWorksSectionPr
           </div>
 
           {/* Right Column: Sticky Image */} 
-          <div className="md:w-1/2 md:sticky md:top-[25vh] h-[50vh] mt-12 md:mt-0 flex items-center justify-center"> {/* Centering sticky content */} 
-            <div className="relative w-full max-w-md lg:max-w-lg aspect-[4/3] overflow-hidden rounded-xl border-2 border-[#18181B] bg-muted shadow-[6px_6px_0px_0px_#18181B]">
-              {stepDetails[activeStepIndex] && (
-                 <Image
-                    key={stepDetails[activeStepIndex].imageSrc} // Key for transition on src change
-                    src={stepDetails[activeStepIndex].imageSrc}
-                    alt={stepDetails[activeStepIndex].imageAlt}
-                    layout="fill"
-                    objectFit="cover"
-                    className="rounded-lg transition-opacity duration-700 ease-in-out opacity-0 animage"
-                    onLoadingComplete={(image) => image.classList.remove('opacity-0')}
-                 />
-              )}
+          <div className="md:w-[685px] md:flex-none md:sticky md:top-[25vh] h-[540px] mt-12 md:mt-0 flex items-center justify-center"> {/* Changed from md:w-1/2, added md:flex-none */}
+            <div className="relative w-full h-full overflow-hidden rounded-xl border border-black bg-muted"> {/* Changed from w-[685px] h-[540px] to w-full h-full */}
+              <AnimatePresence initial={false}>
+                {stepDetails[activeStepIndex] && (
+                   <motion.div
+                      key={stepDetails[activeStepIndex].imageSrc}
+                      className="absolute inset-0"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.7, ease: "easeInOut" }}
+                   >
+                    <Image
+                        src={stepDetails[activeStepIndex].imageSrc}
+                        alt={stepDetails[activeStepIndex].imageAlt}
+                        layout="fill"
+                        objectFit="cover"
+                        className="rounded-lg"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
