@@ -29,7 +29,7 @@ export function HeroSection() {
             <Button
               asChild
               variant="outline"
-              className="rounded-lg border-2 border-black bg-transparent text-black h-[54px] py-4 px-8 text-lg transition-all duration-300 hover:bg-gray-100 shadow-[3px_3px_0px_0px_#18181B] hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+              className="rounded-lg border-2 border-black bg-white text-black h-[54px] py-4 px-8 text-lg transition-all duration-300 hover:bg-gray-100 shadow-[3px_3px_0px_0px_#18181B] hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px]"
             >
               <Link href="#">See it in Action</Link>
             </Button>

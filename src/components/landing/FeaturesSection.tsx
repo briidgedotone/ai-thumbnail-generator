@@ -1,93 +1,73 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, ChevronRight } from "lucide-react";
-
-const featureCategories = [
-  {
-    title: "For Creators",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-        <polyline points="14 2 14 8 20 8" />
-      </svg>
-    ),
-    description: "Everything you need to produce high-quality content at scale",
-    features: ["Content templates", "AI-assisted writing", "Multi-format export", "Scheduling tools"],
-    buttonText: "Learn more",
-  },
-  {
-    title: "For Editors",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-        <path d="M12 20h9" />
-        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-      </svg>
-    ),
-    description: "Advanced editing tools to refine and polish your content",
-    features: ["Collaborative editing", "Version history", "Grammar & style checks", "SEO optimization"],
-    buttonText: "Learn more",
-  },
-  {
-    title: "For Your Community",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-    ),
-    description: "Tools to engage and grow your audience effectively",
-    features: ["Comment moderation", "Audience insights", "Community forums", "Member management"],
-    buttonText: "Learn more",
-  },
-];
+import { Card } from "@/components/ui/card";
+// Removed CardContent and CardHeader imports as they are not explicitly used in the new structure
+// import { cn } from "@/lib/utils"; // cn is not used
 
 export function FeaturesSection() {
   return (
-    <section className="py-16 md:py-24">
-      <div className="container px-4 md:px-6">
-        <div className="flex flex-col items-center justify-center space-y-4 text-center">
-          <div className="space-y-2">
-            <div className="inline-flex items-center rounded-full border border-border/40 bg-muted px-3 py-1 text-sm">
-              <span>Features</span>
+    <section className="py-16 md:py-24 bg-transparent dark:bg-transparent">
+      <div className="container mx-auto max-w-7xl px-4 md:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Card 1: For Creators */}
+          <Card className="bg-white p-8 rounded-xl border-2 border-black flex flex-col shadow-none">
+            <div className="mb-6">
+              <span className="inline-block text-white text-xs font-semibold px-3 py-1 rounded-md bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] shadow-[3px_3px_0px_0px_#18181B] border-2 border-black">
+                FOR CREATORS
+              </span>
             </div>
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">
-              Designed for Everyone
-            </h2>
-            <p className="mx-auto max-w-[700px] text-muted-foreground md:text-lg">
-              Powerful tools that cater to all your creative needs
+            <h3 className="text-3xl md:text-4xl font-semibold text-black mb-4 leading-tight">
+              Skyrocket Your Channel's Growth
+            </h3>
+            <p className="text-gray-700 mb-8 text-base leading-relaxed">
+              Craft professional thumbnails in seconds to boost your views and build a loyal audience. Focus on creating content while our AI handles the visuals.
             </p>
-          </div>
-        </div>
+            <div className="flex-grow bg-gray-200/50 border border-gray-300 rounded-lg p-6 flex items-center justify-center min-h-[300px]">
+              <p className="text-gray-500">Thumbnail Customization UI Placeholder</p>
+            </div>
+          </Card>
 
-        <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {featureCategories.map((category) => (
-            <Card key={category.title} className="border border-border/40">
-              <CardContent className="p-6">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                  {category.icon}
-                </div>
-                <h3 className="mt-4 text-xl font-bold">{category.title}</h3>
-                <p className="mt-2 text-muted-foreground">
-                  {category.description}
+          {/* Card 2: For Marketers */}
+          <Card className="bg-white p-8 rounded-xl border-2 border-black flex flex-col shadow-none">
+            <div className="mb-6">
+              <span className="inline-block text-white text-xs font-semibold px-3 py-1 rounded-md bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] shadow-[3px_3px_0px_0px_#18181B] border-2 border-black">
+                FOR MARKETERS
+              </span>
+            </div>
+            <h3 className="text-3xl md:text-4xl font-semibold text-black mb-4 leading-tight">
+              Amplify Your Campaign Results
+            </h3>
+            <p className="text-gray-700 mb-8 text-base leading-relaxed">
+              Our AI creates data-driven thumbnails that fit your marketing strategy, helping you engage audiences and hit campaign goals.
+            </p>
+            <div className="flex-grow bg-gray-200/50 border border-gray-300 rounded-lg p-6 flex items-center justify-center min-h-[300px]">
+              <p className="text-gray-500">Marketing Campaign UI Placeholder</p>
+            </div>
+          </Card>
+
+          {/* Card 3: For Founders - Full Width, 60%ish height concept */}
+          <Card className="md:col-span-2 bg-white p-8 rounded-xl border-2 border-black flex flex-col shadow-none h-[617px]">
+            <div className="mb-6">
+              <span className="inline-block text-white text-xs font-semibold px-3 py-1 rounded-md bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] shadow-[3px_3px_0px_0px_#18181B] border-2 border-black">
+                FOR FOUNDERS
+              </span>
+            </div>
+            <div className="flex flex-col md:flex-row gap-8 flex-grow">
+              {/* Text content on the left */}
+              <div className="md:w-1/2 flex flex-col">
+                <h3 className="text-3xl md:text-4xl font-semibold text-black mb-4 leading-tight">
+                  Scale Your Content Empire
+                </h3>
+                <p className="text-gray-700 text-base leading-relaxed mb-auto">
+                  Manage high-volume thumbnail needs effortlessly, saving time and ensuring quality across your portfolio or agency.
                 </p>
-                <ul className="mt-4 space-y-2">
-                  {category.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-sm">
-                      <CheckCircle className="h-4 w-4 text-primary" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button className="mt-6 w-full justify-between rounded-full bg-[#FFB900]/10 text-[#FFB900] hover:bg-[#FFB900]/20 shadow-sm">
-                  {category.buttonText} <ChevronRight className="h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+              {/* Image placeholder on the right */}
+              <div className="md:w-1/2 flex-grow bg-gray-200/50 border border-gray-300 rounded-lg p-6 flex items-center justify-center min-h-[200px] md:min-h-full">
+                <p className="text-gray-500">Founder Dashboard/Analytics UI Placeholder</p>
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
     </section>

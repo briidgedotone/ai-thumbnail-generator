@@ -18,7 +18,7 @@ import React from "react";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
-import { PricingSection, type CreativePricingTier } from "@/components/landing/PricingSection";
+import { PricingSection, type CreativePricingTier as PricingSectionTierType } from "@/components/landing/PricingSection";
 import { FAQSection } from "@/components/landing/FAQSection";
 import { FooterSection } from "@/components/landing/FooterSection";
 
@@ -49,6 +49,19 @@ const ListItem = React.forwardRef<
 });
 ListItem.displayName = "ListItem";
 
+// Update CreativePricingTier type definition
+export interface CreativePricingTier {
+  name: string;
+  icon: React.ReactNode;
+  price: number; // Use -1 for Custom Pricing
+  description: string;
+  features: string[];
+  popular: boolean;
+  color: string;
+  ctaText: string; // New field for button text
+  ctaLink: string; // New field for button link
+}
+
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
@@ -58,13 +71,14 @@ export default function Home() {
       title: "Ideate",
       content: (
         <>
-          <p className="mb-2">
-            Brainstorm and develop your concepts with our intuitive tools and templates. 
-            Explore different possibilities and lay the groundwork for your creation.
+          <p className="mb-4 text-lg">
+            Launch Your Creative Process by Entering Video Details and Tailoring Designs to Reflect Your Brand's Unique Identity
           </p>
-          <p>
-            Our platform provides you with the resources to effectively plan and structure your ideas before moving to the generation phase.
-          </p>
+          <ul className="space-y-2 list-disc list-inside">
+            <li>Input Your Vision</li>
+            <li>Upload Assets</li>
+            <li>Choose a Style</li>
+          </ul>
         </>
       ),
     },
@@ -73,13 +87,14 @@ export default function Home() {
       title: "Generate",
       content: (
         <>
-          <p className="mb-2">
-            Transform your ideas into polished content with our advanced generation tools. 
-            Utilize AI assistance and powerful features to bring your vision to life.
+          <p className="mb-4 text-lg">
+            Empower AI to Rapidly Produce Visually Stunning Thumbnails Crafted to Boost Click-Through Rates and Viewer Engagement
           </p>
-          <p>
-            Whether it's text, images, or other media, our generation engine is designed for quality and efficiency.
-          </p>
+          <ul className="space-y-2 list-disc list-inside">
+            <li>Instant Creations</li>
+            <li>Smart Suggestions</li>
+            <li>Fine-Tune Easily</li>
+          </ul>
         </>
       ),
     },
@@ -88,13 +103,14 @@ export default function Home() {
       title: "Post",
       content: (
         <>
-          <p className="mb-2">
-            Share your creations with the world through our integrated publishing platform or export them for use elsewhere. 
-            Reach your audience effortlessly.
+          <p className="mb-4 text-lg">
+            Effortlessly Download Your High-Resolution Thumbnail and Upload It to YouTube for Immediate, High-Impact Audience Connection
           </p>
-          <p>
-            Manage your content, track its performance, and engage with your community, all from one place.
-          </p>
+          <ul className="space-y-2 list-disc list-inside">
+            <li>Download Fast</li>
+            <li>Direct Upload</li>
+            <li>Save for Later</li>
+          </ul>
         </>
       ),
     },
@@ -102,31 +118,54 @@ export default function Home() {
 
   const creativePricingTiers: CreativePricingTier[] = [
     {
-      name: "Starter",
+      name: "Free",
       icon: <Sparkles className="h-6 w-6" />,
-      price: 9,
-      description: "Perfect for individuals just getting started.",
-      features: ["5 projects", "Basic templates", "Standard support", "1GB storage"],
+      price: 0,
+      description: "Perfect for individual creators.", // Corrected spelling
+      features: [
+        "3 thumbnails per month.",
+        "1 iteration per thumbnail",
+        "YouTube-ready resolution (1280x720px).",
+        "Standard email support."
+      ],
       popular: false,
       color: "blue",
+      ctaText: "Get Started Free",
+      ctaLink: "/auth"
     },
     {
       name: "Pro",
       icon: <Zap className="h-6 w-6" />,
-      price: 29,
-      description: "Ideal for professionals and small teams.",
-      features: ["20 projects", "Premium templates", "Priority support", "10GB storage", "Advanced analytics"],
+      price: 19,
+      description: "Ideal for growing creators and teams.",
+      features: [
+        "20 thumbnails.",
+        "5 iterations per thumbnail",
+        "upload images for inspiration",
+        "YouTube-ready resolution (1280x720px).",
+        "Email priority support."
+      ],
       popular: true,
       color: "purple",
+      ctaText: "Choose Pro",
+      ctaLink: "/auth?plan=pro" // Example link for a specific plan
     },
     {
       name: "Studio",
       icon: <Rocket className="h-6 w-6" />,
-      price: 79,
-      description: "For growing businesses and creative teams.",
-      features: ["Unlimited projects", "All templates", "24/7 dedicated support", "100GB storage", "Team collaboration", "Custom branding"],
+      price: -1, // Sentinel for Custom Pricing
+      description: "Built for agencies, multi-channel creators, or businesses.",
+      features: [
+        "Everything in Pro.",
+        "Bulk thumbnail generation for multiple videos.",
+        "White-label options for client branding.",
+        "Multi-channel management dashboard.",
+        "Dedicated account manager and email priority support."
+      ],
       popular: false,
       color: "green",
+      ctaText: "Contact Sales",
+      ctaLink: "/contact" // Example link for contact page
     },
   ];
 
@@ -147,7 +186,7 @@ export default function Home() {
             <Button
               asChild
               variant="ghost"
-              className="rounded-lg border-2 border-black bg-transparent hover:bg-gray-100 text-black px-5 text-base font-medium h-[44px] shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+              className="rounded-lg border-2 border-black bg-white hover:bg-gray-100 text-black px-5 text-base font-medium h-[44px] shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px]"
             >
               <Link href="/auth">Log in</Link>
             </Button>
