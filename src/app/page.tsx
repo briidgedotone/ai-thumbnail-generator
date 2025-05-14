@@ -145,13 +145,17 @@ export default function Home() {
           {/* Auth Buttons Desktop - Simplified */}
           <div className="flex items-center space-x-2">
             <Button
+              asChild
               variant="ghost"
-              className="rounded-lg border-2 border-black bg-transparent hover:bg-gray-100 text-black px-5 text-base font-medium shadow-sm h-[44px]">
-              Log in
+              className="rounded-lg border-2 border-black bg-transparent hover:bg-gray-100 text-black px-5 text-base font-medium h-[44px] shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+            >
+              <Link href="/auth">Log in</Link>
             </Button>
             <Button
-              className="rounded-lg border-2 border-black bg-black hover:bg-black/90 text-white px-5 text-base font-medium shadow-sm h-[44px]">
-              Start for free
+              asChild
+              className="rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-5 text-base font-medium h-[44px] shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+            >
+              <Link href="/auth">Start for free</Link>
             </Button>
           </div>
         </div>
