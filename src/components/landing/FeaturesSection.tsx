@@ -10,7 +10,7 @@ export function FeaturesSection() {
       <div className="container mx-auto max-w-7xl px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Card 1: For Creators */}
-          <Card className="bg-[#EDECE9] p-8 rounded-xl border-2 border-gray-300 flex flex-col shadow-none">
+          <Card className="bg-white p-8 rounded-xl border-2 border-black flex flex-col shadow-none">
             <div className="mb-6">
               <span className="inline-block text-white text-xs font-semibold px-3 py-1 rounded-md bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] shadow-[3px_3px_0px_0px_#18181B] border-2 border-black">
                 FOR CREATORS
@@ -31,7 +31,7 @@ export function FeaturesSection() {
           </Card>
 
           {/* Card 2: For Marketers */}
-          <Card className="bg-[#EDECE9] p-8 rounded-xl border-2 border-gray-300 flex flex-col shadow-none">
+          <Card className="bg-white p-8 rounded-xl border-2 border-black flex flex-col shadow-none">
             <div className="mb-6">
               <span className="inline-block text-white text-xs font-semibold px-3 py-1 rounded-md bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] shadow-[3px_3px_0px_0px_#18181B] border-2 border-black">
                 FOR MARKETERS
@@ -49,7 +49,7 @@ export function FeaturesSection() {
           </Card>
 
           {/* Card 3: For Founders - Full Width, 60%ish height concept */}
-          <Card className="md:col-span-2 bg-[#EDECE9] p-8 rounded-xl border-2 border-gray-300 flex flex-col shadow-none h-[617px]">
+          <Card className="md:col-span-2 bg-white p-8 rounded-xl border-2 border-black flex flex-col shadow-none h-[617px]">
             <div className="mb-6">
               <span className="inline-block text-white text-xs font-semibold px-3 py-1 rounded-md bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] shadow-[3px_3px_0px_0px_#18181B] border-2 border-black">
                 FOR FOUNDERS

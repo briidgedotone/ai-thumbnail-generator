@@ -147,7 +147,7 @@ export default function Home() {
             <Button
               asChild
               variant="ghost"
-              className="rounded-lg border-2 border-black bg-transparent hover:bg-gray-100 text-black px-5 text-base font-medium h-[44px] shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+              className="rounded-lg border-2 border-black bg-white hover:bg-gray-100 text-black px-5 text-base font-medium h-[44px] shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px]"
             >
               <Link href="/auth">Log in</Link>
             </Button>

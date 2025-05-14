@@ -5,6 +5,7 @@ import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 // Define Tier type locally based on usage in page.tsx
 export interface CreativePricingTier {
@@ -33,12 +34,6 @@ export function PricingSection({ tiers }: PricingSectionProps) {
           <div className="relative">
             <h2 className="text-4xl md:text-5xl font-bold rotate-[-1deg] text-zinc-900">
               Choose Your Perfect Fit
-              <div className="absolute -right-8 top-0 text-amber-500 rotate-12">
-                ✨
-              </div>
-              <div className="absolute -left-6 bottom-0 text-[#02ADD2] -rotate-12">
-                ⭐️
-              </div>
             </h2>
             <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-44 h-3 bg-[#FF5C8D]/20 rotate-[-1deg] rounded-full blur-sm" />
           </div>
@@ -62,6 +57,11 @@ export function PricingSection({ tiers }: PricingSectionProps) {
                 index === 2 && "rotate-[-2deg]"
               )}
             >
+              {/* Outer Glow for Popular Card */}
+              {tier.popular && (
+                <div className="absolute -inset-1.5 rounded-xl bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] blur-xl opacity-70 group-hover:opacity-80 transition-opacity duration-300 z-0" />
+              )}
+
               <div className={cn(
                 "absolute inset-0 bg-white",
                 "border-2 border-black",
@@ -69,82 +69,83 @@ export function PricingSection({ tiers }: PricingSectionProps) {
                 "transition-all duration-300",
                 "group-hover:shadow-[8px_8px_0px_0px_#18181B]",
                 "group-hover:translate-x-[-4px]",
-                "group-hover:translate-y-[-4px]"
+                "group-hover:translate-y-[-4px]",
+                "relative z-10" // Ensure this is above the glow
               )} />
 
-              <div className="relative p-6">
+              <div className={cn(
+                "relative p-6 transition-all duration-300 h-full flex flex-col",
+                "group-hover:translate-x-[-4px]",
+                "group-hover:translate-y-[-4px]",
+                "relative z-20" // Ensure this is above the background and glow
+              )}>
                 {tier.popular && (
                   <div className="absolute -top-2 -right-2 bg-[#FFA600] text-black font-bold px-3 py-1 rounded-full rotate-12 text-sm border-2 border-black">
                     Popular!
                   </div>
                 )}
 
-                <div className="mb-6">
-                  <div className={cn(
-                    "w-12 h-12 rounded-full mb-4",
-                    "flex items-center justify-center",
-                    "border-2 border-black",
-                    tier.color === "blue" && "text-[#02ADD2]",
-                    tier.color === "purple" && "text-[#FF5C8D]",
-                    tier.color === "green" && "text-[#FFA600]"
-                  )}>
-                    {tier.icon}
-                  </div>
-                  <h3 className="text-2xl font-bold text-zinc-900">
-                    {tier.name}
-                  </h3>
-                  <p className="text-zinc-600">
-                    {tier.description}
-                  </p>
-                </div>
-
-                {/* Price */}
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-zinc-900">
-                    ${tier.price}
-                  </span>
-                  <span className="text-zinc-600">
-                    /month
-                  </span>
-                </div>
-
-                <div className="space-y-3 mb-6">
-                  {tier.features.map((feature) => (
-                    <div
-                      key={feature}
-                      className="flex items-center gap-3"
-                    >
-                      <div className="w-5 h-5 rounded-full border-2 border-black flex items-center justify-center shadow-[1px_1px_0px_0px_#18181B]">
-                        <Check className="w-3 h-3" />
-                      </div>
-                      <span className="text-zinc-900">
-                        {feature}
-                      </span>
+                <div className="flex-grow">
+                  <div className="mb-6">
+                    <div className={cn(
+                      "w-12 h-12 rounded-full mb-4",
+                      "flex items-center justify-center",
+                      "border-2 border-black",
+                      tier.color === "blue" && "text-[#02ADD2]",
+                      tier.color === "purple" && "text-[#FF5C8D]",
+                      tier.color === "green" && "text-[#FFA600]"
+                    )}>
+                      {tier.icon}
                     </div>
-                  ))}
+                    <h3 className="text-2xl font-bold text-zinc-900">
+                      {tier.name}
+                    </h3>
+                    <p className="text-zinc-600">
+                      {tier.description}
+                    </p>
+                  </div>
+
+                  {/* Price */}
+                  <div className="mb-6">
+                    <span className="text-4xl font-bold text-zinc-900">
+                      ${tier.price}
+                    </span>
+                    <span className="text-zinc-600">
+                      /month
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 mb-6">
+                    {tier.features.map((feature) => (
+                      <div
+                        key={feature}
+                        className="flex items-center gap-3"
+                      >
+                        <div className="w-5 h-5 rounded-full border-2 border-black flex items-center justify-center shadow-[1px_1px_0px_0px_#18181B]">
+                          <Check className="w-3 h-3" />
+                        </div>
+                        <span className="text-zinc-900">
+                          {feature}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <Button
+                  asChild
                   className={cn(
-                    "w-full h-12 text-lg relative",
+                    "w-full h-12 text-lg relative mt-auto",
                     "border-2 border-black",
                     "transition-all duration-300",
                     "shadow-[4px_4px_0px_0px_#18181B]",
                     "hover:shadow-[6px_6px_0px_0px_#18181B]",
                     "hover:translate-x-[-2px] hover:translate-y-[-2px]",
-                    tier.popular
-                      ? [
-                        "bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white",
-                        "hover:bg-gradient-to-br hover:from-[#FF5C8D] hover:via-[#FF0000] hover:to-[#FFA600]",
-                      ]
-                      : [
-                        "bg-white",
-                        "text-black",
-                        "hover:bg-gray-50",
-                      ]
+                    "bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white",
+                    "hover:bg-gradient-to-br hover:from-[#FF5C8D] hover:via-[#FF0000] hover:to-[#FFA600]"
                   )}
                 >
-                  Get Started
+                  <Link href="/auth">Get Started</Link>
                 </Button>
               </div>
             </motion.div>
@@ -153,12 +154,12 @@ export function PricingSection({ tiers }: PricingSectionProps) {
 
         {/* Background Decorative Elements */}
         <div className="absolute -z-10 inset-0 overflow-hidden">
-          <div className="absolute top-40 left-20 text-4xl rotate-12">
+          {/* <div className="absolute top-40 left-20 text-4xl rotate-12">
             ✎
           </div>
           <div className="absolute bottom-40 right-20 text-4xl -rotate-12">
             ✏️
-          </div>
+          </div> */}
         </div>
       </div>
     </section>

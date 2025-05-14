@@ -79,7 +79,6 @@ const CustomAccordionTrigger = React.forwardRef<
     {...props}
   >
     <span>{children}</span>
-    <ChevronDown className="h-5 w-5 shrink-0 transition-transform duration-300 group-data-[state=open]:rotate-180" />
   </AccordionTrigger>
 ));
 CustomAccordionTrigger.displayName = "CustomAccordionTrigger";
@@ -140,17 +139,6 @@ export function FAQSection() {
               </motion.div>
             ))}
           </Accordion>
-
-          <motion.div 
-            className="mt-10 text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            <p className="text-sm text-gray-600">
-              Still have questions? <a href="#" className="font-medium text-[#FF5C8D] hover:underline">Contact our support team</a>
-            </p>
-          </motion.div>
         </div>
       </div>
     </section>
