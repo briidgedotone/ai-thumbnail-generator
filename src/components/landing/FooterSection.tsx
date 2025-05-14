@@ -1,112 +1,162 @@
 "use client";
 
+import Link from "next/link";
+import { ChevronRight, Mail, Github, Twitter, Linkedin, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
-const socialMediaLinks = [
-  { name: "twitter", path: "#" },
-  { name: "facebook", path: "#" },
-  { name: "instagram", path: "#" },
-  { name: "github", path: "#" },
+const footerLinks = [
+  {
+    title: "Product",
+    links: [
+      { name: "Features", href: "#features" },
+      { name: "Pricing", href: "#pricing" },
+      { name: "Testimonials", href: "#testimonials" },
+      { name: "API Docs", href: "/docs" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { name: "About Us", href: "/about" },
+      { name: "Careers", href: "/careers" },
+      { name: "Blog", href: "/blog" },
+      { name: "Press Kit", href: "/press" },
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      { name: "Help Center", href: "/help" },
+      { name: "Community", href: "/community" },
+      { name: "Status", href: "/status" },
+      { name: "Changelog", href: "/changelog" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { name: "Privacy", href: "/privacy" },
+      { name: "Terms", href: "/terms" },
+      { name: "Cookie Policy", href: "/cookies" },
+      { name: "GDPR", href: "/gdpr" },
+    ],
+  },
 ];
 
-const companyLinks = ["About", "Careers", "Blog", "Legal"];
-const resourceLinks = ["Documentation", "Help Center", "Community", "Tutorials"];
+const socialLinks = [
+  { name: "Twitter", icon: <Twitter className="h-5 w-5" />, href: "#" },
+  { name: "Github", icon: <Github className="h-5 w-5" />, href: "#" },
+  { name: "LinkedIn", icon: <Linkedin className="h-5 w-5" />, href: "#" },
+  { name: "Instagram", icon: <Instagram className="h-5 w-5" />, href: "#" },
+];
+
+const LinkButton = ({ href, children }: { href: string; children: React.ReactNode }) => (
+  <Link 
+    href={href} 
+    className="text-gray-600 hover:text-black transition-colors duration-200 flex items-center group"
+  >
+    <span className="mr-1">{children}</span>
+    <ChevronRight className="h-3 w-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" />
+  </Link>
+);
+
+const SocialButton = ({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) => (
+  <motion.a
+    href={href}
+    aria-label={label}
+    whileHover={{ y: -5 }}
+    whileTap={{ scale: 0.95 }}
+    className="flex items-center justify-center w-10 h-10 rounded-lg border-2 border-black bg-white text-black shadow-[2px_2px_0px_0px_#18181B] hover:shadow-[4px_4px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
+  >
+    {icon}
+  </motion.a>
+);
 
 export function FooterSection() {
   return (
-    <footer className="border-t border-border/40 bg-muted/40 py-10">
+    <footer className="pt-16 pb-8 relative bg-muted/30">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+      
       <div className="container px-4 md:px-6">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center">
-                <span className="font-bold text-primary-foreground">B</span> {/* Placeholder Logo */}
+        {/* Main Footer Content */}
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-8 mb-12">
+          {/* Logo and Newsletter Section */}
+          <div className="col-span-2">
+            <Link 
+              href="/" 
+              className="text-2xl font-bold text-gray-900 inline-block mb-6 border-b-2 border-[#FF5C8D]"
+            >
+              LOGO
+            </Link>
+            <p className="text-gray-600 mb-4 max-w-sm">
+              Join our newsletter to get updates about features and releases.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 mb-6">
+              <div className="relative rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_#18181B] transition-all duration-200 bg-white">
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="w-full py-2 px-3 bg-transparent outline-none"
+                />
+                <div className="absolute inset-y-0 right-2 flex items-center">
+                  <Mail className="h-4 w-4 text-gray-400" />
+                </div>
               </div>
-              <span className="font-semibold">Brand</span> {/* Placeholder Brand Name */}
-            </div>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Empowering creators with innovative tools to bring their ideas to life.
-            </p>
-            <div className="mt-4 flex space-x-3">
-              {socialMediaLinks.map((social) => (
-                <a key={social.name} href={social.path} className="rounded-full border border-border/40 p-2">
-                  <span className="sr-only">{social.name}</span>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-muted-foreground"
-                  >
-                    {social.name === "twitter" && (
-                      <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
-                    )}
-                    {social.name === "facebook" && (
-                      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-                    )}
-                    {social.name === "instagram" && (
-                      <>
-                        <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                        <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-                      </>
-                    )}
-                    {social.name === "github" && (
-                      <>
-                        <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
-                        <path d="M9 18c-4.51 2-5-2-7-2" />
-                      </>
-                    )}
-                  </svg>
-                </a>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium">Company</h3>
-            <ul className="mt-4 space-y-2 text-sm">
-              {companyLinks.map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-muted-foreground hover:text-foreground">
-                    {item}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium">Resources</h3>
-            <ul className="mt-4 space-y-2 text-sm">
-              {resourceLinks.map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-muted-foreground hover:text-foreground">
-                    {item}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium">Subscribe to our newsletter</h3>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Get the latest updates and news directly to your inbox.
-            </p>
-            <div className="mt-4 flex gap-2">
-              <Input placeholder="Enter your email" className="max-w-[240px]" />
-              <Button className="rounded-full bg-[#FFB900] hover:bg-[#FFB900]/90 text-black shadow-sm">
+              <Button 
+                className="rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white shadow-[3px_3px_0px_0px_#18181B] hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-300"
+              >
                 Subscribe
               </Button>
             </div>
           </div>
+          
+          {/* Links Sections */}
+          {footerLinks.map((section) => (
+            <div key={section.title} className="col-span-1">
+              <h3 className="font-bold mb-4 text-sm tracking-widest uppercase">{section.title}</h3>
+              <ul className="space-y-2">
+                {section.links.map((link) => (
+                  <li key={link.name}>
+                    <LinkButton href={link.href}>
+                      {link.name}
+                    </LinkButton>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
-        <div className="mt-10 border-t border-border/40 pt-6 text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Brand. All rights reserved.</p>
+        
+        {/* Bottom Bar */}
+        <div className="border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex gap-4">
+            {socialLinks.map((link) => (
+              <SocialButton 
+                key={link.name} 
+                href={link.href} 
+                icon={link.icon} 
+                label={`Visit our ${link.name}`} 
+              />
+            ))}
+          </div>
+          
+          <div className="text-gray-600 text-sm">
+            © {new Date().getFullYear()} Your Company. All rights reserved.
+          </div>
+          
+          <motion.button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            whileHover={{ y: -5 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center justify-center rounded-lg border-2 border-black bg-white p-2 shadow-[3px_3px_0px_0px_#18181B] hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
+            aria-label="Back to top"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 3L14 9L12.5 10.5L8 6L3.5 10.5L2 9L8 3Z" fill="currentColor" />
+            </svg>
+          </motion.button>
         </div>
       </div>
     </footer>
