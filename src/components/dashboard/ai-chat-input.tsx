@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useState, useEffect, useRef } from "react";
-import { Paperclip, Send, Type as TypeIcon } from "lucide-react";
+import { Paperclip, Send, Type as TypeIcon, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
  
 const PLACEHOLDERS = [
@@ -21,7 +21,17 @@ const AIChatInput = () => {
   const [inputValue, setInputValue] = useState("");
   const [includeTextOnThumbnail, setIncludeTextOnThumbnail] = useState(false);
   const [thumbnailText, setThumbnailText] = useState("");
+  const [selectedTextStyle, setSelectedTextStyle] = useState("Bold White");
   const wrapperRef = useRef<HTMLDivElement>(null);
+ 
+  const TEXT_STYLE_OPTIONS = [
+    "Bold White",
+    "Bold Yellow",
+    "Minimalist",
+    "Pixel",
+    "Calligraphy",
+    "Cute",
+  ];
  
   // Cycle placeholder text when input is inactive
   useEffect(() => {
@@ -200,7 +210,7 @@ const AIChatInput = () => {
             animate={isActive || inputValue ? "visible" : "hidden"}
             style={{ marginTop: 8 }}
           >
-            <div className="flex gap-3 items-center">
+            <div className="flex gap-3 items-center w-full">
               <button
                 className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all font-medium group ${
                   includeTextOnThumbnail
@@ -226,19 +236,36 @@ const AIChatInput = () => {
                   <motion.div
                     key="thumbnail-text-input-wrapper"
                     initial={{ opacity: 0, width: 0, x: -20 }}
-                    animate={{ opacity: 1, width: 250, x: 0 }}
+                    animate={{ opacity: 1, width: "100%", x: 0 }}
                     exit={{ opacity: 0, width: 0, x: -20 }}
                     transition={{ type: "spring", stiffness: 150, damping: 20, duration: 0.3 }}
-                    className="overflow-hidden"
+                    className="overflow-hidden flex-1 flex items-center"
                   >
                     <input
                       type="text"
                       value={thumbnailText}
                       onChange={(e) => setThumbnailText(e.target.value)}
                       placeholder="Enter text for thumbnail..."
-                      className="w-full px-3 py-2 text-sm rounded-full border border-gray-300 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white text-gray-700 placeholder-gray-400"
+                      className="w-full px-4 py-2 text-sm rounded-l-full border border-r-0 border-gray-300 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white text-gray-700 placeholder-gray-400"
                       onClick={(e) => e.stopPropagation()}
                     />
+                    <div className="relative">
+                      <select
+                        value={selectedTextStyle}
+                        onChange={(e) => setSelectedTextStyle(e.target.value)}
+                        className="pl-6 pr-8 py-2 text-sm rounded-r-full border border-l-0 border-gray-300 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-100 text-gray-700 appearance-none"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {TEXT_STYLE_OPTIONS.map((style) => (
+                          <option key={style} value={style}>
+                            {style}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                        <ChevronDown size={18} className="text-gray-500" />
+                      </div>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
