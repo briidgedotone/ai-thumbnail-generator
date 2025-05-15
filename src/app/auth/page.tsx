@@ -39,58 +39,58 @@ export default function AuthPage() {
           <div className="w-full max-w-sm mx-auto">
             {isLoginView ? (
               <>
-                <h1 className="text-4xl font-bold text-neutral-900 mb-2">Welcome Back</h1>
-                <p className="text-neutral-600 mb-8">
+            <h1 className="text-4xl font-bold text-neutral-900 mb-2">Welcome Back</h1>
+            <p className="text-neutral-600 mb-8">
                   Sign in to generate your next viral thumbnail!
-                </p>
-                <form className="space-y-6">
-                  <div>
+            </p>
+            <form className="space-y-6">
+              <div>
                     <label htmlFor="emailLogin" className="block text-xs font-medium text-neutral-700 mb-1">
                       Email Address
-                    </label>
-                    <Input
+                </label>
+                <Input
                       type="email"
                       id="emailLogin"
                       name="emailLogin"
                       placeholder="you@example.com"
                       className="w-full rounded-lg border-2 border-neutral-300 focus:border-black focus:ring-2 focus:ring-[#FF5C8D]/50 h-10 px-3"
-                    />
-                  </div>
-                  <div>
+                />
+              </div>
+              <div>
                     <label htmlFor="passwordLogin" className="block text-xs font-medium text-neutral-700 mb-1">
-                      Password
-                    </label>
-                    <Input
-                      type="password"
+                  Password
+                </label>
+                <Input
+                  type="password"
                       id="passwordLogin"
                       name="passwordLogin"
                       placeholder="••••••••"
                       className="w-full rounded-lg border-2 border-neutral-300 focus:border-black focus:ring-2 focus:ring-[#FF5C8D]/50 h-10 px-3"
-                    />
-                  </div>
+                />
+              </div>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <input 
-                        type="checkbox" 
-                        id="rememberMe" 
-                        name="rememberMe" 
-                        defaultChecked 
+              <div className="flex items-center">
+                <input 
+                  type="checkbox" 
+                  id="rememberMe" 
+                  name="rememberMe" 
+                  defaultChecked 
                         className="h-4 w-4 text-[#FF0000] border-neutral-300 rounded focus:ring-[#FF5C8D]/50 custom-checkbox"
-                      />
-                      <label htmlFor="rememberMe" className="ml-2 block text-sm text-neutral-700">
-                        Remember me
-                      </label>
-                    </div>
+                />
+                <label htmlFor="rememberMe" className="ml-2 block text-sm text-neutral-700">
+                  Remember me
+                </label>
+              </div>
                     <Link href="#" className="text-sm font-medium text-[#FF0000] hover:text-[#FF5C8D]">
                       Forgot Password?
                     </Link>
                   </div>
-                  <Button
-                    type="submit"
+              <Button
+                type="submit"
                     className="w-full rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-5 text-base font-medium shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] h-10 flex items-center justify-center"
-                  >
+              >
                     Log In <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
+              </Button>
                 </form>
 
                 <div className="my-6 flex items-center">
@@ -148,14 +148,14 @@ export default function AuthPage() {
                       placeholder="Create a strong password"
                       className="w-full rounded-lg border-2 border-neutral-300 focus:border-black focus:ring-2 focus:ring-[#FF5C8D]/50 h-10 px-3"
                     />
-                  </div>
+              </div>
                   <Button
                     type="submit"
                     className="w-full rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-5 text-base font-medium shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] h-10 flex items-center justify-center"
                   >
                     Sign Up <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
-                </form>
+            </form>
 
                 <div className="my-6 flex items-center">
                   <div className="flex-grow border-t border-neutral-300"></div>
