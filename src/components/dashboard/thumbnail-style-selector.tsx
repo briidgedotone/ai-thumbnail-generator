@@ -19,7 +19,7 @@ const styles = [
 export function ThumbnailStyleSelector({ selectedStyle, onSelectStyle }: ThumbnailStyleSelectorProps) {
   return (
     <div className="mb-4 w-full">
-      <label className="block text-sm font-medium text-neutral-700 mb-1 ml-0">
+      <label className="block text-base font-semibold text-neutral-700 mb-1 ml-0">
         Choose a Thumbnail Style
       </label>
       <div className="grid grid-cols-4 gap-3">
@@ -28,7 +28,7 @@ export function ThumbnailStyleSelector({ selectedStyle, onSelectStyle }: Thumbna
             key={style.id}
             onClick={() => onSelectStyle(style.id)}
             className={cn(
-              'w-full pb-[66.6666%] rounded-md cursor-pointer transition-all relative overflow-hidden group',
+              'w-full pb-[66.6666%] rounded-xl cursor-pointer transition-all relative overflow-hidden group',
               selectedStyle === style.id
                 ? 'ring-2 ring-pink-500 shadow-lg'
                 : 'hover:shadow-md',
