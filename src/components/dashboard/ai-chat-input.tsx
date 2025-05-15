@@ -6,12 +6,14 @@ import { Paperclip, Send, Type as TypeIcon, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
  
 const PLACEHOLDERS = [
-  "Generate website with HextaUI",
-  "Create a new project with Next.js",
-  "What is the meaning of life?",
-  "What is the best way to learn React?",
-  "How to cook a delicious meal?",
-  "Summarize this article",
+  "Make a thumbnail for my latest gaming video...",
+  "Vlog thumbnail: 'A Day in the Life of a Software Engineer'...",
+  "Create a catchy thumbnail for a cooking tutorial...",
+  "Generate a professional thumbnail for my business webinar...",
+  "Thumbnail ideas for a travel vlog in Bali...",
+  "Design a clickbait thumbnail for a reaction video...",
+  "Futuristic style for a tech review thumbnail...",
+  "Minimalist and clean thumbnail for a coding tutorial..."
 ];
  
 const AIChatInput = () => {
@@ -43,7 +45,7 @@ const AIChatInput = () => {
         setPlaceholderIndex((prev) => (prev + 1) % PLACEHOLDERS.length);
         setShowPlaceholder(true);
       }, 400);
-    }, 3000);
+    }, 7000);
  
     return () => clearInterval(interval);
   }, [isActive, inputValue]);
@@ -180,7 +182,7 @@ const AIChatInput = () => {
             </div>
  
             <button
-              className="flex items-center gap-1 bg-black hover:bg-zinc-700 text-white p-3 rounded-full font-medium justify-center"
+              className="flex items-center gap-1 text-white p-3 rounded-full font-medium justify-center bg-gradient-to-r from-pink-500 via-orange-500 to-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:opacity-90 transition-opacity"
               title="Send"
               type="button"
               tabIndex={-1}
