@@ -11,6 +11,8 @@ import { useTextareaResize } from "@/hooks/use-textarea-resize";
 import { ThumbnailStyleSelector } from "@/components/dashboard/thumbnail-style-selector";
 import { AIChatInput } from "@/components/dashboard/ai-chat-input"; // Import the new component
 import { VideoDescriptionInput } from "@/components/dashboard/video-description-input"; // Import new component
+import { ProjectsView } from "@/components/dashboard/projects-view"; // Import the new ProjectsView component
+import { motion } from "framer-motion"; // Ensure framer-motion is imported
 
 // New CircularProgress component
 interface CircularProgressProps {
@@ -117,46 +119,72 @@ export default function DashboardPage() {
     // Placeholder for profile navigation or modal
   };
 
+  // New handler to switch from Projects to Studio view
+  const handleCreateNew = () => {
+    setActiveView('studio');
+    console.log("Switching to Studio view to create new thumbnail");
+  };
+
   const creditPercentage = totalCredits > 0 ? (currentCredits / totalCredits) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-background relative grainy-background dashboard-backdrop-circle-container flex flex-col items-center justify-center px-4 pt-24 pb-8">
-      {/* Top Center Fixed Elements: Studio/Projects Button Group - Set to 44px height */}
+      {/* Top Center Fixed Elements: Studio/Projects Button Group */}
       <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
-        <div className="flex items-center gap-1 p-1 h-11 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-gray-300">
+        <div className="relative flex items-center gap-1 p-1 h-11 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-gray-300">
+          
           <Button
-            variant={activeView === 'studio' ? "default" : "ghost"}
+            variant="ghost"
             size="sm"
             className={cn(
-              "rounded-full px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-all duration-200 ease-in-out",
-              activeView === 'studio' 
-                ? "bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white shadow-md"
-                : "text-gray-600 hover:bg-gray-200/70 hover:text-gray-800"
+              "relative rounded-full px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-colors duration-200 ease-in-out z-20", // Simplified base transition for button
+              activeView !== 'studio' && "hover:bg-gray-200/70" // Apply hover background only when inactive
             )}
             onClick={() => {
               setActiveView('studio');
               console.log("Studio view selected");
             }}
           >
-            <Palette size={16} />
-            Studio
+            {activeView === 'studio' && (
+              <motion.div
+                layoutId="activePill"
+                className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] shadow-md z-10"
+                transition={{ type: "spring", stiffness: 350, damping: 30 }}
+              />
+            )}
+            <span className={cn(
+              "relative z-30 flex items-center gap-2",
+              activeView === 'studio' ? "text-white" : "text-gray-600 hover:text-gray-800" // Text color now directly on span
+            )}>
+              <Palette size={16} /> Studio
+            </span>
           </Button>
+
           <Button
-            variant={activeView === 'projects' ? "default" : "ghost"}
+            variant="ghost"
             size="sm"
             className={cn(
-              "rounded-full px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-all duration-200 ease-in-out",
-              activeView === 'projects' 
-                ? "bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white shadow-md"
-                : "text-gray-600 hover:bg-gray-200/70 hover:text-gray-800"
+              "relative rounded-full px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-colors duration-200 ease-in-out z-20", // Simplified base transition for button
+              activeView !== 'projects' && "hover:bg-gray-200/70" // Apply hover background only when inactive
             )}
             onClick={() => {
               setActiveView('projects');
               console.log("Projects view selected");
             }}
           >
-            <LayoutGrid size={16} />
-            Projects
+            {activeView === 'projects' && (
+              <motion.div
+                layoutId="activePill" 
+                className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] shadow-md z-10"
+                transition={{ type: "spring", stiffness: 350, damping: 30 }}
+              />
+            )}
+            <span className={cn(
+              "relative z-30 flex items-center gap-2",
+              activeView === 'projects' ? "text-white" : "text-gray-600 hover:text-gray-800" // Text color now directly on span
+            )}>
+              <LayoutGrid size={16} /> Projects
+            </span>
           </Button>
         </div>
       </div>
@@ -165,17 +193,17 @@ export default function DashboardPage() {
       <div className="fixed top-6 right-6 z-50 flex items-center gap-3">
         {/* Credit Counter Element - Changed to pill shape with text, and set to 44px height */}
         <div 
-          className="flex items-center gap-2 px-3 py-1.5 h-11 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-gray-300"
+          className="flex items-center gap-2 px-3 py-1.5 h-11 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-gray-300" /* Added h-11 */
           title={`${currentCredits}/${totalCredits} Credits Remaining`}
         >
-          <CircularProgress percentage={creditPercentage} size={20} strokeWidth={2.5} baseColor="text-gray-200" />
+          <CircularProgress percentage={creditPercentage} size={20} strokeWidth={2.5} baseColor="text-gray-200" /> 
           <span className="text-xs font-medium text-gray-700">
             {currentCredits}/{totalCredits} Credits
           </span>
         </div>
         {/* Profile Element - Button removed, div styled to look like bordered avatar */}
         <div 
-          className="w-11 h-11 rounded-full bg-white/80 backdrop-blur-sm shadow-lg border border-gray-400 hover:border-gray-500 transition-all p-0 overflow-hidden cursor-pointer flex items-center justify-center"
+          className="w-11 h-11 rounded-full bg-white/80 backdrop-blur-sm shadow-lg border border-gray-400 hover:border-gray-500 transition-all p-0 overflow-hidden cursor-pointer flex items-center justify-center" /* Darker border */
           onClick={handleProfileClick}
           title="Profile"
         >
@@ -190,26 +218,30 @@ export default function DashboardPage() {
 
       {/* Main Dashboard Content Area */}
       <div className="max-w-3xl w-full flex flex-col items-stretch gap-6">
-        
-        <ThumbnailStyleSelector
-          selectedStyle={selectedThumbnailStyle}
-          onSelectStyle={setSelectedThumbnailStyle}
-        />
+        {activeView === 'studio' ? (
+          /* Studio View - Thumbnail Generation UI */
+          <>
+            <ThumbnailStyleSelector
+              selectedStyle={selectedThumbnailStyle}
+              onSelectStyle={setSelectedThumbnailStyle}
+            />
 
-        <div className="w-full flex flex-col items-start">
-          <AIChatInput /> 
-        </div>
+            <div className="w-full flex flex-col items-start">
+              <AIChatInput /> 
+            </div>
 
-        <div className="w-full flex flex-col items-start">
-          <VideoDescriptionInput 
-            value={videoDescription}
-            onChange={(e) => setVideoDescription(e.target.value)}
-            placeholder="Describe your video"
-          />
-        </div>
-
-        {/* Button container removed from here */}
-
+            <div className="w-full flex flex-col items-start">
+              <VideoDescriptionInput 
+                value={videoDescription}
+                onChange={(e) => setVideoDescription(e.target.value)}
+                placeholder="Describe your video"
+              />
+            </div>
+          </>
+        ) : (
+          /* Projects View - Grid of Existing Projects */
+          <ProjectsView onCreateNew={handleCreateNew} />
+        )}
       </div>
     </div>
   );
