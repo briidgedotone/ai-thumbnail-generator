@@ -182,7 +182,7 @@ const AIChatInput = () => {
             </div>
  
             <button
-              className="flex items-center gap-1 text-white p-3 rounded-full font-medium justify-center bg-gradient-to-r from-pink-500 via-orange-500 to-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:opacity-90 transition-opacity"
+              className="flex items-center gap-1 text-white p-3 rounded-full font-medium justify-center bg-gradient-to-r from-pink-500 via-orange-500 to-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:opacity-90 transition-opacity cursor-pointer"
               title="Send"
               type="button"
               tabIndex={-1}
@@ -214,7 +214,7 @@ const AIChatInput = () => {
           >
             <div className="flex gap-3 items-center w-full">
               <button
-                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all font-medium group ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all font-medium group cursor-pointer ${
                   includeTextOnThumbnail
                     ? "bg-blue-600/10 outline outline-blue-600/60 text-blue-950"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"

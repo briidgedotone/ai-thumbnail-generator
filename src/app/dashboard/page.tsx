@@ -1,18 +1,17 @@
 "use client"
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 // import { ChatInput } from "@/components/ui/chat-input"; // No longer needed directly here
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles as GenerateIcon, UploadCloud as UploadIcon, Palette, LayoutGrid } from "lucide-react";
+import { Sparkles as GenerateIcon, UploadCloud as UploadIcon, Palette, LayoutGrid, LogOut, SettingsIcon } from "lucide-react";
 import Avatar from 'boring-avatars'; // Added import for Boring Avatars
 import { cn } from "@/lib/utils";
 import { useTextareaResize } from "@/hooks/use-textarea-resize";
-import { ThumbnailStyleSelector } from "@/components/dashboard/thumbnail-style-selector";
-import { AIChatInput } from "@/components/dashboard/ai-chat-input"; // Import the new component
-import { VideoDescriptionInput } from "@/components/dashboard/video-description-input"; // Import new component
-import { ProjectsView } from "@/components/dashboard/projects-view"; // Import the new ProjectsView component
+import { ProjectsView } from "@/components/dashboard/projects-view";
+import { StudioView } from "@/components/dashboard/studio-view"; // Import the new StudioView component
 import { motion } from "framer-motion"; // Ensure framer-motion is imported
+import { SettingsModal } from "@/components/dashboard/settings-modal"; // Import the new SettingsModal component
 
 // New CircularProgress component
 interface CircularProgressProps {
@@ -82,16 +81,17 @@ export default function DashboardPage() {
   const [currentCredits, setCurrentCredits] = useState(15);
   const [totalCredits, setTotalCredits] = useState(20);
   const [activeView, setActiveView] = useState<'studio' | 'projects'>('studio'); // New state for active view
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false); // New state for profile dropdown
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false); // New state for settings modal
+
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
 
   // handleChatSubmit is removed as the new component handles its own submission/logic.
 
   const handleGenerate = () => {
-    // Temporarily remove chatInputValue check. We will need to find a way to get this value from AIChatInput.
+    // Temporarily remove chatInputValue check. We will need to find a way to get this value from AIChatInput if it moves out of StudioView.
     if (/*!chatInputValue.trim() ||*/ !videoDescription.trim() || !selectedThumbnailStyle) {
       console.log("Cannot generate, inputs or style selection missing");
-      // if (!chatInputValue.trim()) {
-      //   alert("Please enter a prompt or keywords.");
-      // }
       if (!videoDescription.trim()) {
         alert("Please describe your video.");
       }
@@ -101,23 +101,50 @@ export default function DashboardPage() {
       return;
     }
     console.log("Generating thumbnails with:");
-    // console.log("Chat Input:", chatInputValue); // Temporarily commented out
     console.log("Video Description:", videoDescription);
     console.log("Selected Style:", selectedThumbnailStyle);
+    // AIChatInput state might need to be accessed here if it's not self-contained for generation logic
   };
 
   const handleUploadStyle = () => {
     console.log("Upload your style button clicked");
-    // Placeholder for actual upload functionality
   };
 
   // Temporarily remove chatInputValue from canGenerate logic
   const canGenerate = /*chatInputValue.trim() !== "" &&*/ videoDescription.trim() !== "" && selectedThumbnailStyle !== null;
 
   const handleProfileClick = () => {
-    console.log("Profile button clicked");
-    // Placeholder for profile navigation or modal
+    setIsProfileDropdownOpen(prev => !prev);
   };
+
+  const handleOpenSettings = () => {
+    setIsSettingsModalOpen(true);
+    setIsProfileDropdownOpen(false); // Close dropdown when opening modal
+    // console.log("Open settings modal clicked"); // Already logs when button is clicked
+  };
+
+  const handleCloseSettings = () => {
+    setIsSettingsModalOpen(false);
+  };
+
+  const handleLogout = () => {
+    console.log("Logout clicked");
+    setIsProfileDropdownOpen(false);
+    // Add actual logout logic here
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [profileDropdownRef]);
 
   // New handler to switch from Projects to Studio view
   const handleCreateNew = () => {
@@ -137,8 +164,8 @@ export default function DashboardPage() {
             variant="ghost"
             size="sm"
             className={cn(
-              "relative rounded-full px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-colors duration-200 ease-in-out z-20", // Simplified base transition for button
-              activeView !== 'studio' && "hover:bg-gray-200/70" // Apply hover background only when inactive
+              "relative rounded-full px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-colors duration-200 ease-in-out z-20 cursor-pointer", // Added cursor-pointer
+              activeView !== 'studio' && "hover:bg-gray-200/70"
             )}
             onClick={() => {
               setActiveView('studio');
@@ -154,7 +181,7 @@ export default function DashboardPage() {
             )}
             <span className={cn(
               "relative z-30 flex items-center gap-2",
-              activeView === 'studio' ? "text-white" : "text-gray-600 hover:text-gray-800" // Text color now directly on span
+              activeView === 'studio' ? "text-white" : "text-gray-600 hover:text-gray-800" 
             )}>
               <Palette size={16} /> Studio
             </span>
@@ -164,8 +191,8 @@ export default function DashboardPage() {
             variant="ghost"
             size="sm"
             className={cn(
-              "relative rounded-full px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-colors duration-200 ease-in-out z-20", // Simplified base transition for button
-              activeView !== 'projects' && "hover:bg-gray-200/70" // Apply hover background only when inactive
+              "relative rounded-full px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-colors duration-200 ease-in-out z-20 cursor-pointer", // Added cursor-pointer
+              activeView !== 'projects' && "hover:bg-gray-200/70"
             )}
             onClick={() => {
               setActiveView('projects');
@@ -181,13 +208,13 @@ export default function DashboardPage() {
             )}
             <span className={cn(
               "relative z-30 flex items-center gap-2",
-              activeView === 'projects' ? "text-white" : "text-gray-600 hover:text-gray-800" // Text color now directly on span
+              activeView === 'projects' ? "text-white" : "text-gray-600 hover:text-gray-800" 
             )}>
               <LayoutGrid size={16} /> Projects
             </span>
           </Button>
         </div>
-      </div>
+        </div>
 
       {/* Top Right Fixed Elements: Credits & Profile */}
       <div className="fixed top-6 right-6 z-50 flex items-center gap-3">
@@ -202,47 +229,77 @@ export default function DashboardPage() {
           </span>
         </div>
         {/* Profile Element - Button removed, div styled to look like bordered avatar */}
-        <div 
-          className="w-11 h-11 rounded-full bg-white/80 backdrop-blur-sm shadow-lg border border-gray-400 hover:border-gray-500 transition-all p-0 overflow-hidden cursor-pointer flex items-center justify-center" /* Darker border */
-          onClick={handleProfileClick}
-          title="Profile"
-        >
-          <Avatar
-            size={44} // Avatar size to fill the div
-            name="User SessionID" 
-            variant="beam" 
-            colors={['#FFAD08', '#EDD75A', '#73B06F', '#0C8F8F', '#405059']} 
-          />
+        <div className="relative"> {/* Added relative positioning for dropdown */}
+          <div 
+            className="w-11 h-11 rounded-full bg-white/80 backdrop-blur-sm shadow-lg border border-gray-400 hover:border-gray-500 transition-all p-0 overflow-hidden cursor-pointer flex items-center justify-center" /* Darker border */
+            onClick={handleProfileClick}
+            title="Profile"
+          >
+            <Avatar
+              size={44} // Avatar size to fill the div
+              name="User SessionID" 
+              variant="beam" 
+              colors={['#FF8C00', '#FFA500', '#FFD700', '#FF4500', '#FF6347']} 
+            />
+          </div>
+          {/* Profile Dropdown Menu */}
+          {isProfileDropdownOpen && (
+            <motion.div
+              ref={profileDropdownRef}
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              className="absolute right-0 mt-2 w-56 origin-top-right bg-white/80 backdrop-blur-md rounded-lg shadow-xl border border-gray-200/70 focus:outline-none z-50 py-1"
+            >
+              <div className="px-4 py-3">
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  User Name
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  user@example.com
+                </p>
+              </div>
+              <div className="h-px bg-gray-200/70 my-1"></div>
+              <button
+                onClick={handleOpenSettings}
+                className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100/70 hover:text-gray-900 transition-colors duration-150"
+              >
+                <SettingsIcon size={16} className="mr-2.5 text-gray-500" />
+                Settings
+              </button>
+              <div className="h-px bg-gray-200/70 my-1"></div>
+              <button
+                onClick={handleLogout}
+                className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100/70 hover:text-gray-900 transition-colors duration-150"
+              >
+                <LogOut size={16} className="mr-2.5 text-gray-500" />
+                Logout
+              </button>
+            </motion.div>
+          )}
         </div>
-      </div>
+        </div>
 
       {/* Main Dashboard Content Area */}
-      <div className="max-w-3xl w-full flex flex-col items-stretch gap-6">
+      <div className="max-w-3xl w-full flex flex-col items-stretch">
         {activeView === 'studio' ? (
-          /* Studio View - Thumbnail Generation UI */
-          <>
-            <ThumbnailStyleSelector
-              selectedStyle={selectedThumbnailStyle}
-              onSelectStyle={setSelectedThumbnailStyle}
-            />
-
-            <div className="w-full flex flex-col items-start">
-              <AIChatInput /> 
-            </div>
-
-            <div className="w-full flex flex-col items-start">
-              <VideoDescriptionInput 
-                value={videoDescription}
-                onChange={(e) => setVideoDescription(e.target.value)}
-                placeholder="Describe your video"
-              />
-            </div>
-          </>
+          <StudioView 
+            selectedThumbnailStyle={selectedThumbnailStyle}
+            onSelectStyle={setSelectedThumbnailStyle}
+            videoDescription={videoDescription}
+            onVideoDescriptionChange={setVideoDescription} 
+          />
         ) : (
-          /* Projects View - Grid of Existing Projects */
           <ProjectsView onCreateNew={handleCreateNew} />
         )}
       </div>
+
+      <SettingsModal 
+        isOpen={isSettingsModalOpen}
+        onClose={handleCloseSettings} 
+      />
+
     </div>
   );
 } 

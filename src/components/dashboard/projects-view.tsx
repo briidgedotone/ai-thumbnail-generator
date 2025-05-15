@@ -93,7 +93,7 @@ export function ProjectsView({ onCreateNew }: ProjectsViewProps) {
           </div>
           <Button 
             onClick={handleCreateNew}
-            className="rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-4 py-2 text-sm font-medium h-10 shadow-[2px_2px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[4px_4px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+            className="rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-4 py-2 text-sm font-medium h-10 shadow-[2px_2px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[4px_4px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] cursor-pointer"
           >
             <Plus size={16} className="mr-2" />
             Create New
@@ -200,7 +200,7 @@ export function ProjectsView({ onCreateNew }: ProjectsViewProps) {
             
             <Button 
               onClick={handleCreateNew}
-              className="rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-6 py-3 text-base font-medium shadow-[2px_2px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[4px_4px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+              className="rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-6 py-3 text-base font-medium shadow-[2px_2px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[4px_4px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] cursor-pointer"
             >
               <Plus size={18} className="mr-2" />
               Create New Thumbnail
