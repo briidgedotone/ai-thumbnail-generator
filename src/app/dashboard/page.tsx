@@ -12,6 +12,10 @@ import { ProjectsView } from "@/components/dashboard/projects-view";
 import { StudioView } from "@/components/dashboard/studio-view"; // Import the new StudioView component
 import { motion } from "framer-motion"; // Ensure framer-motion is imported
 import { SettingsModal } from "@/components/dashboard/settings-modal"; // Import the new SettingsModal component
+import Image from "next/image"; // Import Next.js Image component
+import Link from "next/link"; // Import Next.js Link component
+import { createSupabaseClient } from "@/lib/supabase/client"; // Import Supabase client
+import { useRouter } from "next/navigation"; // Import useRouter for redirects
 
 // New CircularProgress component
 interface CircularProgressProps {
@@ -86,6 +90,9 @@ export default function DashboardPage() {
 
   const profileDropdownRef = useRef<HTMLDivElement>(null);
 
+  const supabase = createSupabaseClient(); // Create Supabase client instance
+  const router = useRouter(); // Get router instance
+
   // handleChatSubmit is removed as the new component handles its own submission/logic.
 
   const handleGenerate = () => {
@@ -127,10 +134,16 @@ export default function DashboardPage() {
     setIsSettingsModalOpen(false);
   };
 
-  const handleLogout = () => {
-    console.log("Logout clicked");
-    setIsProfileDropdownOpen(false);
-    // Add actual logout logic here
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    setIsProfileDropdownOpen(false); // Close dropdown regardless of outcome
+
+    if (error) {
+      console.error("Error logging out:", error.message);
+      // Optionally, display a toast notification or a small error message to the user here
+    } else {
+      router.push("/auth"); // Redirect to auth page on successful logout
+    }
   };
 
   // Close dropdown when clicking outside
@@ -156,6 +169,13 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background relative grainy-background dashboard-backdrop-circle-container flex flex-col items-center justify-center px-4 pt-24 pb-8">
+      {/* Top Left Fixed Element: Logo */}
+      <div className="fixed top-6 left-6 z-50">
+        <Link href="/dashboard" className="flex items-center">
+          <Image src="/ytza-logo.png" alt="YTZA Logo" width={120} height={38} className="object-contain" />
+        </Link>
+      </div>
+
       {/* Top Center Fixed Elements: Studio/Projects Button Group */}
       <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
         <div className="relative flex items-center gap-1 p-1 h-11 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-gray-300">

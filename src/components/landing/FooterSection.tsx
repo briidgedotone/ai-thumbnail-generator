@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 const footerLinksData = [
   { name: "Process", href: "#how-it-works" },
@@ -34,9 +35,9 @@ export function FooterSection() {
           <div className="flex-shrink-0 md:max-w-xs">
             <Link
               href="/"
-              className="text-2xl font-bold text-white inline-block mb-3 border-b-2 border-white"
+              className="inline-block mb-3"
             >
-              LOGO
+              <Image src="/ytza-logo.png" alt="YTZA Logo" width={120} height={38} className="object-contain" />
             </Link>
             <p className="text-neutral-200 text-sm">
               Join our newsletter to get updates about features and releases.
@@ -81,7 +82,7 @@ export function FooterSection() {
         {/* Bottom Bar - Adjusted for better spacing if needed */}
         <div className="border-t border-white/30 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-neutral-200 text-xs text-center md:text-left">
-            © {new Date().getFullYear()} Your Company. All rights reserved.
+            © {new Date().getFullYear()} YTZA. All rights reserved.
           </div>
           
           <motion.button

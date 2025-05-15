@@ -176,8 +176,8 @@ export default function Home() {
         <div className="w-full px-10 flex h-full items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="#" className="text-2xl font-bold text-gray-900 h-[44px] flex items-center">
-              LOGO
+            <Link href="#" className="flex items-center">
+              <Image src="/ytza-logo.png" alt="YTZA Logo" width={140} height={44} className="object-contain" />
             </Link>
           </div>
 
