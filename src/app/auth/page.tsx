@@ -1,13 +1,16 @@
 "use client";
 
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label"; // Assuming you have a Label component, or I'll use HTML label
-import { Checkbox } from "@/components/ui/checkbox"; // Assuming you have a Checkbox component
 import Link from "next/link";
-import { ArrowRight, ShieldCheck } from "lucide-react"; // ShieldCheck for a generic logo icon for now
+import { ArrowRight } from "lucide-react";
 
 export default function AuthPage() {
+  const [isLoginView, setIsLoginView] = useState(true);
+
+  const toggleView = () => setIsLoginView(!isLoginView);
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Left Column */}
@@ -15,17 +18,18 @@ export default function AuthPage() {
         {/* Header Nav */}
         <header className="flex items-center justify-between">
           <Link href="/" className="text-2xl font-bold text-neutral-900 flex items-center">
-            {/* Replace with actual logo if available */}
-            {/* <ShieldCheck className="h-8 w-8 mr-2 text-[#FF0000]" />  */}
-            LOGO
+            ThumbnailBeast
           </Link>
           <div className="flex items-center space-x-3">
-            <span className="text-sm text-neutral-700">Are you a new customer?</span>
+            <span className="text-sm text-neutral-700">
+              {isLoginView ? "Don't have an account?" : "Already have an account?"}
+            </span>
             <Button
-              variant="outline" // Or your default gradient style if preferred
-              className="rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-5 py-2 text-sm font-medium shadow-[3px_3px_0px_0px_#18181B]"
+              onClick={toggleView}
+              variant="outline"
+              className="rounded-lg border-2 border-black bg-white hover:bg-gray-100 text-black px-5 text-sm font-medium shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] h-10"
             >
-              Enroll Now
+              {isLoginView ? "Sign Up" : "Log In"}
             </Button>
           </div>
         </header>
@@ -33,83 +37,147 @@ export default function AuthPage() {
         {/* Form Area */}
         <main className="flex-grow flex flex-col justify-center py-12">
           <div className="w-full max-w-sm mx-auto">
-            <h1 className="text-4xl font-bold text-neutral-900 mb-2">Welcome Back</h1>
-            <p className="text-neutral-600 mb-8">
-              Sign in to your Regions MyMortgage account. {/* Update text if needed */}
-            </p>
+            {isLoginView ? (
+              <>
+                <h1 className="text-4xl font-bold text-neutral-900 mb-2">Welcome Back</h1>
+                <p className="text-neutral-600 mb-8">
+                  Sign in to generate your next viral thumbnail!
+                </p>
+                <form className="space-y-6">
+                  <div>
+                    <label htmlFor="emailLogin" className="block text-xs font-medium text-neutral-700 mb-1">
+                      Email Address
+                    </label>
+                    <Input
+                      type="email"
+                      id="emailLogin"
+                      name="emailLogin"
+                      placeholder="you@example.com"
+                      className="w-full rounded-lg border-2 border-neutral-300 focus:border-black focus:ring-2 focus:ring-[#FF5C8D]/50 h-10 px-3"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="passwordLogin" className="block text-xs font-medium text-neutral-700 mb-1">
+                      Password
+                    </label>
+                    <Input
+                      type="password"
+                      id="passwordLogin"
+                      name="passwordLogin"
+                      placeholder="••••••••"
+                      className="w-full rounded-lg border-2 border-neutral-300 focus:border-black focus:ring-2 focus:ring-[#FF5C8D]/50 h-10 px-3"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        id="rememberMe" 
+                        name="rememberMe" 
+                        defaultChecked 
+                        className="h-4 w-4 text-[#FF0000] border-neutral-300 rounded focus:ring-[#FF5C8D]/50 custom-checkbox"
+                      />
+                      <label htmlFor="rememberMe" className="ml-2 block text-sm text-neutral-700">
+                        Remember me
+                      </label>
+                    </div>
+                    <Link href="#" className="text-sm font-medium text-[#FF0000] hover:text-[#FF5C8D]">
+                      Forgot Password?
+                    </Link>
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-5 text-base font-medium shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] h-10 flex items-center justify-center"
+                  >
+                    Log In <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </form>
 
-            <form className="space-y-6">
-              <div>
-                {/* Using HTML label if @/components/ui/label is not set up for this exact style */}
-                <label htmlFor="onlineId" className="block text-xs font-medium text-neutral-700 mb-1">
-                  Online ID
-                </label>
-                <Input
-                  type="text"
-                  id="onlineId"
-                  name="onlineId"
-                  defaultValue="Geoffrey Mott" // As per image
-                  className="w-full rounded-lg border-neutral-300 focus:border-[#FF0000] focus:ring-[#FF0000]"
-                />
-              </div>
+                <div className="my-6 flex items-center">
+                  <div className="flex-grow border-t border-neutral-300"></div>
+                  <span className="mx-4 text-sm text-neutral-500">OR</span>
+                  <div className="flex-grow border-t border-neutral-300"></div>
+                </div>
 
-              <div>
-                <label htmlFor="password" className="block text-xs font-medium text-neutral-700 mb-1">
-                  Password
-                </label>
-                <Input
-                  type="password"
-                  id="password"
-                  name="password"
-                  defaultValue="............" // As per image
-                  className="w-full rounded-lg border-green-500 focus:border-green-600 focus:ring-green-600" // Green border as per image focus
-                />
-              </div>
+                <Button
+                  variant="outline"
+                  className="w-full rounded-lg border-2 border-black bg-white text-black px-5 text-base font-medium shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] h-10 flex items-center justify-center"
+                >
+                  <span className="mr-2 font-bold">G</span> Login with Google
+                </Button>
+              </>
+            ) : (
+              <>
+                <h1 className="text-4xl font-bold text-neutral-900 mb-2">Create Account</h1>
+                <p className="text-neutral-600 mb-8">
+                  Join us and start creating stunning thumbnails in seconds!
+                </p>
+                <form className="space-y-6">
+                  <div>
+                    <label htmlFor="fullNameSignup" className="block text-xs font-medium text-neutral-700 mb-1">
+                      Full Name
+                    </label>
+                    <Input
+                      type="text"
+                      id="fullNameSignup"
+                      name="fullNameSignup"
+                      placeholder="Your Name"
+                      className="w-full rounded-lg border-2 border-neutral-300 focus:border-black focus:ring-2 focus:ring-[#FF5C8D]/50 h-10 px-3"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="emailSignup" className="block text-xs font-medium text-neutral-700 mb-1">
+                      Email Address
+                    </label>
+                    <Input
+                      type="email"
+                      id="emailSignup"
+                      name="emailSignup"
+                      placeholder="you@example.com"
+                      className="w-full rounded-lg border-2 border-neutral-300 focus:border-black focus:ring-2 focus:ring-[#FF5C8D]/50 h-10 px-3"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="passwordSignup" className="block text-xs font-medium text-neutral-700 mb-1">
+                      Password
+                    </label>
+                    <Input
+                      type="password"
+                      id="passwordSignup"
+                      name="passwordSignup"
+                      placeholder="Create a strong password"
+                      className="w-full rounded-lg border-2 border-neutral-300 focus:border-black focus:ring-2 focus:ring-[#FF5C8D]/50 h-10 px-3"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-5 text-base font-medium shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] h-10 flex items-center justify-center"
+                  >
+                    Sign Up <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </form>
 
-              <div className="flex items-center">
-                {/* Create Checkbox component or use basic HTML checkbox */}
-                {/* <Checkbox id="rememberMe" name="rememberMe" defaultChecked className="h-4 w-4 text-green-600 border-neutral-300 rounded focus:ring-green-500" /> */}
-                <input 
-                  type="checkbox" 
-                  id="rememberMe" 
-                  name="rememberMe" 
-                  defaultChecked 
-                  className="h-4 w-4 text-green-600 border-neutral-300 rounded focus:ring-green-500 custom-checkbox"
-                />
-                <label htmlFor="rememberMe" className="ml-2 block text-sm text-neutral-700">
-                  Remember me
-                </label>
-              </div>
+                <div className="my-6 flex items-center">
+                  <div className="flex-grow border-t border-neutral-300"></div>
+                  <span className="mx-4 text-sm text-neutral-500">OR</span>
+                  <div className="flex-grow border-t border-neutral-300"></div>
+                </div>
 
-              <Button
-                type="submit"
-                className="w-full rounded-lg bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-5 py-3 text-base font-medium shadow-[3px_3px_0px_0px_#18181B]"
-              >
-                Login
-              </Button>
-
-              <div className="flex items-center justify-center space-x-4 text-sm">
-                <Link href="#" className="font-medium text-green-600 hover:text-green-500">
-                  Forgot Online ID?
-                </Link>
-                <span className="text-neutral-400">·</span>
-                <Link href="#" className="font-medium text-green-600 hover:text-green-500">
-                  Forgot Password?
-                </Link>
-              </div>
-            </form>
+                <Button
+                  variant="outline"
+                  className="w-full rounded-lg border-2 border-black bg-white text-black px-5 text-base font-medium shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] h-10 flex items-center justify-center"
+                >
+                  <span className="mr-2 font-bold">G</span> Sign up with Google
+                </Button>
+              </>
+            )}
           </div>
         </main>
 
         {/* Footer */}
         <footer className="text-center">
-          <div className="text-xs text-neutral-500 space-x-3">
-            <span><ShieldCheck className="inline h-3 w-3 mr-1" />Equal Housing Lender</span>
-            <span>·</span>
-            <span>Member FDIC</span>
-          </div>
           <p className="text-xs text-neutral-500 mt-2">
-            ©{new Date().getFullYear()} Regions Financial Corporation. All Rights Reserved. · 1 (800) REGIONS
+            ©{new Date().getFullYear()} ThumbnailBeast. All Rights Reserved.
           </p>
         </footer>
       </div>
@@ -119,18 +187,21 @@ export default function AuthPage() {
         {/* Placeholder for image - could add an <Image /> component here if needed */}
       </div>
 
-      {/* Basic style for custom checkbox to mimic the green check */}
+      {/* Basic style for custom checkbox to mimic the theme colors */}
       <style jsx global>{`
         .custom-checkbox:checked {
-          background-color: #16a34a; /* Tailwind green-600 */
-          border-color: #16a34a;
+          background-color: #FF0000;
+          border-color: #FF0000;
           background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
         }
         .custom-checkbox:focus {
-          ring: 2px;
-          ring-color: #22c55e; /* Tailwind green-500 */
           outline: 2px solid transparent;
           outline-offset: 2px;
+          --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+          --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+          box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+          --tw-ring-color: rgba(255, 92, 141, 0.5);
+          border-color: #FF0000;
         }
       `}</style>
     </div>

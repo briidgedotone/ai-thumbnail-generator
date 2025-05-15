@@ -164,22 +164,42 @@
   z-index: -1;
 }
 
+/* Original style for the landing page hero backdrop */
 .hero-backdrop-circle-container::after {
   content: "";
   position: absolute;
-  width: 500px; /* Adjusted width for new layout */
-  height: 600px; /* Height to position circles vertically */
+  width: 500px;
+  height: 600px;
   background-image: 
-    radial-gradient(circle 165px at 370px 260px, #FF0000 100%, transparent 100.1%),   /* Red circle (full internal opacity) */
-    radial-gradient(circle 121px at 250px 310px, #FFA600 100%, transparent 100.1%), /* Orange circle (full internal opacity) */
-    radial-gradient(circle 143px at 250px 160px, rgba(30, 30, 30, 0.95) 100%, transparent 100.1%);  /* Black circle (95% internal opacity) */
+    radial-gradient(circle 165px at 370px 260px, #FF0000 100%, transparent 100.1%),
+    radial-gradient(circle 121px at 250px 310px, #FFA600 100%, transparent 100.1%),
+    radial-gradient(circle 143px at 250px 160px, rgba(30, 30, 30, 0.95) 100%, transparent 100.1%);
   background-repeat: no-repeat;
-  top: 200px; /* Shifted down by 100px */
-  left: 100px; /* Shifted right by 100px */
+  top: 200px;
+  left: 100px;
   transform: translateX(-50%);
-  z-index: -1;
-  filter: blur(120px); /* Increased blur to 120px */
+  z-index: -2; /* Ensured to be behind grainy-background */
+  filter: blur(120px);
   opacity: 0.8;
+}
+
+/* New style for the dashboard backdrop */
+.dashboard-backdrop-circle-container::after {
+  content: "";
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  background-image: 
+    radial-gradient(circle at 15% 20%, rgba(255, 92, 141, 0.4) 0%, rgba(255, 0, 0, 0.1) 40%, transparent 60%),
+    radial-gradient(circle at 85% 80%, rgba(255, 166, 0, 0.4) 0%, rgba(255, 0, 0, 0.1) 40%, transparent 60%),
+    radial-gradient(circle at 50% 50%, rgba(255, 0, 0, 0.25) 0%, transparent 50%);
+  background-repeat: no-repeat;
+  top: 0;
+  left: 0;
+  transform: none;
+  z-index: -2;
+  filter: blur(80px);
+  opacity: 0.9;
 }
 
 /* Custom styles for hero heading underline */
