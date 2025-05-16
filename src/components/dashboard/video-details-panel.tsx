@@ -3,7 +3,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { X, Download, Copy, Tag } from "lucide-react";
+import { X, Download, Copy, Tag, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface VideoDetailsPanelProps {
@@ -14,12 +14,13 @@ interface VideoDetailsPanelProps {
     title: string;
     description: string;
     tags: string[];
-  }
+  };
+  isLoading?: boolean;
 }
 
-export function VideoDetailsPanel({ isOpen, onClose, data }: VideoDetailsPanelProps) {
+export function VideoDetailsPanel({ isOpen, onClose, data, isLoading = false }: VideoDetailsPanelProps) {
   // Use a placeholder thumbnail if no data is provided
-  const placeholderThumbnail = "/placeholder-thumbnail.jpg";
+  // const placeholderThumbnail = "/placeholder-thumbnail.jpg"; // Removed
   const placeholderTitle = "How to Achieve Success with These 5 Simple Tips";
   const placeholderDescription = "In this video, I share my top 5 productivity tips that have helped me achieve success in my career and personal life.";
   const placeholderTags = ["productivity", "success", "tips", "motivation", "personal growth"];
@@ -102,27 +103,46 @@ export function VideoDetailsPanel({ isOpen, onClose, data }: VideoDetailsPanelPr
             </div>
             
             {/* Thumbnail */}
-            <div className="relative aspect-video w-full overflow-hidden rounded-xl border-2 border-gray-200 mb-6 bg-gray-50">
+            <div className="relative aspect-video w-full overflow-hidden rounded-xl border-2 border-gray-200 mb-6 bg-gray-100">
               <Image 
-                src={data?.thumbnail || placeholderThumbnail} 
-                alt="Thumbnail" 
+                src={data?.thumbnail || ''} // Use empty string if data.thumbnail is null/undefined
+                alt={data?.title || "Thumbnail preview"} 
                 fill
-                className="object-cover"
-                // Fallback for missing image
+                unoptimized={data?.thumbnail?.includes('oaidalleapiprodscus.blob.core.windows.net')} // Skip optimization for OpenAI URLs
+                className={`object-cover ${isLoading ? 'opacity-30' : ''} ${(data?.thumbnail || '') === '' && !isLoading ? 'bg-gray-200' : ''}`} // Add bg if src is empty and not loading
+                // Fallback for missing image - now might not be strictly needed if src can be ''
+                // but can be kept for truly broken external URLs if those become a source
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.src = placeholderThumbnail;
+                  // Instead of setting src to a placeholder, we could hide the image or show a more explicit error state
+                  // For now, let's ensure it doesn't try to reload a non-existent placeholder.
+                  target.style.display = 'none'; // Hide image element on error
+                  // Optionally, you could show a text message in its place or a default icon.
+                  const parent = target.parentElement;
+                  if (parent && !parent.querySelector('.image-error-message')) {
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'image-error-message absolute inset-0 flex items-center justify-center text-xs text-gray-500';
+                    errorMsg.textContent = 'Image failed to load';
+                    parent.appendChild(errorMsg);
+                  }
                 }}
               />
-              
-              <div className="absolute bottom-3 right-3 flex gap-2">
-                <Button 
-                  size="sm" 
-                  className="rounded-lg bg-white/90 backdrop-blur-sm text-black border border-gray-300 hover:bg-white"
-                >
-                  <Download size={16} className="mr-1" /> Download
-                </Button>
-              </div>
+              {isLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10">
+                  <Loader2 className="h-10 w-10 animate-spin text-gray-700 mb-2" />
+                  <p className="text-sm font-semibold text-gray-700">Generating Thumbnail...</p>
+                </div>
+              )}
+              {!isLoading && (
+                <div className="absolute bottom-3 right-3 flex gap-2">
+                  <Button 
+                    size="sm" 
+                    className="rounded-lg bg-white/90 backdrop-blur-sm text-black border border-gray-300 hover:bg-white"
+                  >
+                    <Download size={16} className="mr-1" /> Download
+                  </Button>
+                </div>
+              )}
             </div>
             
             {/* Title */}

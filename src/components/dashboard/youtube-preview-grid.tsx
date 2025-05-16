@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Clock, User } from "lucide-react";
+import { Clock, User, Loader2 } from "lucide-react";
 
 interface VideoPreviewProps {
   thumbnail: string;
@@ -11,6 +11,7 @@ interface VideoPreviewProps {
   viewCount?: string;
   timeAgo?: string;
   channelName?: string;
+  isGenerating?: boolean;
 }
 
 const VideoPreview: React.FC<VideoPreviewProps> = ({
@@ -18,21 +19,31 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({
   title,
   viewCount = "0 views",
   timeAgo = "just now",
-  channelName = "Your Channel"
+  channelName = "Your Channel",
+  isGenerating = false,
 }) => {
   return (
     <div className="flex flex-col w-full cursor-pointer group">
       {/* Thumbnail */}
-      <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-3">
+      <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-3 bg-gray-200">
         <Image
-          src={thumbnail}
+          src={thumbnail || ''}
           alt={title}
           fill
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
+          unoptimized={thumbnail?.includes('oaidalleapiprodscus.blob.core.windows.net')}
+          className={`object-cover group-hover:scale-105 transition-transform duration-300 ${isGenerating ? 'opacity-50' : ''} ${(thumbnail || '') === '' && !isGenerating ? 'bg-gray-300' : ''}`}
         />
-        <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs font-medium py-0.5 px-1.5 rounded">
-          0:00
-        </div>
+        {isGenerating && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white">
+            <Loader2 className="h-8 w-8 animate-spin mb-2" />
+            <p className="text-sm font-medium">Generating...</p>
+          </div>
+        )}
+        {!isGenerating && (
+          <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs font-medium py-0.5 px-1.5 rounded">
+            0:00
+          </div>
+        )}
       </div>
 
       {/* Video Info */}
@@ -65,13 +76,15 @@ interface YouTubePreviewGridProps {
   title: string;
   description: string;
   tags: string[];
+  isGeneratingAiImage?: boolean;
 }
 
 export function YouTubePreviewGrid({
   thumbnailStyleImagePath,
   title,
   description,
-  tags
+  tags,
+  isGeneratingAiImage = false,
 }: YouTubePreviewGridProps) {
   // Animation variants
   const containerVariants = {
@@ -118,6 +131,7 @@ export function YouTubePreviewGrid({
             viewCount="0 views"
             timeAgo="just now"
             channelName="Your Channel"
+            isGenerating={isGeneratingAiImage}
           />
         </motion.div>
 

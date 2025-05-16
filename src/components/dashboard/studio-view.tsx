@@ -30,10 +30,13 @@ export function StudioView({
     description: string;
     tags: string[];
   } | undefined>(undefined);
+  const [aiGeneratedImageUrl, setAiGeneratedImageUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Get thumbnail style image path based on the selected style
-  const getThumbnailStylePath = (styleId: string | null) => {
-    if (!styleId) return "/placeholder-thumbnail.jpg";
+  const getThumbnailStylePath = (styleId: string | null): string | null => {
+    if (!styleId) return null;
     
     const stylePathMap: Record<string, string> = {
       'beast-style': '/thumbnail-styles/01-beast-style.png',
@@ -42,7 +45,7 @@ export function StudioView({
       'clickbait-style': '/thumbnail-styles/04-clickbait-style.jpg',
     };
     
-    return stylePathMap[styleId] || "/placeholder-thumbnail.jpg";
+    return stylePathMap[styleId] || null;
   };
 
   // Notify parent component when details panel state changes
@@ -52,16 +55,69 @@ export function StudioView({
     }
   }, [isDetailsPanelOpen, onDetailsPanelStateChange]);
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (videoDescription.trim() === '' || !selectedThumbnailStyle) return;
+
+    setIsLoading(true);
+    setError(null);
+    setAiGeneratedImageUrl(null); // Reset previous image
+
+    // Set initial generatedData for the panel to render with loading indicators
     setGeneratedData({
-      thumbnail: '/placeholder-thumbnail.jpg',
-      title: `${selectedThumbnailStyle} Video: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
+      thumbnail: aiGeneratedImageUrl || getThumbnailStylePath(selectedThumbnailStyle) || '', // Use empty string if no image path yet, Image component will handle onError or show alt
+      title: `Generating for: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
       description: videoDescription,
       tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
     });
-    setIsDetailsPanelOpen(true);
+    setIsDetailsPanelOpen(true); // Open panel so it can show its loading state
+
+    // Construct the prompt
+    const prompt = `YouTube thumbnail in a ${selectedThumbnailStyle} style for a video about: ${videoDescription}`;
+
+    try {
+      const response = await fetch('/api/generate-thumbnail', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate image');
+      }
+
+      const result = await response.json();
+      setAiGeneratedImageUrl(result.imageUrl);
+
+      // Update generatedData with the new AI image URL and final title
+      setGeneratedData({
+        thumbnail: result.imageUrl, // Use the new AI image URL
+        title: `${selectedThumbnailStyle} Video: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
+        description: videoDescription,
+        tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
+      });
+      // setIsDetailsPanelOpen(true); // Already open
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      console.error("Error generating thumbnail:", errorMessage);
+      setError(errorMessage);
+      alert(`Error generating thumbnail: ${errorMessage}`);
+      // Fallback if AI generation fails and update title
+      setGeneratedData({
+        thumbnail: getThumbnailStylePath(selectedThumbnailStyle) || '',
+        title: `Error - ${selectedThumbnailStyle}: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
+        description: videoDescription,
+        tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
+      });
+      setAiGeneratedImageUrl(null); // Clear any potentially old AI image URL
+      // setIsDetailsPanelOpen(true); // Already open
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCloseDetailsPanel = () => {
@@ -116,10 +172,11 @@ export function StudioView({
             className="w-full" // This will now occupy the resized main content area
           >
             <YouTubePreviewGrid
-              thumbnailStyleImagePath={thumbnailStylePath}
+              thumbnailStyleImagePath={generatedData.thumbnail}
               title={generatedData.title}
               description={generatedData.description}
               tags={generatedData.tags}
+              isGeneratingAiImage={isLoading}
             />
           </motion.div>
         ) : (
@@ -155,9 +212,9 @@ export function StudioView({
                 <button 
                   type="submit" 
                   className="w-full px-6 py-3 rounded-full font-medium bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-                  disabled={!videoDescription.trim() || !selectedThumbnailStyle}
+                  disabled={!videoDescription.trim() || !selectedThumbnailStyle || isLoading}
                 >
-                  Generate Video Content
+                  {isLoading ? 'Generating...' : 'Generate Video Content'}
                 </button>
               </div>
             </form>
@@ -170,6 +227,7 @@ export function StudioView({
         isOpen={isDetailsPanelOpen} 
         onClose={handleCloseDetailsPanel}
         data={generatedData}
+        isLoading={isLoading}
       />
     </div>
   );
