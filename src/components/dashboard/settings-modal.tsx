@@ -130,10 +130,6 @@ export function SettingsModal({
     setIsUpdatingPassword(false);
   };
 
-  const handleForgotPassword = () => {
-    alert("Password reset instructions sent to your email address.");
-  };
-
   const handleSaveChanges = async () => {
     setIsSaving(true);
     let nameUpdateSuccess = false;
@@ -361,14 +357,6 @@ export function SettingsModal({
                     "Update Password"
                   )}
                 </Button>
-                
-                <button 
-                  type="button"
-                  onClick={handleForgotPassword}
-                  className="text-sm font-medium text-pink-600 hover:text-pink-700 hover:underline transition-colors"
-                >
-                  Forgot your password?
-                </button>
               </div>
             </form>
           </div>

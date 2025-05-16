@@ -4,6 +4,10 @@ import * as React from "react"
 import { useState, useEffect, useRef } from "react";
 import { Paperclip, Send, Type as TypeIcon, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+
+interface AIChatInputProps {
+  onSubmit?: (value: string, thumbnailText?: string, textStyle?: string) => void;
+}
  
 const PLACEHOLDERS = [
   "Make a thumbnail for my latest gaming video...",
@@ -16,7 +20,7 @@ const PLACEHOLDERS = [
   "Minimalist and clean thumbnail for a coding tutorial..."
 ];
  
-const AIChatInput = () => {
+const AIChatInput = ({ onSubmit }: AIChatInputProps) => {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
   const [isActive, setIsActive] = useState(false);
@@ -25,6 +29,7 @@ const AIChatInput = () => {
   const [thumbnailText, setThumbnailText] = useState("");
   const [selectedTextStyle, setSelectedTextStyle] = useState("Bold White");
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
  
   const TEXT_STYLE_OPTIONS = [
     "Bold White",
@@ -66,6 +71,27 @@ const AIChatInput = () => {
   }, [inputValue]);
  
   const handleActivate = () => setIsActive(true);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  const handleSubmit = () => {
+    if (inputValue.trim() === '') return;
+    if (onSubmit) {
+      onSubmit(
+        inputValue, 
+        includeTextOnThumbnail ? thumbnailText : undefined, 
+        includeTextOnThumbnail ? selectedTextStyle : undefined
+      );
+    }
+
+    // Optional: Clear the input after submission
+    // setInputValue('');
+  };
  
   const containerVariants = {
     collapsed: {
@@ -143,6 +169,8 @@ const AIChatInput = () => {
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                ref={inputRef}
                 className="flex-1 border-0 outline-0 rounded-md py-2 text-base bg-transparent w-full font-normal"
                 style={{ position: "relative", zIndex: 1 }}
                 onFocus={handleActivate}
@@ -181,14 +209,15 @@ const AIChatInput = () => {
               </div>
             </div>
  
-            <button
+            {/* <button
               className="flex items-center gap-1 text-white p-3 rounded-full font-medium justify-center bg-gradient-to-r from-pink-500 via-orange-500 to-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:opacity-90 transition-opacity cursor-pointer"
               title="Send"
               type="button"
               tabIndex={-1}
+              onClick={handleSubmit}
             >
               <Send size={18} />
-            </button>
+            </button> */}
           </div>
  
           {/* Expanded Controls */}

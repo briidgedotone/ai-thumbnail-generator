@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { useTextareaResize } from "@/hooks/use-textarea-resize";
 import { ProjectsView } from "@/components/dashboard/projects-view";
 import { StudioView } from "@/components/dashboard/studio-view"; // Import the new StudioView component
-import { motion } from "framer-motion"; // Ensure framer-motion is imported
+import { motion, AnimatePresence } from "framer-motion"; // Ensure framer-motion is imported
 import { SettingsModal } from "@/components/dashboard/settings-modal"; // Import the new SettingsModal component
 import Image from "next/image"; // Import Next.js Image component
 import Link from "next/link"; // Import Next.js Link component
@@ -80,6 +80,9 @@ export default function DashboardPage() {
   const [videoDescription, setVideoDescription] = useState("");
   const [selectedThumbnailStyle, setSelectedThumbnailStyle] = useState<string | null>(null);
   // const descriptionTextareaRef = useTextareaResize(videoDescription, 2); // This is now inside VideoDescriptionInput
+
+  // New state for video details panel
+  const [isDetailsPanelOpen, setIsDetailsPanelOpen] = useState(false);
 
   // Dummy credit state
   const [currentCredits, setCurrentCredits] = useState(15);
@@ -241,6 +244,11 @@ export default function DashboardPage() {
     };
   }, [supabase, router, userEmail]); // Added userEmail to dependencies to control isBackgroundRefresh correctly
 
+  // Handler for details panel state change
+  const handleDetailsPanelStateChange = (isOpen: boolean) => {
+    setIsDetailsPanelOpen(isOpen);
+  };
+
   if (isLoadingUser) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background grainy-background text-gray-700">
@@ -318,72 +326,88 @@ export default function DashboardPage() {
             </span>
           </Button>
         </div>
-        </div>
+      </div>
 
       {/* Top Right Fixed Elements: Credits & Profile */}
-      <div className="fixed top-6 right-6 z-50 flex items-center gap-3">
-        {/* Credit Counter Element - Changed to pill shape with text, and set to 44px height */}
-        <div 
-          className="flex items-center gap-2 px-3 py-1.5 h-11 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-gray-300" /* Added h-11 */
-          title={`${currentCredits}/${totalCredits} Credits Remaining`}
-        >
-          <CircularProgress percentage={creditPercentage} size={20} strokeWidth={2.5} baseColor="text-gray-200" /> 
-          <span className="text-xs font-medium text-gray-700">
-            {currentCredits}/{totalCredits} Credits
-          </span>
-        </div>
-        {/* Profile Element - Button removed, div styled to look like bordered avatar */}
-        <div className="relative"> {/* Added relative positioning for dropdown */}
-          <div 
-            className="w-11 h-11 rounded-full bg-white/80 backdrop-blur-sm shadow-lg border border-gray-400 hover:border-gray-500 transition-all p-0 overflow-hidden cursor-pointer flex items-center justify-center" /* Darker border */
-            onClick={handleProfileClick}
-            title="Profile"
+      <AnimatePresence mode="wait">
+        {!isDetailsPanelOpen && (
+          <motion.div 
+            className="fixed top-6 right-6 z-50 flex items-center gap-3"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ 
+              type: "spring",
+              stiffness: 250,
+              damping: 25,
+              duration: 0.4,
+              delay: isDetailsPanelOpen ? 0 : 0.1 // Small delay when reappearing
+            }}
           >
-            <Avatar
-              size={44} // Avatar size to fill the div
-              name={avatarName} // Use dynamic avatarName
-              variant="beam" 
-              colors={['#FF8C00', '#FFA500', '#FFD700', '#FF4500', '#FF6347']} 
-            />
-          </div>
-          {/* Profile Dropdown Menu */}
-          {isProfileDropdownOpen && (
-            <motion.div
-              ref={profileDropdownRef}
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.15, ease: "easeOut" }}
-              className="absolute right-0 mt-2 w-56 origin-top-right bg-white/80 backdrop-blur-md rounded-lg shadow-xl border border-gray-200/70 focus:outline-none z-50 py-1"
+            {/* Credit Counter Element - Changed to pill shape with text, and set to 44px height */}
+            <div 
+              className="flex items-center gap-2 px-3 py-1.5 h-11 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-gray-300"
+              title={`${currentCredits}/${totalCredits} Credits Remaining`}
             >
-              <div className="px-4 py-3">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {userName || "User Name"} {/* Display fetched user name */}
-                </p>
-                <p className="text-xs text-gray-500 truncate">
-                  {userEmail || "user@example.com"} {/* Display fetched user email */}
-                </p>
+              <CircularProgress percentage={creditPercentage} size={20} strokeWidth={2.5} baseColor="text-gray-200" /> 
+              <span className="text-xs font-medium text-gray-700">
+                {currentCredits}/{totalCredits} Credits
+              </span>
+            </div>
+            {/* Profile Element - Button removed, div styled to look like bordered avatar */}
+            <div className="relative">
+              <div 
+                className="w-11 h-11 rounded-full bg-white/80 backdrop-blur-sm shadow-lg border border-gray-400 hover:border-gray-500 transition-all p-0 overflow-hidden cursor-pointer flex items-center justify-center"
+                onClick={handleProfileClick}
+                title="Profile"
+              >
+                <Avatar
+                  size={44}
+                  name={avatarName}
+                  variant="beam" 
+                  colors={['#FF8C00', '#FFA500', '#FFD700', '#FF4500', '#FF6347']} 
+                />
               </div>
-              <div className="h-px bg-gray-200/70 my-1"></div>
-              <button
-                onClick={handleOpenSettings}
-                className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100/70 hover:text-gray-900 transition-colors duration-150"
-              >
-                <SettingsIcon size={16} className="mr-2.5 text-gray-500" />
-                Settings
-              </button>
-              <div className="h-px bg-gray-200/70 my-1"></div>
-              <button
-                onClick={handleLogout}
-                className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100/70 hover:text-gray-900 transition-colors duration-150"
-              >
-                <LogOut size={16} className="mr-2.5 text-gray-500" />
-                Logout
-              </button>
-            </motion.div>
-          )}
-        </div>
-        </div>
+              {/* Profile Dropdown Menu */}
+              {isProfileDropdownOpen && (
+                <motion.div
+                  ref={profileDropdownRef}
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.15, ease: "easeOut" }}
+                  className="absolute right-0 mt-2 w-56 origin-top-right bg-white/80 backdrop-blur-md rounded-lg shadow-xl border border-gray-200/70 focus:outline-none z-50 py-1"
+                >
+                  <div className="px-4 py-3">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {userName || "User Name"} {/* Display fetched user name */}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {userEmail || "user@example.com"} {/* Display fetched user email */}
+                    </p>
+                  </div>
+                  <div className="h-px bg-gray-200/70 my-1"></div>
+                  <button
+                    onClick={handleOpenSettings}
+                    className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100/70 hover:text-gray-900 transition-colors duration-150"
+                  >
+                    <SettingsIcon size={16} className="mr-2.5 text-gray-500" />
+                    Settings
+                  </button>
+                  <div className="h-px bg-gray-200/70 my-1"></div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100/70 hover:text-gray-900 transition-colors duration-150"
+                  >
+                    <LogOut size={16} className="mr-2.5 text-gray-500" />
+                    Logout
+                  </button>
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Dashboard Content Area */}
       <div className="max-w-3xl w-full flex flex-col items-stretch">
@@ -392,7 +416,8 @@ export default function DashboardPage() {
             selectedThumbnailStyle={selectedThumbnailStyle}
             onSelectStyle={setSelectedThumbnailStyle}
             videoDescription={videoDescription}
-            onVideoDescriptionChange={setVideoDescription} 
+            onVideoDescriptionChange={setVideoDescription}
+            onDetailsPanelStateChange={handleDetailsPanelStateChange}
           />
         ) : (
           <ProjectsView onCreateNew={handleCreateNew} />
@@ -406,7 +431,6 @@ export default function DashboardPage() {
         userEmail={userEmail}
         avatarName={avatarName}
       />
-
     </div>
   );
 } 
