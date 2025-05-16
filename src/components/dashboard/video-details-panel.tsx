@@ -108,7 +108,10 @@ export function VideoDetailsPanel({ isOpen, onClose, data, isLoading = false }: 
                 src={data?.thumbnail || ''} // Use empty string if data.thumbnail is null/undefined
                 alt={data?.title || "Thumbnail preview"} 
                 fill
-                unoptimized={data?.thumbnail?.includes('oaidalleapiprodscus.blob.core.windows.net')} // Skip optimization for OpenAI URLs
+                unoptimized={
+                  data?.thumbnail?.includes('oaidalleapiprodscus.blob.core.windows.net') || 
+                  data?.thumbnail?.startsWith('data:image/')
+                } // Skip optimization for OpenAI URLs and data URLs
                 className={`object-cover ${isLoading ? 'opacity-30' : ''} ${(data?.thumbnail || '') === '' && !isLoading ? 'bg-gray-200' : ''}`} // Add bg if src is empty and not loading
                 // Fallback for missing image - now might not be strictly needed if src can be ''
                 // but can be kept for truly broken external URLs if those become a source

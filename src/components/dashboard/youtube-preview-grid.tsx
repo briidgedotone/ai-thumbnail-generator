@@ -30,7 +30,10 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({
           src={thumbnail || ''}
           alt={title}
           fill
-          unoptimized={thumbnail?.includes('oaidalleapiprodscus.blob.core.windows.net')}
+          unoptimized={
+            thumbnail?.includes('oaidalleapiprodscus.blob.core.windows.net') || 
+            thumbnail?.startsWith('data:image/')
+          }
           className={`object-cover group-hover:scale-105 transition-transform duration-300 ${isGenerating ? 'opacity-50' : ''} ${(thumbnail || '') === '' && !isGenerating ? 'bg-gray-300' : ''}`}
         />
         {isGenerating && (

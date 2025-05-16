@@ -73,7 +73,22 @@ export function StudioView({
     setIsDetailsPanelOpen(true); // Open panel so it can show its loading state
 
     // Construct the prompt
-    const prompt = `YouTube thumbnail in a ${selectedThumbnailStyle} style for a video about: ${videoDescription}`;
+    const prompt = `Create a high-quality YouTube thumbnail for a video about: "${videoDescription}".
+
+Style: ${selectedThumbnailStyle.replace('-style', '')}
+Resolution: 1024x1024
+Purpose: Attract viewers and increase click-through rate
+
+Design requirements:
+- Create a visually striking, eye-catching composition with bold colors
+- Include relevant imagery that represents the video topic
+- Maintain clear visual hierarchy with a focal point
+- Ensure any text or elements are easily readable at small sizes
+- Use dramatic lighting and depth to create visual interest
+- Make it look professional and polished
+- Avoid cluttered compositions - keep it clean but impactful
+
+The thumbnail should look professional, be visually appealing, and make viewers want to click.`;
 
     try {
       const response = await fetch('/api/generate-thumbnail', {

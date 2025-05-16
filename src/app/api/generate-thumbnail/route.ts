@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   }
 
   console.log('[API Route] Generating image with prompt:', prompt);
-  console.log('[API Route] Model: dall-e-2, Size: 1024x1024'); // Log other params for clarity
+  console.log('[API Route] Model: gpt-image-1, Size: 1536x1024'); // Log updated model and size
 
   try {
     const response = await fetch('https://api.openai.com/v1/images/generations', {
@@ -25,11 +25,12 @@ export async function POST(request: Request) {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'dall-e-2', // Or 'dall-e-3' if you have access and prefer it
+        model: 'gpt-image-1',
         prompt: prompt,
-        n: 1, // Number of images to generate
-        size: '1024x1024', // Or other supported sizes like '256x256', '512x512', '1024x1792', '1792x1024' for DALL-E 3
-        response_format: 'url', // We want the URL of the generated image
+        n: 1,
+        size: '1536x1024', // Updated to landscape size
+        quality: 'high',
+        // Note: response_format is not needed for gpt-image-1 as it always returns base64
       }),
     });
 
@@ -41,14 +42,17 @@ export async function POST(request: Request) {
 
     const data = await response.json();
     
-    // Assuming DALL-E returns data in the format: { created: number, data: [{ url: string }, ...] }
-    const imageUrl = data?.data?.[0]?.url;
+    // gpt-image-1 returns data in the format: { created: number, data: [{ b64_json: string }, ...] }
+    const imageBase64 = data?.data?.[0]?.b64_json;
 
-    if (!imageUrl) {
-      console.error('Image URL not found in OpenAI response:', data);
-      return NextResponse.json({ error: 'Image URL not found in response' }, { status: 500 });
+    if (!imageBase64) {
+      console.error('Image data not found in OpenAI response:', data);
+      return NextResponse.json({ error: 'Image data not found in response' }, { status: 500 });
     }
 
+    // Convert base64 to a data URL the frontend can use directly
+    const imageUrl = `data:image/png;base64,${imageBase64}`;
+    
     return NextResponse.json({ imageUrl });
 
   } catch (error) {
