@@ -1,7 +1,8 @@
 "use client"; // Added directive for client component
 
+import React, { useState, useEffect } from "react"; // Added useEffect, useState
 import { Button } from "@/components/ui/button";
-import { Menu as MenuIcon, Sparkles, Zap, Rocket } from "lucide-react";
+import { Menu as MenuIcon, Sparkles, Zap, Rocket, LogIn, LayoutDashboard } from "lucide-react"; // Added LogIn, LayoutDashboard
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -14,13 +15,15 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
-import React from "react";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { PricingSection, type CreativePricingTier as PricingSectionTierType } from "@/components/landing/PricingSection";
 import { FAQSection } from "@/components/landing/FAQSection";
 import { FooterSection } from "@/components/landing/FooterSection";
+
+import { createSupabaseClient } from "@/lib/supabase/client"; // Import Supabase client
+import type { Session } from "@supabase/supabase-js"; // Import Session type
 
 // Component for list items in navigation dropdown
 const ListItem = React.forwardRef<
@@ -64,6 +67,30 @@ export interface CreativePricingTier {
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const supabase = createSupabaseClient();
+
+  useEffect(() => {
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      setLoading(false);
+    };
+    getSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        // If loading was true and we get a session (or null), it means initial check is done.
+        if (loading) setLoading(false);
+      }
+    );
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, [supabase, loading]); // Added loading to dependency array to ensure setLoading(false) is called correctly after initial check
 
   const howItWorksSteps = [
     {
@@ -169,38 +196,55 @@ export default function Home() {
     },
   ];
 
+  // Skip rendering anything until session check is complete to avoid flash of wrong buttons
+  // if (loading) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center bg-background grainy-background">
+  //       <p>Loading...</p> {/* Or a more sophisticated global loader if you have one */}
+  //     </div>
+  //   );
+  // }
+
   return (
     <div className="min-h-screen bg-background relative grainy-background hero-backdrop-circle-container">
-      {/* Modified Header */}
       <header className="h-[90px]">
         <div className="w-full px-10 flex h-full items-center justify-between">
-          {/* Logo */}
           <div className="flex items-center">
-            <Link href="#" className="flex items-center">
-              <Image src="/ytza-logo.png" alt="YTZA Logo" width={140} height={44} className="object-contain" />
+            <Link href="/" className="flex items-center"> {/* Changed to Link to root for consistency */}
+              <Image src="/ytza-logo.jpeg" alt="YTZA Logo" width={140} height={44} className="object-contain" />
             </Link>
           </div>
 
-          {/* Auth Buttons Desktop - Simplified */}
+          {/* Auth Buttons Desktop - Conditional Rendering */}
           <div className="flex items-center space-x-2">
-            <Button
-              asChild
-              variant="ghost"
-              className="rounded-lg border-2 border-black bg-white hover:bg-gray-100 text-black px-5 text-base font-medium h-[44px] shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px]"
-            >
-              <Link href="/auth">Log in</Link>
-            </Button>
-            <Button
-              asChild
-              className="rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-5 text-base font-medium h-[44px] shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px]"
-            >
-              <Link href="/auth">Start for free</Link>
-            </Button>
+            {session ? (
+              <Button
+                asChild
+                className="rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-5 text-base font-medium h-[44px] shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] flex items-center gap-2"
+              >
+                <Link href="/dashboard"><LayoutDashboard size={18} /> Go to Dashboard</Link>
+              </Button>
+            ) : (
+              <>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="rounded-lg border-2 border-black bg-white hover:bg-gray-100 text-black px-5 text-base font-medium h-[44px] shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] flex items-center gap-2"
+                >
+                  <Link href="/auth"><LogIn size={18}/> Log in</Link>
+                </Button>
+                <Button
+                  asChild
+                  className="rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-5 text-base font-medium h-[44px] shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] flex items-center gap-2"
+                >
+                  <Link href="/auth"><Sparkles size={18}/> Start for free</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
 
-      {/* Remove padding from main content */}
       <main>
         <HeroSection />
         <HowItWorksSection steps={howItWorksSteps} />
