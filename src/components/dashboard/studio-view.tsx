@@ -5,6 +5,7 @@ import { ThumbnailStyleSelector } from "@/components/dashboard/thumbnail-style-s
 import { AIChatInput } from "@/components/dashboard/ai-chat-input";
 import { VideoDescriptionInput } from "@/components/dashboard/video-description-input";
 import { VideoDetailsPanel } from "@/components/dashboard/video-details-panel";
+import { YouTubePreviewGrid } from "@/components/dashboard/youtube-preview-grid";
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface StudioViewProps {
@@ -29,6 +30,20 @@ export function StudioView({
     description: string;
     tags: string[];
   } | undefined>(undefined);
+
+  // Get thumbnail style image path based on the selected style
+  const getThumbnailStylePath = (styleId: string | null) => {
+    if (!styleId) return "/placeholder-thumbnail.jpg";
+    
+    const stylePathMap: Record<string, string> = {
+      'beast-style': '/thumbnail-styles/01-beast-style.png',
+      'minimalist-style': '/thumbnail-styles/02-minimalist-style.png',
+      'cinematic-style': '/thumbnail-styles/03-cinematic-style.png',
+      'clickbait-style': '/thumbnail-styles/04-clickbait-style.jpg',
+    };
+    
+    return stylePathMap[styleId] || "/placeholder-thumbnail.jpg";
+  };
 
   // Notify parent component when details panel state changes
   useEffect(() => {
@@ -86,6 +101,8 @@ export function StudioView({
     }
   };
 
+  const thumbnailStylePath = getThumbnailStylePath(selectedThumbnailStyle);
+
   return (
     <div className="relative w-full">
       <AnimatePresence mode="wait">
@@ -132,10 +149,21 @@ export function StudioView({
         )}
       </AnimatePresence>
       
+      {/* YouTube preview grid that shows when details panel is open */}
+      <YouTubePreviewGrid 
+        isVisible={isDetailsPanelOpen}
+        thumbnailStyleImagePath={thumbnailStylePath}
+        title={generatedData?.title || 'Your Video Title'}
+        description={generatedData?.description || 'Your video description will appear here.'}
+        tags={generatedData?.tags || []}
+      />
+
+      {/* Video details panel */}
       <VideoDetailsPanel 
         isOpen={isDetailsPanelOpen} 
         onClose={handleCloseDetailsPanel}
         data={generatedData}
+        thumbnailStyleImagePath={thumbnailStylePath}
       />
     </div>
   );
