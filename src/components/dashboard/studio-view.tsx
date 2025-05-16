@@ -72,23 +72,9 @@ export function StudioView({
     });
     setIsDetailsPanelOpen(true); // Open panel so it can show its loading state
 
-    // Construct the prompt
-    const prompt = `Create a high-quality YouTube thumbnail for a video about: "${videoDescription}".
-
-Style: ${selectedThumbnailStyle.replace('-style', '')}
-Resolution: 1024x1024
-Purpose: Attract viewers and increase click-through rate
-
-Design requirements:
-- Create a visually striking, eye-catching composition with bold colors
-- Include relevant imagery that represents the video topic
-- Maintain clear visual hierarchy with a focal point
-- Ensure any text or elements are easily readable at small sizes
-- Use dramatic lighting and depth to create visual interest
-- Make it look professional and polished
-- Avoid cluttered compositions - keep it clean but impactful
-
-The thumbnail should look professional, be visually appealing, and make viewers want to click.`;
+    // Generate a style-specific structured prompt
+    const structuredPrompt = generateThumbnailPrompt(videoDescription, selectedThumbnailStyle);
+    console.log('[Structured Prompt]', structuredPrompt); // Log for debugging
 
     try {
       const response = await fetch('/api/generate-thumbnail', {
@@ -96,7 +82,7 @@ The thumbnail should look professional, be visually appealing, and make viewers 
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt: structuredPrompt }),
       });
 
       if (!response.ok) {
@@ -110,7 +96,7 @@ The thumbnail should look professional, be visually appealing, and make viewers 
       // Update generatedData with the new AI image URL and final title
       setGeneratedData({
         thumbnail: result.imageUrl, // Use the new AI image URL
-        title: `${selectedThumbnailStyle} Video: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
+        title: `${selectedThumbnailStyle.replace('-style', '')} Video: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
         description: videoDescription,
         tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
       });
@@ -133,6 +119,209 @@ The thumbnail should look professional, be visually appealing, and make viewers 
     } finally {
       setIsLoading(false);
     }
+  };
+
+  /**
+   * Generates a structured, detailed prompt for thumbnail generation based on the video description and selected style
+   */
+  const generateThumbnailPrompt = (description: string, style: string): string => {
+    // Extract key subjects and themes from the description
+    const keyThemes = extractKeyThemes(description);
+    
+    switch(style) {
+      case 'beast-style':
+        return generateBeastStylePrompt(description, keyThemes);
+      case 'minimalist-style':
+        return generateMinimalistStylePrompt(description, keyThemes);
+      case 'cinematic-style':
+        return generateCinematicStylePrompt(description, keyThemes);
+      case 'clickbait-style':
+        return generateClickbaitStylePrompt(description, keyThemes);
+      default:
+        return generateBeastStylePrompt(description, keyThemes); // Default to beast style
+    }
+  };
+
+  /**
+   * Extracts key themes, subjects, and elements from the video description
+   */
+  const extractKeyThemes = (description: string): {
+    mainSubject: string;
+    action: string;
+    setting: string;
+    mood: string;
+  } => {
+    // This is a simple implementation - in a production app, you might use NLP or more sophisticated parsing
+    const words = description.toLowerCase().split(/\s+/);
+    
+    // Extract potential subjects (nouns)
+    const subjects = words.filter(word => 
+      !['the', 'a', 'an', 'and', 'or', 'but', 'for', 'with', 'in', 'on', 'at', 'to', 'from'].includes(word)
+    );
+    
+    return {
+      mainSubject: subjects[0] || 'person',
+      action: subjects[1] || 'demonstrating',
+      setting: subjects[2] || 'environment',
+      mood: description.includes('exciting') || description.includes('amazing') ? 'excited' : 
+            description.includes('calm') || description.includes('peaceful') ? 'calm' : 'intense'
+    };
+  };
+
+  /**
+   * Generates a detailed prompt for Beast Style thumbnails following specific format guidelines
+   */
+  const generateBeastStylePrompt = (description: string, themes: any): string => {
+    return `Create a hyper-realistic, ultra high-definition YouTube thumbnail for a video about: "${description}"
+
+COMPOSITION:
+- Use rule of thirds with the main subject positioned for maximum impact
+- Create depth with foreground subjects sharply detailed against a slightly blurred background
+- Ensure clean, uncluttered composition that immediately draws the eye to key elements
+- Create visual tension and energy through dynamic positioning of elements
+
+SUBJECTS & EXPRESSIONS:
+- Feature subjects with exaggerated, intense facial expressions showing extreme emotion
+- Emphasize wide eyes, open mouths, or expressions of shock/excitement/determination
+- Add details like sweat, dirt, or texture that enhance realism and intensity
+- Position subjects in dynamic, mid-action poses that suggest movement and energy
+
+VISUAL TREATMENT:
+- Use extremely saturated, vibrant colors with high contrast combinations
+- Implement dramatic lighting with bold highlights and deep shadows
+- Add rim lighting to separate subjects clearly from backgrounds
+- Create a color palette that evokes intensity: electric blues, vibrant greens, fiery reds
+
+STORYTELLING ELEMENTS:
+- Capture a "one-second story" that instantly communicates high stakes or drama
+- Include subtle mystery elements or visual questions that provoke curiosity
+- Suggest conflict, challenge, or extraordinary circumstances
+- Make the image scream "YOU HAVE TO CLICK THIS!"
+
+TECHNICAL SPECIFICATIONS:
+- Render in extremely high definition with crisp, sharp details
+- Add subtle effects like light flares or particles to enhance production value
+- Ensure high contrast ratio between elements for maximum visual impact
+- Create a polished, professional final image with clean edges and defined surfaces
+
+The thumbnail should be eye-catching, somewhat over-the-top, and instantly communicate the excitement of: "${description}"`;
+  };
+
+  /**
+   * Generates a detailed prompt for Minimalist Style thumbnails
+   */
+  const generateMinimalistStylePrompt = (description: string, themes: any): string => {
+    return `Create a clean, minimalist YouTube thumbnail for a video about: "${description}"
+
+COMPOSITION:
+- Use generous negative space to create a calm, focused composition
+- Place minimal elements with intentional, precise positioning
+- Follow principles of balance and simplicity with careful alignment
+- Employ subtle asymmetry to create visual interest without clutter
+
+SUBJECTS & EXPRESSIONS:
+- Feature a single, iconic representation of the main subject
+- If including people, show neutral or subtle expressions rather than exaggerated ones
+- Use simplified shapes and forms that represent the subject's essence
+- Avoid busy details in favor of clean, recognizable silhouettes
+
+VISUAL TREATMENT:
+- Apply a restrained color palette of 2-4 colors maximum
+- Use flat, solid color areas rather than complex gradients
+- Incorporate subtle textures only where necessary for depth
+- Employ high contrast between foreground and background elements
+
+STORYTELLING ELEMENTS:
+- Communicate the concept through elegant symbolism rather than literal representation
+- Use visual metaphors that distill the video's message to its essence
+- Create intrigue through what is left out rather than what is shown
+- Design the image to appeal to a sophisticated, thoughtful audience
+
+TECHNICAL SPECIFICATIONS:
+- Render with crisp, clean edges and perfect geometry
+- Use precise alignment and mathematical spacing between elements
+- Ensure consistent line weights and shape treatment throughout
+- Create a polished final image that feels intentional and designed rather than photographed
+
+The thumbnail should be elegant, sophisticated, and instantly communicate the essence of: "${description}"`;
+  };
+
+  /**
+   * Generates a detailed prompt for Cinematic Style thumbnails
+   */
+  const generateCinematicStylePrompt = (description: string, themes: any): string => {
+    return `Create a professional, cinematic YouTube thumbnail for a video about: "${description}"
+
+COMPOSITION:
+- Use widescreen, film-like framing with letterbox aesthetics
+- Implement the cinematic rule of thirds with strategic subject placement
+- Create multiple layers of depth with foreground, midground, and background elements
+- Design with dramatic perspective and sightlines that draw the viewer in
+
+SUBJECTS & EXPRESSIONS:
+- Feature subjects with nuanced, emotional expressions that tell a story
+- Capture the "decisive moment" that suggests what happened before and after
+- Position characters in relation to each other to suggest narrative
+- Use posture and body language to convey tension or emotional states
+
+VISUAL TREATMENT:
+- Apply cinematic color grading with complementary color theory (teal/orange works well)
+- Create atmospheric elements like fog, smoke, or light rays for depth
+- Use dramatic, directional lighting that creates mood and shapes subjects
+- Include subtle lens effects like bokeh, flares, or vignetting
+
+STORYTELLING ELEMENTS:
+- Suggest a complete narrative moment that makes viewers want to know more
+- Create visual intrigue that promises an emotional or intellectual journey
+- Include subtle details that reward closer inspection
+- Make the image feel like a still from a high-budget film production
+
+TECHNICAL SPECIFICATIONS:
+- Render with film-like quality including subtle grain texture
+- Implement perfect depth of field with foreground/background separation
+- Add cinematic aspect ratio framing (2.35:1 or similar widescreen format)
+- Create a polished final image with excellent dynamic range and shadow detail
+
+The thumbnail should look like a frame from a professional film and instantly communicate the drama of: "${description}"`;
+  };
+
+  /**
+   * Generates a detailed prompt for Clickbait Style thumbnails
+   */
+  const generateClickbaitStylePrompt = (description: string, themes: any): string => {
+    return `Create an attention-grabbing, clickbait YouTube thumbnail for a video about: "${description}"
+
+COMPOSITION:
+- Design with bold visual hierarchy that immediately communicates excitement
+- Use asymmetrical composition with strategic empty space for text (though don't add text)
+- Position elements to create maximum impact and visual surprise
+- Create a layout that feels energetic, immediate, and slightly chaotic
+
+SUBJECTS & EXPRESSIONS:
+- Feature subjects with extremely exaggerated emotions - shock, surprise, excitement
+- Include open-mouthed expressions, wide eyes, and pointing gestures
+- Position subjects to break the fourth wall, looking or pointing directly at viewer
+- Use body language that suggests something amazing just happened or is about to happen
+
+VISUAL TREATMENT:
+- Apply oversaturated, candy-colored palette with high contrast
+- Add subtle graphic elements like arrows, circles, or highlight effects
+- Use bright, flat lighting that shows everything clearly
+- Incorporate slight warping or exaggeration effects for added impact
+
+STORYTELLING ELEMENTS:
+- Create a "what just happened?!" moment that demands investigation
+- Suggest extreme consequences, unexpected revelations, or dramatic discoveries
+- Design to trigger curiosity, FOMO, or emotional response
+- Make the viewer feel they absolutely must know what happens next
+
+TECHNICAL SPECIFICATIONS:
+- Render with crystal clarity and maximum brightness
+- Add subtle motion-blur elements to suggest action and excitement
+- Use perfectly sharp focus on key emotional elements like faces
+- Create a hyper-real final image with slightly enhanced textures and details
+
+The thumbnail should be irresistibly clickable and instantly make viewers need to know more about: "${description}"`;
   };
 
   const handleCloseDetailsPanel = () => {
