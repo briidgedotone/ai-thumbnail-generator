@@ -64,6 +64,23 @@ export default function AuthPage() {
     setLoading(false);
   };
 
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError(null);
+    const { error: googleSignInError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`, // Important: Callback URL
+      },
+    });
+
+    if (googleSignInError) {
+      setError(googleSignInError.message);
+      setLoading(false);
+    }
+    // No setLoading(false) here if successful, as the user will be redirected to Google.
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Left Column */}
@@ -168,6 +185,7 @@ export default function AuthPage() {
                   variant="outline"
                   className="w-full rounded-lg border-2 border-black bg-white text-black px-5 text-base font-medium shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] h-10 flex items-center justify-center"
                   disabled={loading}
+                  onClick={handleGoogleSignIn}
                 >
                   <span className="mr-2 font-bold">G</span> Login with Google
                 </Button>
@@ -248,6 +266,7 @@ export default function AuthPage() {
                   variant="outline"
                   className="w-full rounded-lg border-2 border-black bg-white text-black px-5 text-base font-medium shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] h-10 flex items-center justify-center"
                   disabled={loading}
+                  onClick={handleGoogleSignIn}
                 >
                   <span className="mr-2 font-bold">G</span> Sign up with Google
                 </Button>

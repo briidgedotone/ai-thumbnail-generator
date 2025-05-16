@@ -31,11 +31,10 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public files (images, etc.)
+     * - ytza-logo.jpeg (logo file)
+     * - images/ (other images)
+     * - auth/callback (OAuth callback route)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|ytza-logo.png|images/).*)',
-    // We explicitly want to run on /auth and /dashboard routes.
-    // The above negative lookahead will match them.
-    // If it were too broad, we could list them: '/dashboard/:path*', '/auth'
+    '/((?!api|_next/static|_next/image|favicon.ico|ytza-logo.jpeg|images/|auth/callback).*)',
   ],
 } 
