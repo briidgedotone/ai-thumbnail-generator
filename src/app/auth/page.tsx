@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { ArrowRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { createSupabaseClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function AuthPage() {
   const [isLoginView, setIsLoginView] = useState(true);
@@ -19,6 +19,14 @@ export default function AuthPage() {
 
   const supabase = createSupabaseClient();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const oauthErrorDescription = searchParams.get('error_description');
+    if (oauthErrorDescription) {
+      setError(oauthErrorDescription);
+    }
+  }, [searchParams, router]);
 
   const toggleView = () => {
     setIsLoginView(!isLoginView);
@@ -165,7 +173,11 @@ const handleGoogleSignIn = async () => {
                       Forgot Password?
                     </Link>
                   </div>
-                  {error && <p className="text-sm text-red-600">{error}</p>}
+                  {error && (
+                    <p className="text-sm text-red-700 bg-red-100 p-3 rounded-lg border border-red-300">
+                      {error}
+                    </p>
+                  )}
                   <Button
                     type="submit"
                     className="w-full rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-5 text-base font-medium shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] h-10 flex items-center justify-center"
@@ -246,7 +258,11 @@ const handleGoogleSignIn = async () => {
                       disabled={loading}
                     />
                   </div>
-                  {error && <p className="text-sm text-red-600">{error}</p>}
+                  {error && (
+                    <p className="text-sm text-red-700 bg-red-100 p-3 rounded-lg border border-red-300">
+                      {error}
+                    </p>
+                  )}
                   <Button
                     type="submit"
                     className="w-full rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-5 text-base font-medium shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] h-10 flex items-center justify-center"

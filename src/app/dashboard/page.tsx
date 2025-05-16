@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 // import { ChatInput } from "@/components/ui/chat-input"; // No longer needed directly here
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles as GenerateIcon, UploadCloud as UploadIcon, Palette, LayoutGrid, LogOut, SettingsIcon } from "lucide-react";
+import { Sparkles as GenerateIcon, UploadCloud as UploadIcon, Palette, LayoutGrid, LogOut, SettingsIcon, Loader2 } from "lucide-react";
 import Avatar from 'boring-avatars'; // Added import for Boring Avatars
 import { cn } from "@/lib/utils";
 import { useTextareaResize } from "@/hooks/use-textarea-resize";
@@ -243,8 +243,10 @@ export default function DashboardPage() {
 
   if (isLoadingUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background grainy-background">
-        <p>Loading dashboard...</p> {/* Or a spinner component */}
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background grainy-background text-gray-700">
+        <Loader2 className="h-12 w-12 animate-spin text-[#FF0000] mb-4" /> 
+        <p className="text-lg font-medium">Loading Dashboard...</p>
+        <p className="text-sm text-gray-500">Please wait a moment.</p>
       </div>
     );
   }
