@@ -61,7 +61,6 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({
 };
 
 interface YouTubePreviewGridProps {
-  isVisible: boolean;
   thumbnailStyleImagePath: string;
   title: string;
   description: string;
@@ -69,7 +68,6 @@ interface YouTubePreviewGridProps {
 }
 
 export function YouTubePreviewGrid({
-  isVisible,
   thumbnailStyleImagePath,
   title,
   description,
@@ -98,8 +96,6 @@ export function YouTubePreviewGrid({
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
   };
-
-  if (!isVisible) return null;
 
   return (
     <motion.div

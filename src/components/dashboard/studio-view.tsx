@@ -106,7 +106,23 @@ export function StudioView({
   return (
     <div className="relative w-full">
       <AnimatePresence mode="wait">
-        {!isDetailsPanelOpen && (
+        {isDetailsPanelOpen && generatedData ? (
+          <motion.div
+            key="youtubePreview"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            transition={{ type: "spring", stiffness: 250, damping: 25, duration: 0.4 }}
+            className="w-full" // This will now occupy the resized main content area
+          >
+            <YouTubePreviewGrid
+              thumbnailStyleImagePath={thumbnailStylePath}
+              title={generatedData.title}
+              description={generatedData.description}
+              tags={generatedData.tags}
+            />
+          </motion.div>
+        ) : (
           <motion.div 
             key="mainContent"
             initial={{ opacity: 0, x: -30 }}
@@ -149,21 +165,11 @@ export function StudioView({
         )}
       </AnimatePresence>
       
-      {/* YouTube preview grid that shows when details panel is open */}
-      <YouTubePreviewGrid 
-        isVisible={isDetailsPanelOpen}
-        thumbnailStyleImagePath={thumbnailStylePath}
-        title={generatedData?.title || 'Your Video Title'}
-        description={generatedData?.description || 'Your video description will appear here.'}
-        tags={generatedData?.tags || []}
-      />
-
-      {/* Video details panel */}
+      {/* Video details panel remains fixed and will appear alongside the resized content */}
       <VideoDetailsPanel 
         isOpen={isDetailsPanelOpen} 
         onClose={handleCloseDetailsPanel}
         data={generatedData}
-        thumbnailStyleImagePath={thumbnailStylePath}
       />
     </div>
   );

@@ -410,7 +410,11 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       {/* Main Dashboard Content Area */}
-      <div className="max-w-3xl w-full flex flex-col items-stretch">
+      <div className={cn(
+        "max-w-3xl w-full flex flex-col items-stretch",
+        "transition-[margin-right] duration-400 ease-in-out",
+        isDetailsPanelOpen ? "mr-[450px]" : "mr-0"
+      )}>
         {activeView === 'studio' ? (
           <StudioView 
             selectedThumbnailStyle={selectedThumbnailStyle}
