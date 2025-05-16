@@ -401,7 +401,10 @@ export default function DashboardPage() {
 
       <SettingsModal 
         isOpen={isSettingsModalOpen}
-        onClose={handleCloseSettings} 
+        onClose={handleCloseSettings}
+        userName={userName}
+        userEmail={userEmail}
+        avatarName={avatarName}
       />
 
     </div>

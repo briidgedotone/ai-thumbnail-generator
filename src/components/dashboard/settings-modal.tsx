@@ -10,23 +10,45 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { User, Shield, Gem, CreditCard, CheckCircle, Calendar, ChevronRight, Lock, KeyRound, Mail, CircleAlert } from "lucide-react";
+import { User, Shield, Gem, CreditCard, CheckCircle, Calendar, ChevronRight, Lock, KeyRound, Mail, CircleAlert, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Avatar from 'boring-avatars';
+import { createSupabaseClient } from "@/lib/supabase/client";
+import { Toaster, toast } from "sonner";
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  userName: string | null;
+  userEmail: string | null;
+  avatarName: string;
 }
 
 type SettingsTab = "general" | "security" | "subscription";
 
-export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+export function SettingsModal({ 
+  isOpen, 
+  onClose, 
+  userName: initialUserName,
+  userEmail: initialUserEmail,
+  avatarName 
+}: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>("general");
   
-  // General tab states
-  const [name, setName] = useState("John Doe");
-  const [email, setEmail] = useState("john.doe@example.com");
+  const [nameInput, setNameInput] = useState(initialUserName || "");
+  const [emailInput, setEmailInput] = useState(initialUserEmail || "");
+
+  // New states for save operation
+  const [isSaving, setIsSaving] = useState(false);
+
+  const supabase = createSupabaseClient();
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setNameInput(initialUserName || "");
+      setEmailInput(initialUserEmail || "");
+    }
+  }, [initialUserName, initialUserEmail, isOpen]);
   
   // Security tab states
   const [currentPassword, setCurrentPassword] = useState("");
@@ -60,6 +82,66 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     alert("Password reset instructions sent to your email address.");
   };
 
+  const handleSaveChanges = async () => {
+    setIsSaving(true);
+    let nameUpdateSuccess = false;
+    let emailUpdateAttempted = false;
+    let emailUpdateRequiresConfirmation = false;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Could not identify user. Please log in again.");
+      setIsSaving(false);
+      return;
+    }
+
+    let accumulatedErrors: string[] = [];
+    let accumulatedSuccessMessages: string[] = [];
+
+    if (nameInput.trim() !== (initialUserName || "")) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ full_name: nameInput.trim() })
+        .eq('id', user.id);
+      if (profileError) {
+        accumulatedErrors.push(`Failed to update name: ${profileError.message}`);
+      } else {
+        nameUpdateSuccess = true;
+        accumulatedSuccessMessages.push("Name updated successfully.");
+      }
+    }
+
+    if (emailInput.trim() !== (initialUserEmail || "")) {
+      emailUpdateAttempted = true;
+      const { error: emailError } = await supabase.auth.updateUser({
+        email: emailInput.trim()
+      });
+      if (emailError) {
+        accumulatedErrors.push(`Failed to update email: ${emailError.message}`);
+      } else {
+        emailUpdateRequiresConfirmation = true;
+        accumulatedSuccessMessages.push("Confirmation email sent to verify your new email address.");
+      }
+    }
+
+    if (accumulatedErrors.length > 0) {
+      toast.error(accumulatedErrors.join("\n"));
+    }
+    
+    if (accumulatedSuccessMessages.length > 0 && accumulatedErrors.length === 0) {
+      toast.success(accumulatedSuccessMessages.join(" "));
+    } else if (accumulatedSuccessMessages.length > 0 && accumulatedErrors.length > 0) {
+      toast.info(`Partial success: ${accumulatedSuccessMessages.join(" ")} (but some errors occurred)`);
+    }
+    
+    if (!nameUpdateSuccess && !emailUpdateAttempted && !emailUpdateRequiresConfirmation && accumulatedErrors.length === 0 && accumulatedSuccessMessages.length === 0) {
+       if (nameInput.trim() === (initialUserName || "") && emailInput.trim() === (initialUserEmail || "")) {
+        toast.info("No changes detected.");
+      }
+    }
+    setIsSaving(false);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "general":
@@ -74,15 +156,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <div className="relative mr-6">
                 <Avatar
                   size={80}
-                  name="User SessionID"
+                  name={avatarName}
                   variant="beam" 
                   colors={['#FF8C00', '#FFA500', '#FFD700', '#FF4500', '#FF6347']}
                 />
               </div>
               
               <div className="flex-1 space-y-1">
-                <p className="text-xl font-bold text-gray-900">{name}</p>
-                <p className="text-md text-gray-600">{email}</p>
+                <p className="text-xl font-bold text-gray-900">{initialUserName || "User Name"}</p>
+                <p className="text-md text-gray-600">{initialUserEmail || "user@example.com"}</p>
               </div>
             </div>
             
@@ -93,9 +175,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </label>
                 <Input 
                   id="name" 
-                  value={name} 
-                  onChange={(e) => setName(e.target.value)} 
+                  value={nameInput} 
+                  onChange={(e) => setNameInput(e.target.value)} 
                   className="w-full border-2 border-gray-300 rounded-xl h-12 px-4 focus:border-pink-500 focus:ring-pink-500 shadow-sm transition-colors"
+                  placeholder={initialUserName || "Enter your full name"}
                 />
               </div>
               
@@ -106,16 +189,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <Input 
                   id="email" 
                   type="email" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
+                  value={emailInput} 
+                  onChange={(e) => setEmailInput(e.target.value)} 
                   className="w-full border-2 border-gray-300 rounded-xl h-12 px-4 focus:border-pink-500 focus:ring-pink-500 shadow-sm transition-colors"
+                  placeholder={initialUserEmail || "Enter your email address"}
                 />
               </div>
             </div>
             
             <div className="mt-8">
-              <Button className="rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-6 py-3 font-medium h-12 shadow-[2px_2px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[4px_4px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px]">
-                Save Changes
+              <Button 
+                onClick={handleSaveChanges}
+                disabled={isSaving}
+                className="rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-6 py-3 font-medium h-12 shadow-[2px_2px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[4px_4px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] flex items-center justify-center w-full sm:w-auto"
+              >
+                {isSaving ? (
+                  <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Saving...</>
+                ) : (
+                  "Save Changes"
+                )}
               </Button>
             </div>
           </div>
