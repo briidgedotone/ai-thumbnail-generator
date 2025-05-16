@@ -64,22 +64,23 @@ export default function AuthPage() {
     setLoading(false);
   };
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    setError(null);
-    const { error: googleSignInError } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`, // Important: Callback URL
-      },
-    });
+const handleGoogleSignIn = async () => {
+  setLoading(true);
+  setError(null);
+  const { error: googleSignInError } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+     redirectTo: new URL('/auth/callback', window.location.origin).toString(),
+    },
+  });
 
-    if (googleSignInError) {
-      setError(googleSignInError.message);
-      setLoading(false);
-    }
-    // No setLoading(false) here if successful, as the user will be redirected to Google.
-  };
+  if (googleSignInError) {
+    setError(googleSignInError.message);
+    setLoading(false);
+   return;
+  }
+ // User will be redirected to Google OAuth page, so we don't need to handle navigation here
+};
 
   return (
     <div className="flex min-h-screen bg-background">

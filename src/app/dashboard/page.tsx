@@ -88,10 +88,16 @@ export default function DashboardPage() {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false); // New state for profile dropdown
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false); // New state for settings modal
 
-  const profileDropdownRef = useRef<HTMLDivElement>(null);
+  // New state for user information
+  const [userName, setUserName] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [avatarName, setAvatarName] = useState<string>("User"); // For boring-avatars, default
+  const [isLoadingUser, setIsLoadingUser] = useState(true); // Still true by default for initial load
 
-  const supabase = createSupabaseClient(); // Create Supabase client instance
-  const router = useRouter(); // Get router instance
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const supabase = createSupabaseClient();
+  const router = useRouter();
+  const isMounted = useRef(false); // To track if component has mounted
 
   // handleChatSubmit is removed as the new component handles its own submission/logic.
 
@@ -135,15 +141,9 @@ export default function DashboardPage() {
   };
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    setIsProfileDropdownOpen(false); // Close dropdown regardless of outcome
-
-    if (error) {
-      console.error("Error logging out:", error.message);
-      // Optionally, display a toast notification or a small error message to the user here
-    } else {
-      router.push("/auth"); // Redirect to auth page on successful logout
-    }
+    await supabase.auth.signOut();
+    // onAuthStateChange will handle the redirect to /auth and state cleanup
+    setIsProfileDropdownOpen(false); 
   };
 
   // Close dropdown when clicking outside
@@ -166,6 +166,88 @@ export default function DashboardPage() {
   };
 
   const creditPercentage = totalCredits > 0 ? (currentCredits / totalCredits) * 100 : 0;
+
+  useEffect(() => {
+    isMounted.current = true; // Set to true on mount
+
+    const fetchUserData = async (isBackgroundRefresh = false) => {
+      // Only show full page loader on initial load, not on background refreshes
+      if (!isBackgroundRefresh && isMounted.current) {
+        setIsLoadingUser(true);
+      }
+
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        console.error("Error fetching user or no user session:", userError?.message);
+        if (isMounted.current) { // Prevent state updates if unmounted
+          router.push('/auth');
+        }
+        return;
+      }
+
+      // Proceed with setting user data only if component is still mounted
+      if (!isMounted.current) return;
+
+      setUserEmail(user.email || "No email found");
+      setAvatarName(user.email || user.id);
+
+      if (user.id) {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+        
+        if (!isMounted.current) return; // Check again before setting state
+
+        if (profileError && profileError.code !== 'PGRST116') {
+          console.error("Error fetching profile:", profileError.message);
+          setUserName(user.email?.split('@')[0] || "User");
+        } else if (profile && profile.full_name) {
+          setUserName(profile.full_name);
+        } else {
+          setUserName(user.email?.split('@')[0] || "User");
+        }
+      } else {
+        setUserName(user.email?.split('@')[0] || "User");
+      }
+      
+      if (isMounted.current) {
+        setIsLoadingUser(false); // Stop loading indicator
+      }
+    };
+
+    // Initial fetch
+    fetchUserData();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!isMounted.current) return; // Don't do anything if component unmounted
+
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        // For these events, treat as a background refresh if user data already exists
+        fetchUserData(!!userEmail); // Pass true if userEmail exists, indicating a background refresh
+      } else if (event === 'SIGNED_OUT') {
+        setUserName(null);
+        setUserEmail(null);
+        setAvatarName("User");
+        router.push('/auth');
+      }
+    });
+
+    return () => {
+      isMounted.current = false; // Set to false on unmount
+      authListener?.subscription.unsubscribe();
+    };
+  }, [supabase, router, userEmail]); // Added userEmail to dependencies to control isBackgroundRefresh correctly
+
+  if (isLoadingUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background grainy-background">
+        <p>Loading dashboard...</p> {/* Or a spinner component */}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background relative grainy-background dashboard-backdrop-circle-container flex flex-col items-center justify-center px-4 pt-24 pb-8">
@@ -257,7 +339,7 @@ export default function DashboardPage() {
           >
             <Avatar
               size={44} // Avatar size to fill the div
-              name="User SessionID" 
+              name={avatarName} // Use dynamic avatarName
               variant="beam" 
               colors={['#FF8C00', '#FFA500', '#FFD700', '#FF4500', '#FF6347']} 
             />
@@ -274,10 +356,10 @@ export default function DashboardPage() {
             >
               <div className="px-4 py-3">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  User Name
+                  {userName || "User Name"} {/* Display fetched user name */}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
-                  user@example.com
+                  {userEmail || "user@example.com"} {/* Display fetched user email */}
                 </p>
               </div>
               <div className="h-px bg-gray-200/70 my-1"></div>
