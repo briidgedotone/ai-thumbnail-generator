@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { X, Download, Copy, Tag, Loader2, Eye, Maximize } from "lucide-react";
+import { X, Download, Copy, Tag, Loader2, Eye, Maximize, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface VideoDetailsPanelProps {
@@ -27,6 +27,11 @@ export function VideoDetailsPanel({ isOpen, onClose, data, isLoading = false }: 
   
   // State for thumbnail preview modal
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  
+  // States for copy feedback
+  const [titleCopied, setTitleCopied] = useState(false);
+  const [descriptionCopied, setDescriptionCopied] = useState(false);
+  const [tagsCopied, setTagsCopied] = useState(false);
 
   // Function to download the thumbnail
   const handleDownload = () => {
@@ -39,6 +44,19 @@ export function VideoDetailsPanel({ isOpen, onClose, data, isLoading = false }: 
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+  
+  // Function to copy text with feedback
+  const copyToClipboard = async (text: string, setCopied: (copied: boolean) => void) => {
+    if (!text) return;
+    
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
   };
 
   // Animation variants
@@ -197,6 +215,7 @@ export function VideoDetailsPanel({ isOpen, onClose, data, isLoading = false }: 
                 <h3 className="text-sm font-medium text-gray-500 mb-2.5 flex items-center">
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-2"></span>
                   Video Title
+                  {isLoading && <Loader2 className="h-3 w-3 ml-2 animate-spin text-indigo-500" />}
                 </h3>
                 <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                   <p className="font-medium text-gray-900">{data?.title || placeholderTitle}</p>
@@ -205,13 +224,18 @@ export function VideoDetailsPanel({ isOpen, onClose, data, isLoading = false }: 
                       variant="ghost" 
                       size="sm" 
                       className="text-xs text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 flex items-center gap-1 transition-colors"
-                      onClick={() => {
-                        if (data?.title) {
-                          navigator.clipboard.writeText(data.title);
-                        }
-                      }}
+                      onClick={() => copyToClipboard(data?.title || '', setTitleCopied)}
+                      disabled={!data?.title || titleCopied}
                     >
-                      <Copy size={14} /> Copy
+                      {titleCopied ? (
+                        <>
+                          <Check size={14} className="text-green-500" /> Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={14} /> Copy
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -222,21 +246,29 @@ export function VideoDetailsPanel({ isOpen, onClose, data, isLoading = false }: 
                 <h3 className="text-sm font-medium text-gray-500 mb-2.5 flex items-center">
                   <span className="w-1.5 h-1.5 rounded-full bg-pink-500 mr-2"></span>
                   Video Description
+                  {isLoading && <Loader2 className="h-3 w-3 ml-2 animate-spin text-pink-500" />}
                 </h3>
                 <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-gray-700 text-sm leading-relaxed">{data?.description || placeholderDescription}</p>
+                  <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
+                    {data?.description || placeholderDescription}
+                  </div>
                   <div className="flex justify-end mt-3">
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       className="text-xs text-gray-600 hover:text-pink-600 hover:bg-pink-50 flex items-center gap-1 transition-colors"
-                      onClick={() => {
-                        if (data?.description) {
-                          navigator.clipboard.writeText(data.description);
-                        }
-                      }}
+                      onClick={() => copyToClipboard(data?.description || '', setDescriptionCopied)}
+                      disabled={!data?.description || descriptionCopied}
                     >
-                      <Copy size={14} /> Copy
+                      {descriptionCopied ? (
+                        <>
+                          <Check size={14} className="text-green-500" /> Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={14} /> Copy
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -247,6 +279,7 @@ export function VideoDetailsPanel({ isOpen, onClose, data, isLoading = false }: 
                 <h3 className="text-sm font-medium text-gray-500 mb-2.5 flex items-center">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2"></span>
                   Video Tags
+                  {isLoading && <Loader2 className="h-3 w-3 ml-2 animate-spin text-amber-500" />}
                 </h3>
                 <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex flex-wrap gap-2 mb-3">
@@ -265,13 +298,18 @@ export function VideoDetailsPanel({ isOpen, onClose, data, isLoading = false }: 
                       variant="ghost" 
                       size="sm" 
                       className="text-xs text-gray-600 hover:text-amber-600 hover:bg-amber-50 flex items-center gap-1 transition-colors"
-                      onClick={() => {
-                        if (data?.tags && data.tags.length > 0) {
-                          navigator.clipboard.writeText(data.tags.join(', '));
-                        }
-                      }}
+                      onClick={() => data?.tags && copyToClipboard(data.tags.join(', '), setTagsCopied)}
+                      disabled={!data?.tags || data.tags.length === 0 || tagsCopied}
                     >
-                      <Copy size={14} /> Copy All
+                      {tagsCopied ? (
+                        <>
+                          <Check size={14} className="text-green-500" /> Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={14} /> Copy All
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
