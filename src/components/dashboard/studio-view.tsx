@@ -7,6 +7,7 @@ import { VideoDescriptionInput } from "@/components/dashboard/video-description-
 import { VideoDetailsPanel } from "@/components/dashboard/video-details-panel";
 import { YouTubePreviewGrid } from "@/components/dashboard/youtube-preview-grid";
 import { motion, AnimatePresence } from 'framer-motion';
+import nlp from 'compromise';
 
 interface StudioViewProps {
   selectedThumbnailStyle: string | null;
@@ -14,6 +15,17 @@ interface StudioViewProps {
   videoDescription: string;
   onVideoDescriptionChange: (value: string) => void;
   onDetailsPanelStateChange?: (isOpen: boolean) => void;
+}
+
+// Define a proper interface for the extracted themes
+interface ExtractedThemes {
+  mainSubject: string;
+  action: string;
+  setting: string;
+  mood: string;
+  topics: string[];
+  adjectives: string[];
+  hasPriceComparison: boolean;
 }
 
 export function StudioView({
@@ -55,7 +67,7 @@ export function StudioView({
     }
   }, [isDetailsPanelOpen, onDetailsPanelStateChange]);
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent, thumbnailText?: string, textStyle?: string) => {
     if (e) e.preventDefault();
     if (videoDescription.trim() === '' || !selectedThumbnailStyle) return;
 
@@ -72,8 +84,8 @@ export function StudioView({
     });
     setIsDetailsPanelOpen(true); // Open panel so it can show its loading state
 
-    // Generate a style-specific structured prompt
-    const structuredPrompt = generateThumbnailPrompt(videoDescription, selectedThumbnailStyle);
+    // Generate a style-specific structured prompt, now with text overlay if provided
+    const structuredPrompt = generateThumbnailPrompt(videoDescription, selectedThumbnailStyle, thumbnailText, textStyle);
     console.log('[Structured Prompt]', structuredPrompt); // Log for debugging
 
     try {
@@ -122,206 +134,427 @@ export function StudioView({
   };
 
   /**
-   * Generates a structured, detailed prompt for thumbnail generation based on the video description and selected style
+   * Extracts key themes, subjects, and elements from the video description
+   * using NLP to better understand the content
    */
-  const generateThumbnailPrompt = (description: string, style: string): string => {
-    // Extract key subjects and themes from the description
-    const keyThemes = extractKeyThemes(description);
+  const extractKeyThemes = (description: string): ExtractedThemes => {
+    // Process the description with compromise.js
+    const doc = nlp(description);
     
-    switch(style) {
-      case 'beast-style':
-        return generateBeastStylePrompt(description, keyThemes);
-      case 'minimalist-style':
-        return generateMinimalistStylePrompt(description, keyThemes);
-      case 'cinematic-style':
-        return generateCinematicStylePrompt(description, keyThemes);
-      case 'clickbait-style':
-        return generateClickbaitStylePrompt(description, keyThemes);
-      default:
-        return generateBeastStylePrompt(description, keyThemes); // Default to beast style
+    // Extract nouns (potential subjects)
+    const nouns = doc.nouns().out('array');
+    
+    // Extract verbs (potential actions)
+    const verbs = doc.verbs().out('array');
+    const verbBase = verbs.length > 0 ? 
+      doc.verbs().toInfinitive().out('array')[0] : 'demonstrating';
+    
+    // Extract adjectives (descriptions, qualities)
+    const adjectives = doc.adjectives().out('array');
+    
+    // Extract places (potential settings)
+    const places = doc.places().out('array');
+    
+    // Determine the mood based on more sophisticated analysis
+    const sentiments = {
+      positive: ['amazing', 'exciting', 'awesome', 'great', 'incredible', 'excellent', 'fantastic'],
+      negative: ['terrible', 'awful', 'bad', 'horrible', 'disappointing'],
+      calm: ['peaceful', 'calm', 'relaxing', 'gentle', 'soothing', 'quiet'],
+      intense: ['extreme', 'intense', 'dramatic', 'powerful', 'strong', 'epic']
+    };
+    
+    // Detect the overall mood
+    let detectedMood = 'neutral';
+    
+    // Check for sentiments in both adjectives and the full description
+    if (adjectives.some((adj: string) => sentiments.positive.includes(adj.toLowerCase()))) {
+      detectedMood = 'positive';
+    } else if (adjectives.some((adj: string) => sentiments.negative.includes(adj.toLowerCase()))) {
+      detectedMood = 'negative';
+    } else if (adjectives.some((adj: string) => sentiments.calm.includes(adj.toLowerCase()))) {
+      detectedMood = 'calm';
+    } else if (adjectives.some((adj: string) => sentiments.intense.includes(adj.toLowerCase()))) {
+      detectedMood = 'intense';
     }
+    
+    // Check the full description if no mood detected in adjectives
+    if (detectedMood === 'neutral') {
+      for (const mood in sentiments) {
+        if (sentiments[mood as keyof typeof sentiments].some(term => 
+          description.toLowerCase().includes(term))) {
+          detectedMood = mood;
+          break;
+        }
+      }
+    }
+    
+    // Extract topics (important terms not covered by other categories)
+    const topics = doc.topics().out('array');
+    
+    // Extract hashtags if they exist
+    const hashtags = description.match(/#\w+/g) || [];
+    
+    // Get a main subject - prefer topics, then nouns
+    const mainSubject = topics.length > 0 ? topics[0] : 
+                       nouns.length > 0 ? nouns[0] : 'content';
+                       
+    // Get a setting - prefer places, then look for setting-like words
+    const settingWords = ['room', 'house', 'outside', 'indoor', 'outdoor', 'studio', 'kitchen'];
+    const settingNoun = nouns.find((noun: string) => 
+      settingWords.some((setting: string) => noun.toLowerCase().includes(setting))
+    );
+    
+    const setting = places.length > 0 ? places[0] : 
+                   settingNoun || 'environment';
+
+    // Check for price/value comparisons that might suggest MrBeast-style comparisons
+    const pricePattern = /\$\d+\s*(?:vs\.?|versus)\s*\$\d+|\d+\s*(?:vs\.?|versus)\s*\d+|\$\d+\s*(?:to)\s*\$\d+|\d+\s*(?:day|days|hour|hours)/i;
+    const hasPriceComparison = pricePattern.test(description);
+    
+    return {
+      mainSubject,
+      action: verbBase,
+      setting,
+      mood: detectedMood,
+      topics: [...topics, ...hashtags.map(tag => tag.substring(1))], // Remove # from hashtags
+      adjectives,
+      hasPriceComparison
+    };
   };
 
   /**
-   * Extracts key themes, subjects, and elements from the video description
+   * Generates a structured, detailed prompt for thumbnail generation based on the video description and selected style
    */
-  const extractKeyThemes = (description: string): {
-    mainSubject: string;
-    action: string;
-    setting: string;
-    mood: string;
-  } => {
-    // This is a simple implementation - in a production app, you might use NLP or more sophisticated parsing
-    const words = description.toLowerCase().split(/\s+/);
+  const generateThumbnailPrompt = (
+    description: string, 
+    style: string,
+    thumbnailText?: string,
+    textStyle?: string
+  ): string => {
+    // Extract key subjects and themes from the description
+    const keyThemes = extractKeyThemes(description);
     
-    // Extract potential subjects (nouns)
-    const subjects = words.filter(word => 
-      !['the', 'a', 'an', 'and', 'or', 'but', 'for', 'with', 'in', 'on', 'at', 'to', 'from'].includes(word)
-    );
+    // Generate base style prompt
+    let prompt: string;
+    switch(style) {
+      case 'beast-style':
+        prompt = generateBeastStylePrompt(description, keyThemes);
+        break;
+      case 'minimalist-style':
+        prompt = generateMinimalistStylePrompt(description, keyThemes);
+        break;
+      case 'cinematic-style':
+        prompt = generateCinematicStylePrompt(description, keyThemes);
+        break;
+      case 'clickbait-style':
+        prompt = generateClickbaitStylePrompt(description, keyThemes);
+        break;
+      default:
+        prompt = generateBeastStylePrompt(description, keyThemes); // Default to beast style
+    }
     
-    return {
-      mainSubject: subjects[0] || 'person',
-      action: subjects[1] || 'demonstrating',
-      setting: subjects[2] || 'environment',
-      mood: description.includes('exciting') || description.includes('amazing') ? 'excited' : 
-            description.includes('calm') || description.includes('peaceful') ? 'calm' : 'intense'
-    };
+    // Add special MrBeast comparison guidance if price comparison is detected
+    if (keyThemes.hasPriceComparison && style === 'beast-style') {
+      prompt += `\n\nVALUE COMPARISON GUIDANCE:
+- This appears to be a thumbnail comparing values, prices, or timeframes
+- Consider using a split-screen layout with clear division between the two sides
+- Make the numerical values prominent (like $1 vs $1000, Day 1 vs Day 30)
+- Use stark visual contrast between the sides (dull/bright, poor/luxurious, etc.)
+- Match facial expressions to each side - serious/concerned on the low value side, excited/happy on the high value side
+- Add visual cues that enhance the comparison (worn objects vs new shiny objects, etc.)`;
+    }
+    
+    // Add text overlay instructions if provided
+    if (thumbnailText && textStyle) {
+      const textOverlayPrompt = generateTextOverlayPrompt(thumbnailText, textStyle);
+      prompt += '\n\n' + textOverlayPrompt;
+    }
+    
+    return prompt;
+  };
+
+  /**
+   * Generates specific instructions for text overlay based on the style
+   */
+  const generateTextOverlayPrompt = (text: string, style: string): string => {
+    let styleInstructions = '';
+    
+    switch(style) {
+      case 'Bold White':
+        styleInstructions = 'large, bold white text with a thick black outline or drop shadow for maximum readability against any background - similar to popular YouTuber styles';
+        break;
+      case 'Bold Yellow':
+        styleInstructions = 'large, bold yellow text with a heavy black outline that pops against any background - similar to top YouTube creators';
+        break;
+      case 'Minimalist':
+        styleInstructions = 'clean, thin sans-serif text in white with subtle spacing between characters';
+        break;
+      case 'Pixel':
+        styleInstructions = 'retro pixel-style text that resembles classic video games, with a blocky appearance';
+        break;
+      case 'Calligraphy':
+        styleInstructions = 'elegant handwritten calligraphy style that appears flowing and artistic';
+        break;
+      case 'Cute':
+        styleInstructions = 'playful, rounded letters with a cheerful appearance, possibly in pastel colors';
+        break;
+      default:
+        styleInstructions = 'clear, readable text that contrasts with the background';
+    }
+    
+    return `TEXT OVERLAY INSTRUCTIONS:
+- Add the following text to the thumbnail: "${text}"
+- Style the text using ${style} typography: ${styleInstructions}
+- Position the text where it will have maximum impact and readability
+- If text includes numbers (like "$1M" or "Day 30"), make them especially prominent and large
+- For comparison thumbnails, position text to clearly label each side (left/right)
+- Text should be extremely legible, even at small thumbnail sizes
+- The text should be a focal point and integrate harmoniously with the overall design
+
+IMPORTANT EXPRESSION NOTE:
+- Avoid the default "shocked face with wide eyes and open mouth" expression unless the content specifically requires it
+- Use facial expressions that genuinely match the video content's emotional tone
+- Consider a range of authentic emotions: focused, determined, thoughtful, amused, confident, or curious`;
+  };
+
+  /**
+   * Creates a structured prompt template that all style generators can use
+   */
+  interface PromptSection {
+    composition: string[];
+    subjects: string[];
+    visualTreatment: string[];
+    storytelling: string[];
+    technical: string[];
+    styleAdjective: string;
+    styleNoun: string;
+  }
+
+  const createPromptFromTemplate = (
+    description: string, 
+    themes: ExtractedThemes, 
+    styleTitle: string,
+    promptSection: PromptSection
+  ): string => {
+    return `Create a ${styleTitle} YouTube thumbnail for a video about: "${description}"
+
+FACIAL EXPRESSION GUIDANCE:
+- Important: Avoid defaulting to shocked/surprised expressions with wide eyes and open mouths
+- Choose facial expressions that genuinely match the content's emotional tone and purpose
+- Consider a diverse range of authentic emotions appropriate to the subject matter
+
+COMPOSITION:
+${promptSection.composition.map(item => `- ${item}`).join('\n')}
+
+SUBJECTS & EXPRESSIONS:
+${promptSection.subjects.map(item => `- ${item}`).join('\n')}
+
+VISUAL TREATMENT:
+${promptSection.visualTreatment.map(item => `- ${item}`).join('\n')}
+
+STORYTELLING ELEMENTS:
+${promptSection.storytelling.map(item => `- ${item}`).join('\n')}
+
+TECHNICAL SPECIFICATIONS:
+${promptSection.technical.map(item => `- ${item}`).join('\n')}
+
+KEY ELEMENTS FROM VIDEO:
+- Main subject: ${themes.mainSubject}
+- Action: ${themes.action}
+- Setting: ${themes.setting}
+- Mood: ${themes.mood}
+- Key descriptors: ${themes.adjectives.slice(0, 3).join(', ')}
+- Topics: ${themes.topics.slice(0, 3).join(', ')}
+
+The thumbnail should be ${promptSection.styleAdjective} and instantly communicate the ${promptSection.styleNoun} of: "${description}"`;
   };
 
   /**
    * Generates a detailed prompt for Beast Style thumbnails following specific format guidelines
    */
-  const generateBeastStylePrompt = (description: string, themes: any): string => {
-    return `Create a hyper-realistic, ultra high-definition YouTube thumbnail for a video about: "${description}"
+  const generateBeastStylePrompt = (description: string, themes: ExtractedThemes): string => {
+    const beastStylePrompt: PromptSection = {
+      composition: [
+        "Consider using a split-screen or before/after comparison layout that shows contrast (expensive vs cheap, day 1 vs day 30, etc.)",
+        "Use rule of thirds with the main subject positioned for maximum impact, adapting as needed for the specific content",
+        "Create clean, professional compositions with clear subject focus and minimal distracting elements",
+        "Consider YouTube's display format, keeping essential elements within the central viewing area for both mobile and desktop"
+      ],
+      subjects: [
+        "Feature subjects with emotions that match the video's content - avoid defaulting to shocked expressions unless specifically appropriate",
+        "For human subjects, use a diverse range of authentic emotions like joy, concentration, determination, curiosity, or thoughtfulness",
+        "If showing a person, frame them from mid-chest up to maximize emotional connection and recognition",
+        "Position subjects to directly engage the viewer, looking toward the camera when appropriate"
+      ],
+      visualTreatment: [
+        "Use vibrant, contrasting colors - particularly bold yellows, reds, blues - that grab attention while remaining appropriate to the subject",
+        "Implement dramatic lighting with bold highlights and deep shadows to create visual hierarchy",
+        "Consider stark color contrast between different sides if using a split-screen layout",
+        "Use lighting techniques to direct attention to the most important elements in the composition"
+      ],
+      storytelling: [
+        "Include bold numerical values or price points when relevant ($1 vs $1M, Day 1 vs Day 30, etc.)",
+        "Create a clear visual story that instantly communicates what the video is about",
+        "Design to stand out when displayed alongside competing videos in search results and recommendations",
+        "Balance drama and authenticity - make it eye-catching without feeling misleading"
+      ],
+      technical: [
+        "Render with excellent clarity and detail that remains legible even at smaller display sizes",
+        "Use clean, professional editing with sharp edges and defined borders between elements",
+        "Ensure strong visual contrast between elements to maintain impact at any scale",
+        "Create a polished, professional image that feels intentional and high-quality"
+      ],
+      styleAdjective: "eye-catching, professional",
+      styleNoun: "content"
+    };
 
-COMPOSITION:
-- Use rule of thirds with the main subject positioned for maximum impact
-- Create depth with foreground subjects sharply detailed against a slightly blurred background
-- Ensure clean, uncluttered composition that immediately draws the eye to key elements
-- Create visual tension and energy through dynamic positioning of elements
-
-SUBJECTS & EXPRESSIONS:
-- Feature subjects with exaggerated, intense facial expressions showing extreme emotion
-- Emphasize wide eyes, open mouths, or expressions of shock/excitement/determination
-- Add details like sweat, dirt, or texture that enhance realism and intensity
-- Position subjects in dynamic, mid-action poses that suggest movement and energy
-
-VISUAL TREATMENT:
-- Use extremely saturated, vibrant colors with high contrast combinations
-- Implement dramatic lighting with bold highlights and deep shadows
-- Add rim lighting to separate subjects clearly from backgrounds
-- Create a color palette that evokes intensity: electric blues, vibrant greens, fiery reds
-
-STORYTELLING ELEMENTS:
-- Capture a "one-second story" that instantly communicates high stakes or drama
-- Include subtle mystery elements or visual questions that provoke curiosity
-- Suggest conflict, challenge, or extraordinary circumstances
-- Make the image scream "YOU HAVE TO CLICK THIS!"
-
-TECHNICAL SPECIFICATIONS:
-- Render in extremely high definition with crisp, sharp details
-- Add subtle effects like light flares or particles to enhance production value
-- Ensure high contrast ratio between elements for maximum visual impact
-- Create a polished, professional final image with clean edges and defined surfaces
-
-The thumbnail should be eye-catching, somewhat over-the-top, and instantly communicate the excitement of: "${description}"`;
+    return createPromptFromTemplate(
+      description, 
+      themes, 
+      "high-impact, attention-grabbing",
+      beastStylePrompt
+    );
   };
 
   /**
    * Generates a detailed prompt for Minimalist Style thumbnails
    */
-  const generateMinimalistStylePrompt = (description: string, themes: any): string => {
-    return `Create a clean, minimalist YouTube thumbnail for a video about: "${description}"
+  const generateMinimalistStylePrompt = (description: string, themes: ExtractedThemes): string => {
+    const minimalistStylePrompt: PromptSection = {
+      composition: [
+        "Use strategic negative space to create a clean, focused composition that adapts to the content",
+        "Position elements with intentional, balanced arrangement that guides the viewer's eye",
+        "Embrace simplicity while ensuring the core message is clearly communicated",
+        "Consider how the design will appear at different scales on the YouTube platform"
+      ],
+      subjects: [
+        "Represent the subject with simplified, iconic visuals that capture its essence",
+        "If featuring people, use thoughtful, subtle expressions that convey intelligence and intentionality - avoid surprised expressions",
+        "Remove unnecessary details to focus attention on what truly matters to the content",
+        "Use simplified forms that communicate clearly even at small thumbnail sizes"
+      ],
+      visualTreatment: [
+        "Apply a thoughtful, limited color palette (2-4 colors) that creates visual harmony",
+        "Use color and contrast intentionally to highlight the most important elements",
+        "Consider using subtle textures or gradients only where they enhance understanding",
+        "Create visual hierarchy through thoughtful use of scale, weight, and positioning"
+      ],
+      storytelling: [
+        "Communicate the video's concept through elegant visual metaphors or symbols",
+        "Create intrigue through what is purposefully omitted rather than what is shown",
+        "Design for a sophisticated audience that appreciates subtlety and clarity",
+        "Ensure the thumbnail functions well in YouTube's content-dense environment"
+      ],
+      technical: [
+        "Render with precise edges and thoughtful geometry that maintains integrity at all sizes",
+        "Use careful alignment and consistent spacing between elements",
+        "Ensure consistent treatment of all visual elements (line weights, corners, etc.)",
+        "Create a refined final image that feels intentionally designed rather than accidentally simple"
+      ],
+      styleAdjective: "elegant, purposeful",
+      styleNoun: "essence"
+    };
 
-COMPOSITION:
-- Use generous negative space to create a calm, focused composition
-- Place minimal elements with intentional, precise positioning
-- Follow principles of balance and simplicity with careful alignment
-- Employ subtle asymmetry to create visual interest without clutter
-
-SUBJECTS & EXPRESSIONS:
-- Feature a single, iconic representation of the main subject
-- If including people, show neutral or subtle expressions rather than exaggerated ones
-- Use simplified shapes and forms that represent the subject's essence
-- Avoid busy details in favor of clean, recognizable silhouettes
-
-VISUAL TREATMENT:
-- Apply a restrained color palette of 2-4 colors maximum
-- Use flat, solid color areas rather than complex gradients
-- Incorporate subtle textures only where necessary for depth
-- Employ high contrast between foreground and background elements
-
-STORYTELLING ELEMENTS:
-- Communicate the concept through elegant symbolism rather than literal representation
-- Use visual metaphors that distill the video's message to its essence
-- Create intrigue through what is left out rather than what is shown
-- Design the image to appeal to a sophisticated, thoughtful audience
-
-TECHNICAL SPECIFICATIONS:
-- Render with crisp, clean edges and perfect geometry
-- Use precise alignment and mathematical spacing between elements
-- Ensure consistent line weights and shape treatment throughout
-- Create a polished final image that feels intentional and designed rather than photographed
-
-The thumbnail should be elegant, sophisticated, and instantly communicate the essence of: "${description}"`;
+    return createPromptFromTemplate(
+      description, 
+      themes, 
+      "clean, minimalist",
+      minimalistStylePrompt
+    );
   };
 
   /**
    * Generates a detailed prompt for Cinematic Style thumbnails
    */
-  const generateCinematicStylePrompt = (description: string, themes: any): string => {
-    return `Create a professional, cinematic YouTube thumbnail for a video about: "${description}"
+  const generateCinematicStylePrompt = (description: string, themes: ExtractedThemes): string => {
+    const cinematicStylePrompt: PromptSection = {
+      composition: [
+        "Frame the scene with cinematic proportions that adapt to YouTube's format while suggesting a wider film aspect ratio",
+        "Use cinematic principles of framing and composition that best complement the subject matter",
+        "Create a sense of depth with distinct foreground, midground, and background elements",
+        "Design with intentional perspective and sightlines that draw viewers into the scene"
+      ],
+      subjects: [
+        "Present subjects with authentic emotional expressions that fit the narrative tone - prioritize nuanced, cinematically appropriate emotions",
+        "Capture a compelling moment that suggests an entire story around it - avoid default shock expressions in favor of emotionally rich alternatives",
+        "Consider spatial relationships between elements to suggest narrative connections",
+        "Use body language, positioning, and expressions to convey depth of character and emotional complexity"
+      ],
+      visualTreatment: [
+        "Apply professional-quality cinematic color grading appropriate to the content's genre",
+        "Use atmospheric elements (like fog, light rays, particles) where they enhance the mood",
+        "Implement thoughtful lighting that shapes subjects and creates appropriate atmosphere",
+        "Consider film-inspired visual effects like subtle lens artifacts that enhance realism"
+      ],
+      storytelling: [
+        "Frame a moment that implies a complete narrative and makes viewers want to see more",
+        "Create visual intrigue suggesting an emotional or intellectual journey within the video",
+        "Include thoughtful details that reward closer inspection and suggest production value",
+        "Ensure the thumbnail conveys the genre and tone of the video's content"
+      ],
+      technical: [
+        "Render with film-like quality including appropriate texture for the content",
+        "Use thoughtful depth of field to direct attention to key elements",
+        "Apply cinematic aspect ratio treatments that work within YouTube's container format",
+        "Create an image with excellent dynamic range and shadow detail that works across devices"
+      ],
+      styleAdjective: "cinematically compelling",
+      styleNoun: "story"
+    };
 
-COMPOSITION:
-- Use widescreen, film-like framing with letterbox aesthetics
-- Implement the cinematic rule of thirds with strategic subject placement
-- Create multiple layers of depth with foreground, midground, and background elements
-- Design with dramatic perspective and sightlines that draw the viewer in
-
-SUBJECTS & EXPRESSIONS:
-- Feature subjects with nuanced, emotional expressions that tell a story
-- Capture the "decisive moment" that suggests what happened before and after
-- Position characters in relation to each other to suggest narrative
-- Use posture and body language to convey tension or emotional states
-
-VISUAL TREATMENT:
-- Apply cinematic color grading with complementary color theory (teal/orange works well)
-- Create atmospheric elements like fog, smoke, or light rays for depth
-- Use dramatic, directional lighting that creates mood and shapes subjects
-- Include subtle lens effects like bokeh, flares, or vignetting
-
-STORYTELLING ELEMENTS:
-- Suggest a complete narrative moment that makes viewers want to know more
-- Create visual intrigue that promises an emotional or intellectual journey
-- Include subtle details that reward closer inspection
-- Make the image feel like a still from a high-budget film production
-
-TECHNICAL SPECIFICATIONS:
-- Render with film-like quality including subtle grain texture
-- Implement perfect depth of field with foreground/background separation
-- Add cinematic aspect ratio framing (2.35:1 or similar widescreen format)
-- Create a polished final image with excellent dynamic range and shadow detail
-
-The thumbnail should look like a frame from a professional film and instantly communicate the drama of: "${description}"`;
+    return createPromptFromTemplate(
+      description, 
+      themes, 
+      "professional, cinematic",
+      cinematicStylePrompt
+    );
   };
 
   /**
    * Generates a detailed prompt for Clickbait Style thumbnails
    */
-  const generateClickbaitStylePrompt = (description: string, themes: any): string => {
-    return `Create an attention-grabbing, clickbait YouTube thumbnail for a video about: "${description}"
+  const generateClickbaitStylePrompt = (description: string, themes: ExtractedThemes): string => {
+    const clickbaitStylePrompt: PromptSection = {
+      composition: [
+        "Design with a bold, attention-grabbing layout that immediately draws the eye",
+        "Organize elements to create maximum visual impact while remaining clear on different devices",
+        "Use strategic empty space that accommodates text while keeping the main subject prominent",
+        "Create a composition that stands out in YouTube's crowded recommendation feeds"
+      ],
+      subjects: [
+        "Feature subjects with varied emotional expressions beyond just shock/surprise - use curiosity, amazement, focus, or enthusiasm",
+        "Consider diverse poses and expressions that create interest without defaulting to the standard surprised open-mouth look",
+        "Position subjects to break the fourth wall when appropriate, creating direct connection with natural expressions",
+        "Use dynamic body language that suggests action, reaction, or authentic emotional response suited to the content"
+      ],
+      visualTreatment: [
+        "Use bright, attention-grabbing colors that pop against YouTube's interface",
+        "Apply strategic color contrast to emphasize key elements and create visual hierarchy",
+        "Consider strategic graphic elements (arrows, highlights, etc.) where they enhance understanding",
+        "Implement lighting that creates drama and directs attention to the most important elements"
+      ],
+      storytelling: [
+        "Create a visual moment that generates immediate curiosity about what happens in the video",
+        "Suggest something surprising, unexpected, or impressive that encourages clicking",
+        "Balance engaging 'clickability' with authentic representation of the actual content",
+        "Design to trigger viewer interest while accurately representing what they'll find in the video"
+      ],
+      technical: [
+        "Render with high clarity and excellent detail that works at all YouTube display sizes",
+        "Use subtle motion effects or dynamic elements where appropriate to suggest action",
+        "Ensure perfect focus on the key emotional or narrative elements",
+        "Create a polished final image with enhanced details that feels professionally produced"
+      ],
+      styleAdjective: "instantly intriguing",
+      styleNoun: "curiosity"
+    };
 
-COMPOSITION:
-- Design with bold visual hierarchy that immediately communicates excitement
-- Use asymmetrical composition with strategic empty space for text (though don't add text)
-- Position elements to create maximum impact and visual surprise
-- Create a layout that feels energetic, immediate, and slightly chaotic
-
-SUBJECTS & EXPRESSIONS:
-- Feature subjects with extremely exaggerated emotions - shock, surprise, excitement
-- Include open-mouthed expressions, wide eyes, and pointing gestures
-- Position subjects to break the fourth wall, looking or pointing directly at viewer
-- Use body language that suggests something amazing just happened or is about to happen
-
-VISUAL TREATMENT:
-- Apply oversaturated, candy-colored palette with high contrast
-- Add subtle graphic elements like arrows, circles, or highlight effects
-- Use bright, flat lighting that shows everything clearly
-- Incorporate slight warping or exaggeration effects for added impact
-
-STORYTELLING ELEMENTS:
-- Create a "what just happened?!" moment that demands investigation
-- Suggest extreme consequences, unexpected revelations, or dramatic discoveries
-- Design to trigger curiosity, FOMO, or emotional response
-- Make the viewer feel they absolutely must know what happens next
-
-TECHNICAL SPECIFICATIONS:
-- Render with crystal clarity and maximum brightness
-- Add subtle motion-blur elements to suggest action and excitement
-- Use perfectly sharp focus on key emotional elements like faces
-- Create a hyper-real final image with slightly enhanced textures and details
-
-The thumbnail should be irresistibly clickable and instantly make viewers need to know more about: "${description}"`;
+    return createPromptFromTemplate(
+      description, 
+      themes, 
+      "attention-grabbing, engaging",
+      clickbaitStylePrompt
+    );
   };
 
   const handleCloseDetailsPanel = () => {
@@ -330,12 +563,17 @@ The thumbnail should be irresistibly clickable and instantly make viewers need t
   };
 
   const handleChatSubmit = (prompt: string, thumbnailText?: string, textStyle?: string) => {
+    // Update the video description
     onVideoDescriptionChange(prompt);
-    setTimeout(() => {
+    
+    // Only proceed with submission if a style is selected
       if (selectedThumbnailStyle) {
-        handleSubmit();
-      }
-    }, 100);
+      // Use the updated description in a new event loop to ensure state is updated
+      Promise.resolve().then(() => {
+        // Pass the text and style parameters to handleSubmit
+        handleSubmit(undefined, thumbnailText, textStyle);
+      });
+    }
   };
 
   const mainContentVariants = {

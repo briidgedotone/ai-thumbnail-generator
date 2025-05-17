@@ -14,8 +14,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
   }
 
+  // Check if the prompt includes text overlay instructions
+  const hasTextOverlay = prompt.includes('TEXT OVERLAY INSTRUCTIONS');
+  
   console.log('[API Route] Generating image with prompt:', prompt);
-  console.log('[API Route] Model: gpt-image-1, Size: 1536x1024'); // Log updated model and size
+  console.log('[API Route] Model: gpt-image-1, Size: 1536x1024'); 
+  if (hasTextOverlay) {
+    console.log('[API Route] Text overlay detected in prompt');
+  }
 
   try {
     const response = await fetch('https://api.openai.com/v1/images/generations', {
