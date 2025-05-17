@@ -1,15 +1,94 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
+import Image from "next/image";
+import { createSupabaseClient } from "@/lib/supabase/client";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function AuthPage() {
   const [isLoginView, setIsLoginView] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const toggleView = () => setIsLoginView(!isLoginView);
+  const supabase = createSupabaseClient();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const oauthErrorDescription = searchParams.get('error_description');
+    if (oauthErrorDescription) {
+      setError(oauthErrorDescription);
+    }
+  }, [searchParams, router]);
+
+  const toggleView = () => {
+    setIsLoginView(!isLoginView);
+    setError(null);
+    setEmail("");
+    setPassword("");
+    setFullName("");
+  };
+
+  const handleAuthAction = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    if (isLoginView) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        setError(signInError.message);
+      } else {
+        router.push("/dashboard");
+      }
+    } else {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
+      });
+
+      if (signUpError) {
+        setError(signUpError.message);
+      } else {
+        router.push("/dashboard");
+      }
+    }
+    setLoading(false);
+  };
+
+const handleGoogleSignIn = async () => {
+  setLoading(true);
+  setError(null);
+  const { error: googleSignInError } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+     redirectTo: new URL('/auth/callback', window.location.origin).toString(),
+    },
+  });
+
+  if (googleSignInError) {
+    setError(googleSignInError.message);
+    setLoading(false);
+   return;
+  }
+ // User will be redirected to Google OAuth page, so we don't need to handle navigation here
+};
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -17,8 +96,8 @@ export default function AuthPage() {
       <div className="flex flex-col w-full lg:w-1/2 p-8 md:p-12 lg:p-16 justify-between">
         {/* Header Nav */}
         <header className="flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-neutral-900 flex items-center">
-            ThumbnailBeast
+          <Link href="/" className="flex items-center">
+            <Image src="/ytza-logo.png" alt="YTZA Logo" width={140} height={44} className="object-contain" />
           </Link>
           <div className="flex items-center space-x-3">
             <span className="text-sm text-neutral-700">
@@ -28,6 +107,7 @@ export default function AuthPage() {
               onClick={toggleView}
               variant="outline"
               className="rounded-lg border-2 border-black bg-white hover:bg-gray-100 text-black px-5 text-sm font-medium shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] h-10"
+              disabled={loading}
             >
               {isLoginView ? "Sign Up" : "Log In"}
             </Button>
@@ -43,7 +123,7 @@ export default function AuthPage() {
                 <p className="text-neutral-600 mb-8">
                   Sign in to generate your next viral thumbnail!
                 </p>
-                <form className="space-y-6">
+                <form onSubmit={handleAuthAction} className="space-y-6">
                   <div>
                     <label htmlFor="emailLogin" className="block text-xs font-medium text-neutral-700 mb-1">
                       Email Address
@@ -54,6 +134,10 @@ export default function AuthPage() {
                       name="emailLogin"
                       placeholder="you@example.com"
                       className="w-full rounded-lg border-2 border-neutral-300 focus:border-black focus:ring-2 focus:ring-[#FF5C8D]/50 h-10 px-3"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={loading}
                     />
                   </div>
                   <div>
@@ -66,16 +150,20 @@ export default function AuthPage() {
                       name="passwordLogin"
                       placeholder="••••••••"
                       className="w-full rounded-lg border-2 border-neutral-300 focus:border-black focus:ring-2 focus:ring-[#FF5C8D]/50 h-10 px-3"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={loading}
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <input 
-                        type="checkbox" 
-                        id="rememberMe" 
-                        name="rememberMe" 
-                        defaultChecked 
+                      <input
+                        type="checkbox"
+                        id="rememberMe"
+                        name="rememberMe"
                         className="h-4 w-4 text-[#FF0000] border-neutral-300 rounded focus:ring-[#FF5C8D]/50 custom-checkbox"
+                        disabled={loading}
                       />
                       <label htmlFor="rememberMe" className="ml-2 block text-sm text-neutral-700">
                         Remember me
@@ -85,11 +173,18 @@ export default function AuthPage() {
                       Forgot Password?
                     </Link>
                   </div>
+                  {error && (
+                    <p className="text-sm text-red-700 bg-red-100 p-3 rounded-lg border border-red-300">
+                      {error}
+                    </p>
+                  )}
                   <Button
                     type="submit"
                     className="w-full rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-5 text-base font-medium shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] h-10 flex items-center justify-center"
+                    disabled={loading}
                   >
-                    Log In <ArrowRight className="ml-2 h-5 w-5" />
+                    {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Log In"}
+                    {!loading && <ArrowRight className="ml-2 h-5 w-5" />}
                   </Button>
                 </form>
 
@@ -102,6 +197,8 @@ export default function AuthPage() {
                 <Button
                   variant="outline"
                   className="w-full rounded-lg border-2 border-black bg-white text-black px-5 text-base font-medium shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] h-10 flex items-center justify-center"
+                  disabled={loading}
+                  onClick={handleGoogleSignIn}
                 >
                   <span className="mr-2 font-bold">G</span> Login with Google
                 </Button>
@@ -112,7 +209,7 @@ export default function AuthPage() {
                 <p className="text-neutral-600 mb-8">
                   Join us and start creating stunning thumbnails in seconds!
                 </p>
-                <form className="space-y-6">
+                <form onSubmit={handleAuthAction} className="space-y-6">
                   <div>
                     <label htmlFor="fullNameSignup" className="block text-xs font-medium text-neutral-700 mb-1">
                       Full Name
@@ -123,6 +220,10 @@ export default function AuthPage() {
                       name="fullNameSignup"
                       placeholder="Your Name"
                       className="w-full rounded-lg border-2 border-neutral-300 focus:border-black focus:ring-2 focus:ring-[#FF5C8D]/50 h-10 px-3"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                      disabled={loading}
                     />
                   </div>
                   <div>
@@ -135,6 +236,10 @@ export default function AuthPage() {
                       name="emailSignup"
                       placeholder="you@example.com"
                       className="w-full rounded-lg border-2 border-neutral-300 focus:border-black focus:ring-2 focus:ring-[#FF5C8D]/50 h-10 px-3"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={loading}
                     />
                   </div>
                   <div>
@@ -147,13 +252,24 @@ export default function AuthPage() {
                       name="passwordSignup"
                       placeholder="Create a strong password"
                       className="w-full rounded-lg border-2 border-neutral-300 focus:border-black focus:ring-2 focus:ring-[#FF5C8D]/50 h-10 px-3"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={loading}
                     />
                   </div>
+                  {error && (
+                    <p className="text-sm text-red-700 bg-red-100 p-3 rounded-lg border border-red-300">
+                      {error}
+                    </p>
+                  )}
                   <Button
                     type="submit"
                     className="w-full rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-5 text-base font-medium shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] h-10 flex items-center justify-center"
+                    disabled={loading}
                   >
-                    Sign Up <ArrowRight className="ml-2 h-5 w-5" />
+                    {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Sign Up"}
+                    {!loading && <ArrowRight className="ml-2 h-5 w-5" />}
                   </Button>
                 </form>
 
@@ -166,6 +282,8 @@ export default function AuthPage() {
                 <Button
                   variant="outline"
                   className="w-full rounded-lg border-2 border-black bg-white text-black px-5 text-base font-medium shadow-[3px_3px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] h-10 flex items-center justify-center"
+                  disabled={loading}
+                  onClick={handleGoogleSignIn}
                 >
                   <span className="mr-2 font-bold">G</span> Sign up with Google
                 </Button>
