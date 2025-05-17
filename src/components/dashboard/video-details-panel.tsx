@@ -245,7 +245,7 @@ export function VideoDetailsPanel({
       <AnimatePresence mode="wait">
         {isOpen && (
           <motion.div
-            className="fixed top-0 right-0 bottom-0 border-l shadow-2xl z-40 overflow-hidden backdrop-blur-md"
+            className="fixed top-0 right-0 bottom-0 border-l shadow-2xl z-40 overflow-hidden backdrop-blur-md rounded-tl-xl rounded-bl-xl"
             style={{
               backgroundColor: 'hsla(var(--card), 0.8)', // Use card color with opacity
               borderColor: 'hsl(var(--border))',
@@ -331,29 +331,27 @@ export function VideoDetailsPanel({
                     </div>
                   )}
                   {!isLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-3">
+                    <div className="absolute bottom-3 right-3 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2">
                       <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                         <Button 
                           size="icon" 
-                          variant="outline"
-                          className="rounded-md shadow-sm"
+                          className="rounded-full shadow-sm bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
                           title="Preview Thumbnail"
                           onClick={() => setIsPreviewModalOpen(true)}
                           disabled={!data?.thumbnail}
                         >
-                          <Eye size={16} />
+                          <Eye size={18} />
                         </Button>
                       </motion.div>
                       <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                         <Button 
                           size="icon" 
-                          variant="outline"
-                          className="rounded-md shadow-sm"
+                          className="rounded-full shadow-sm bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
                           title="Download Thumbnail"
                           onClick={handleDownload}
                           disabled={!data?.thumbnail}
                         >
-                          <Download size={16} />
+                          <Download size={18} />
                         </Button>
                       </motion.div>
                     </div>
@@ -626,16 +624,15 @@ export function VideoDetailsPanel({
                 className="block max-w-full max-h-[85vh] object-contain"
                 style={{ borderRadius: 'var(--radius-xl)' }}
               />
-              <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="absolute top-3 right-3 rounded-md shadow-sm"
-                  onClick={() => setIsPreviewModalOpen(false)}
-                >
-                  <X size={16} />
-                </Button>
-              </motion.div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute top-3 right-3 rounded-md shadow-sm bg-white hover:bg-gray-100 text-gray-700 cursor-pointer focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                onClick={() => setIsPreviewModalOpen(false)}
+                aria-label="Close preview"
+              >
+                <X size={18} />
+              </Button>
             </motion.div>
           </motion.div>
         )}
