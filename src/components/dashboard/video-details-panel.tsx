@@ -17,6 +17,7 @@ interface VideoDetailsPanelProps {
   };
   isLoading?: boolean;
   onRegenerate?: (contentType: 'titles' | 'descriptions' | 'tags') => Promise<void>;
+  onRegenerateImage?: () => void;
 }
 
 export function VideoDetailsPanel({ 
@@ -24,7 +25,8 @@ export function VideoDetailsPanel({
   onClose, 
   data, 
   isLoading = false,
-  onRegenerate 
+  onRegenerate,
+  onRegenerateImage
 }: VideoDetailsPanelProps) {
   // Use a placeholder thumbnail if no data is provided
   // const placeholderThumbnail = "/placeholder-thumbnail.jpg"; // Removed
@@ -354,6 +356,19 @@ export function VideoDetailsPanel({
                           <Download size={18} />
                         </Button>
                       </motion.div>
+
+                        <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                          <Button
+                            size="icon"
+                            className="rounded-full shadow-sm bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
+                            title="Regenerate Image"
+                            onClick={onRegenerateImage}
+                            disabled={!data?.thumbnail || isLoading}
+                          >
+                            <RefreshCw size={18} />
+                          </Button>
+                        </motion.div>
+
                     </div>
                   )}
                 </div>

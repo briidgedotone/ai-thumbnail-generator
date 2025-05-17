@@ -31,6 +31,9 @@ export function StudioView({
   const [aiGeneratedImageUrl, setAiGeneratedImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // State for storing text overlay parameters for regeneration
+  const [currentThumbnailText, setCurrentThumbnailText] = useState<string | undefined>(undefined);
+  const [currentTextStyle, setCurrentTextStyle] = useState<string | undefined>(undefined);
 
   // Get thumbnail style image path based on the selected style
   const getThumbnailStylePath = (styleId: string | null): string | null => {
@@ -56,6 +59,10 @@ export function StudioView({
   const handleSubmit = async (e?: React.FormEvent, thumbnailText?: string, textStyle?: string) => {
     if (e) e.preventDefault();
     if (videoDescription.trim() === '' || !selectedThumbnailStyle) return;
+
+    // Store text overlay params for potential regeneration
+    setCurrentThumbnailText(thumbnailText);
+    setCurrentTextStyle(textStyle);
 
     setIsLoading(true);
     setError(null);
@@ -248,13 +255,65 @@ export function StudioView({
     // Update the video description
     onVideoDescriptionChange(prompt);
     
+    // Store text overlay params for potential regeneration when chat initiates submission
+    setCurrentThumbnailText(thumbnailText);
+    setCurrentTextStyle(textStyle);
+
     // Only proceed with submission if a style is selected
-      if (selectedThumbnailStyle) {
+    if (selectedThumbnailStyle) {
       // Use the updated description in a new event loop to ensure state is updated
       Promise.resolve().then(() => {
         // Pass the text and style parameters to handleSubmit
         handleSubmit(undefined, thumbnailText, textStyle);
       });
+    }
+  };
+
+  // Handle regeneration of a new image using current settings
+  const handleRegenerateImage = async () => {
+    if (!videoDescription || !selectedThumbnailStyle || !generatedData) {
+      console.warn("Cannot regenerate image: missing video description, style, or existing generated data.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const structuredPrompt = await generateThumbnailPrompt(
+        videoDescription, // Current video description
+        selectedThumbnailStyle, // Current selected style
+        currentThumbnailText, // Stored thumbnail text from initial generation
+        currentTextStyle    // Stored text style from initial generation
+      );
+      console.log('[TESTING - Regenerate Image - Structured Prompt from Gemini]', structuredPrompt);
+
+      const thumbnailResponse = await fetch('/api/generate-thumbnail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: structuredPrompt }),
+      });
+
+      if (!thumbnailResponse.ok) {
+        const errorData = await thumbnailResponse.json();
+        throw new Error(errorData.error || 'Failed to regenerate image');
+      }
+
+      const thumbnailResult = await thumbnailResponse.json();
+      const newImageUrl = thumbnailResult.imageUrl;
+
+      setAiGeneratedImageUrl(newImageUrl);
+      setGeneratedData(prevData => ({
+        ...prevData!, // Assert prevData is not null due to initial check
+        thumbnail: newImageUrl || '', 
+      }));
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred during image regeneration';
+      console.error("Error during image regeneration:", errorMessage);
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -268,11 +327,12 @@ export function StudioView({
             data={generatedData}
             isLoading={isLoading}
             onRegenerate={handleRegenerateContent}
+            onRegenerateImage={handleRegenerateImage}
           />
         ) : (
           <StyleSelectionForm
             selectedThumbnailStyle={selectedThumbnailStyle}
-                onSelectStyle={onSelectStyle}
+            onSelectStyle={onSelectStyle}
             videoDescription={videoDescription}
             onVideoDescriptionChange={onVideoDescriptionChange}
             onSubmit={handleSubmit}

@@ -14,6 +14,7 @@ interface GenerationResultsProps {
   };
   isLoading: boolean;
   onRegenerate?: (contentType: 'titles' | 'descriptions' | 'tags') => Promise<void>;
+  onRegenerateImage?: () => void;
 }
 
 export function GenerationResults({
@@ -21,7 +22,8 @@ export function GenerationResults({
   onClose,
   data,
   isLoading,
-  onRegenerate
+  onRegenerate,
+  onRegenerateImage
 }: GenerationResultsProps) {
   return (
     <>
@@ -51,6 +53,7 @@ export function GenerationResults({
         data={data}
         isLoading={isLoading}
         onRegenerate={onRegenerate}
+        onRegenerateImage={onRegenerateImage}
       />
     </>
   );
