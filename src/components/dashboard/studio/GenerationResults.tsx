@@ -13,13 +13,15 @@ interface GenerationResultsProps {
     tags: string[];
   };
   isLoading: boolean;
+  onRegenerate?: (contentType: 'titles' | 'descriptions' | 'tags') => Promise<void>;
 }
 
 export function GenerationResults({
   isOpen,
   onClose,
   data,
-  isLoading
+  isLoading,
+  onRegenerate
 }: GenerationResultsProps) {
   return (
     <>
@@ -48,6 +50,7 @@ export function GenerationResults({
         onClose={onClose}
         data={data}
         isLoading={isLoading}
+        onRegenerate={onRegenerate}
       />
     </>
   );

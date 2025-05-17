@@ -63,7 +63,7 @@ export function StudioView({
 
     // Set initial generatedData for the panel to render with loading indicators
     setGeneratedData({
-      thumbnail: aiGeneratedImageUrl || getThumbnailStylePath(selectedThumbnailStyle) || '', // Use empty string if no image path yet, Image component will handle onError or show alt
+      thumbnail: getThumbnailStylePath(selectedThumbnailStyle) || '', // Use empty string if no image path yet, Image component will handle onError or show alt
       title: `Generating prompt for: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
       description: videoDescription,
       tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
@@ -187,6 +187,69 @@ export function StudioView({
     }
   };
 
+  // Handle regeneration of specific content types
+  const handleRegenerateContent = async (contentType: 'titles' | 'descriptions' | 'tags') => {
+    if (!selectedThumbnailStyle || !generatedData) return;
+    
+    try {
+      // Call the API with the specific content type to regenerate
+      const contentResponse = await fetch('/api/generate-content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          videoDescription, 
+          style: selectedThumbnailStyle,
+          contentType: contentType // Specify which content type to regenerate
+        }),
+      });
+
+      if (!contentResponse.ok) {
+        const errorData = await contentResponse.json();
+        console.warn(`Failed to regenerate ${contentType}:`, errorData.error || contentResponse.statusText);
+        return;
+      }
+
+      const contentResult = await contentResponse.json();
+      
+      if (contentResult.success) {
+        // Update only the specific content type that was regenerated
+        if (contentType === 'titles' && contentResult.titles && contentResult.titles.length > 0) {
+          // Get best title or default to first one
+          const bestTitleIndex = contentResult.bestTitle >= 0 && contentResult.bestTitle < contentResult.titles.length 
+            ? contentResult.bestTitle 
+            : 0;
+            
+          setGeneratedData({
+            ...generatedData,
+            title: contentResult.titles[bestTitleIndex]
+          });
+        } else if (contentType === 'descriptions' && contentResult.descriptions && contentResult.descriptions.length > 0) {
+          // Get best description or default to first one
+          const bestDescriptionIndex = contentResult.bestDescription >= 0 && contentResult.bestDescription < contentResult.descriptions.length 
+            ? contentResult.bestDescription 
+            : 0;
+            
+          setGeneratedData({
+            ...generatedData,
+            description: contentResult.descriptions[bestDescriptionIndex]
+          });
+        } else if (contentType === 'tags' && contentResult.tags && contentResult.tags.length > 0) {
+          setGeneratedData({
+            ...generatedData,
+            tags: contentResult.tags
+          });
+        }
+      } else {
+        console.warn(`Regeneration of ${contentType} returned success: false`);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      console.error(`Error regenerating ${contentType}:`, errorMessage);
+    }
+  };
+
   const handleCloseDetailsPanel = () => {
     // Add a small delay when closing to make the animation smoother
     setIsDetailsPanelOpen(false);
@@ -215,6 +278,7 @@ export function StudioView({
             onClose={handleCloseDetailsPanel}
             data={generatedData}
             isLoading={isLoading}
+            onRegenerate={handleRegenerateContent}
           />
         ) : (
           <StyleSelectionForm

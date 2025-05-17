@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     // Parse the request body
     const body = await request.json();
-    const { videoDescription, style } = body;
+    const { videoDescription, style, contentType } = body;
 
     if (!videoDescription) {
       return NextResponse.json(
@@ -31,46 +31,122 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Create a prompt for Gemini
-    const geminiPrompt = `
-    You are a YouTube content optimization expert. A content creator has provided a brief description of their video and needs help creating compelling titles, descriptions, and tags for maximum engagement and SEO.
+    // Create a prompt for Gemini based on contentType
+    let geminiPrompt = '';
+    
+    if (contentType === 'titles') {
+      // Prompt specialized for titles only
+      geminiPrompt = `
+      You are a YouTube content optimization expert. A content creator has provided a brief description of their video and needs help creating compelling titles for maximum engagement and SEO.
 
-    Video Description: "${videoDescription}"
-    ${style ? `Style: ${style}` : ''}
+      Video Description: "${videoDescription}"
+      ${style ? `Style: ${style}` : ''}
 
-    Please generate the following:
+      Please generate the following:
 
-    1. Five (5) engaging YouTube titles (max 100 characters each):
-    - Make them clickable but not clickbait
-    - Include relevant keywords for SEO
-    - Make them emotionally compelling
-    - If the video is a comparison, tutorial, or review, reflect that in the title
+      Five (5) engaging YouTube titles (max 100 characters each):
+      - Make them clickable but not clickbait
+      - Include relevant keywords for SEO
+      - Make them emotionally compelling
+      - If the video is a comparison, tutorial, or review, reflect that in the title
 
-    2. Five (5) optimized descriptions (max 300 characters each):
-    - Include relevant keywords naturally
-    - Add a clear call-to-action for engagement
-    - Format with paragraph breaks (use \\n for line breaks)
-    - Include hashtags at the end
+      Format your response as a valid JSON object with this exact structure:
+      {
+        "titles": ["title1", "title2", "title3", "title4", "title5"],
+        "bestTitle": 1
+      }
 
-    3. 8-12 SEO-optimized tags:
-    - Include a mix of broad and specific tags
-    - Add tags for related topics and channels
-    - Keep each tag between 1-5 words
-    - Avoid overly generic tags
+      Your response should ONLY include this JSON object, nothing else.
+      `;
+    } else if (contentType === 'descriptions') {
+      // Prompt specialized for descriptions only
+      geminiPrompt = `
+      You are a YouTube content optimization expert. A content creator has provided a brief description of their video and needs help creating compelling descriptions for maximum engagement and SEO.
 
-    4. Indicate which title and description you think is best (by number 1-5)
+      Video Description: "${videoDescription}"
+      ${style ? `Style: ${style}` : ''}
 
-    Format your response as a valid JSON object with this exact structure:
-    {
-      "titles": ["title1", "title2", "title3", "title4", "title5"],
-      "descriptions": ["desc1", "desc2", "desc3", "desc4", "desc5"],
-      "tags": ["tag1", "tag2", "tag3", etc.],
-      "bestTitle": 1,
-      "bestDescription": 1
+      Please generate the following:
+
+      Five (5) optimized descriptions (max 300 characters each):
+      - Include relevant keywords naturally
+      - Add a clear call-to-action for engagement
+      - Format with paragraph breaks (use \\n for line breaks)
+      - Include hashtags at the end
+
+      Format your response as a valid JSON object with this exact structure:
+      {
+        "descriptions": ["desc1", "desc2", "desc3", "desc4", "desc5"],
+        "bestDescription": 1
+      }
+
+      Your response should ONLY include this JSON object, nothing else.
+      `;
+    } else if (contentType === 'tags') {
+      // Prompt specialized for tags only
+      geminiPrompt = `
+      You are a YouTube content optimization expert. A content creator has provided a brief description of their video and needs help creating effective tags for maximum SEO.
+
+      Video Description: "${videoDescription}"
+      ${style ? `Style: ${style}` : ''}
+
+      Please generate the following:
+
+      8-12 SEO-optimized tags:
+      - Include a mix of broad and specific tags
+      - Add tags for related topics and channels
+      - Keep each tag between 1-5 words
+      - Avoid overly generic tags
+
+      Format your response as a valid JSON object with this exact structure:
+      {
+        "tags": ["tag1", "tag2", "tag3", etc.]
+      }
+
+      Your response should ONLY include this JSON object, nothing else.
+      `;
+    } else {
+      // Default prompt for all content types
+      geminiPrompt = `
+      You are a YouTube content optimization expert. A content creator has provided a brief description of their video and needs help creating compelling titles, descriptions, and tags for maximum engagement and SEO.
+
+      Video Description: "${videoDescription}"
+      ${style ? `Style: ${style}` : ''}
+
+      Please generate the following:
+
+      1. Five (5) engaging YouTube titles (max 100 characters each):
+      - Make them clickable but not clickbait
+      - Include relevant keywords for SEO
+      - Make them emotionally compelling
+      - If the video is a comparison, tutorial, or review, reflect that in the title
+
+      2. Five (5) optimized descriptions (max 300 characters each):
+      - Include relevant keywords naturally
+      - Add a clear call-to-action for engagement
+      - Format with paragraph breaks (use \\n for line breaks)
+      - Include hashtags at the end
+
+      3. 8-12 SEO-optimized tags:
+      - Include a mix of broad and specific tags
+      - Add tags for related topics and channels
+      - Keep each tag between 1-5 words
+      - Avoid overly generic tags
+
+      4. Indicate which title and description you think is best (by number 1-5)
+
+      Format your response as a valid JSON object with this exact structure:
+      {
+        "titles": ["title1", "title2", "title3", "title4", "title5"],
+        "descriptions": ["desc1", "desc2", "desc3", "desc4", "desc5"],
+        "tags": ["tag1", "tag2", "tag3", etc.],
+        "bestTitle": 1,
+        "bestDescription": 1
+      }
+
+      Your response should ONLY include this JSON object, nothing else.
+      `;
     }
-
-    Your response should ONLY include this JSON object, nothing else.
-    `;
 
     // Make the request to the Gemini API with retry mechanism
     let response;
@@ -163,10 +239,25 @@ export async function POST(request: NextRequest) {
       
       const contentData = JSON.parse(jsonText);
       
-      // Validate the response structure
-      if (!contentData.titles || !contentData.descriptions || !contentData.tags || 
-          !Array.isArray(contentData.titles) || !Array.isArray(contentData.descriptions) || !Array.isArray(contentData.tags)) {
-        throw new Error('Invalid response structure from Gemini API');
+      // Validate the response structure based on contentType
+      if (contentType === 'titles') {
+        if (!contentData.titles || !Array.isArray(contentData.titles)) {
+          throw new Error('Invalid response structure: missing titles array');
+        }
+      } else if (contentType === 'descriptions') {
+        if (!contentData.descriptions || !Array.isArray(contentData.descriptions)) {
+          throw new Error('Invalid response structure: missing descriptions array');
+        }
+      } else if (contentType === 'tags') {
+        if (!contentData.tags || !Array.isArray(contentData.tags)) {
+          throw new Error('Invalid response structure: missing tags array');
+        }
+      } else {
+        // For full content generation, validate all fields
+        if (!contentData.titles || !contentData.descriptions || !contentData.tags || 
+            !Array.isArray(contentData.titles) || !Array.isArray(contentData.descriptions) || !Array.isArray(contentData.tags)) {
+          throw new Error('Invalid response structure from Gemini API');
+        }
       }
 
       // Return the structured content

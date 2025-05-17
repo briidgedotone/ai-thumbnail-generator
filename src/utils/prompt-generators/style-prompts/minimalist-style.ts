@@ -14,7 +14,7 @@ export const generateMinimalistStylePrompt = async (description: string, themes:
       body: JSON.stringify({
         description,
         style: 'minimalist-style',
-        themes: JSON.stringify(themes) // Pass themes for context if Gemini needs it
+        themes // Pass themes for context if Gemini needs it
       }),
     });
 

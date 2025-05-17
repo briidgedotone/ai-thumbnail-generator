@@ -19,7 +19,7 @@ export const generateClickbaitStylePrompt = async (
         description,
         aiChatInput, // Include AI chat input
         style: 'clickbait-style',
-        themes: JSON.stringify(themes) // Pass themes for context if Gemini needs it
+        themes: themes // Pass themes for context if Gemini needs it
       }),
     });
 

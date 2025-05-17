@@ -82,7 +82,7 @@ export function useContentGeneration({
 
     // Set initial generatedData for the panel to render with loading indicators
     setGeneratedData({
-      thumbnail: aiGeneratedImageUrl || getThumbnailStylePath(selectedThumbnailStyle) || '', 
+      thumbnail: getThumbnailStylePath(selectedThumbnailStyle) || '', 
       title: `Generating prompt for: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
       description: videoDescription,
       tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),

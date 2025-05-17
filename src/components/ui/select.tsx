@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
+import { Check, ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -43,8 +43,8 @@ function SelectTrigger({
       {...props}
     >
       {children}
-      <SelectPrimitive.Icon asChild>
-        <ChevronDownIcon className="size-4 opacity-50" />
+      <SelectPrimitive.Icon className={cn("h-4 w-4", className)} {...props}>
+        <ChevronDown />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   )
@@ -67,6 +67,10 @@ function SelectContent({
           className
         )}
         position={position}
+        style={{
+          maxHeight: "var(--radix-select-content-available-height)",
+          transformOrigin: "var(--radix-select-content-transform-origin)",
+        }}
         {...props}
       >
         <SelectScrollUpButton />
@@ -114,7 +118,7 @@ function SelectItem({
     >
       <span className="absolute right-2 flex size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <CheckIcon className="size-4" />
+          <Check className="size-4" />
         </SelectPrimitive.ItemIndicator>
       </span>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
@@ -148,7 +152,7 @@ function SelectScrollUpButton({
       )}
       {...props}
     >
-      <ChevronUpIcon className="size-4" />
+      <ChevronUp className="h-4 w-4" />
     </SelectPrimitive.ScrollUpButton>
   )
 }
@@ -166,7 +170,7 @@ function SelectScrollDownButton({
       )}
       {...props}
     >
-      <ChevronDownIcon className="size-4" />
+      <ChevronDown className="h-4 w-4" />
     </SelectPrimitive.ScrollDownButton>
   )
 }

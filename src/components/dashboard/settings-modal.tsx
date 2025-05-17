@@ -82,27 +82,27 @@ export function SettingsModal({
       return;
     }
 
-    const { data: { user }, error: getUserError } = await supabase.auth.getUser();
+    const { data: verificationData, error: functionError } = await supabase.functions.invoke(
+      'verify-current-password',
+      { body: { currentPassword } }
+    );
 
-    if (getUserError || !user || !user.email) {
-      setPasswordError("Could not verify user. Please try again or re-login.");
-      toast.error("Error fetching user details. Please re-login and try again.");
+    if (functionError) {
+      console.error('Error verifying password via Edge Function:', functionError.message);
+      toast.error(functionError.message || 'Failed to verify password. Please try again.');
       setIsUpdatingPassword(false);
-      return;
+      return false;
     }
 
-    // Step 1: Verify current password by trying to sign in
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: user.email, 
-      password: currentPassword,
-    });
-
-    if (signInError) {
-      setPasswordError("Incorrect current password. Please try again.");
-      toast.error("Incorrect current password.");
+    if (!verificationData || !verificationData.success) {
+      toast.error(verificationData?.message || 'The current password you entered is incorrect.');
       setIsUpdatingPassword(false);
-      return;
+      return false;
     }
+
+    // If we reach here, password is correct and session was not mutated client-side
+    // toast.success("Current password verified.");
+    setIsUpdatingPassword(false);
 
     // Step 2: If current password is correct, update to the new password
     const { error: updateError } = await supabase.auth.updateUser({
@@ -127,7 +127,6 @@ export function SettingsModal({
       setNewPassword("");
       setConfirmPassword("");
     }
-    setIsUpdatingPassword(false);
   };
 
   const handleSaveChanges = async () => {
