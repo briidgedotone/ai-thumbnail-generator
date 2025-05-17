@@ -108,44 +108,44 @@ export async function POST(request: NextRequest) {
     } else {
       // Default prompt for all content types
       geminiPrompt = `
-      You are a YouTube content optimization expert. A content creator has provided a brief description of their video and needs help creating compelling titles, descriptions, and tags for maximum engagement and SEO.
+    You are a YouTube content optimization expert. A content creator has provided a brief description of their video and needs help creating compelling titles, descriptions, and tags for maximum engagement and SEO.
 
-      Video Description: "${videoDescription}"
-      ${style ? `Style: ${style}` : ''}
+    Video Description: "${videoDescription}"
+    ${style ? `Style: ${style}` : ''}
 
-      Please generate the following:
+    Please generate the following:
 
-      1. Five (5) engaging YouTube titles (max 100 characters each):
-      - Make them clickable but not clickbait
-      - Include relevant keywords for SEO
-      - Make them emotionally compelling
-      - If the video is a comparison, tutorial, or review, reflect that in the title
+    1. Five (5) engaging YouTube titles (max 100 characters each):
+    - Make them clickable but not clickbait
+    - Include relevant keywords for SEO
+    - Make them emotionally compelling
+    - If the video is a comparison, tutorial, or review, reflect that in the title
 
-      2. Five (5) optimized descriptions (max 300 characters each):
-      - Include relevant keywords naturally
-      - Add a clear call-to-action for engagement
-      - Format with paragraph breaks (use \\n for line breaks)
-      - Include hashtags at the end
+    2. Five (5) optimized descriptions (max 300 characters each):
+    - Include relevant keywords naturally
+    - Add a clear call-to-action for engagement
+    - Format with paragraph breaks (use \\n for line breaks)
+    - Include hashtags at the end
 
-      3. 8-12 SEO-optimized tags:
-      - Include a mix of broad and specific tags
-      - Add tags for related topics and channels
-      - Keep each tag between 1-5 words
-      - Avoid overly generic tags
+    3. 8-12 SEO-optimized tags:
+    - Include a mix of broad and specific tags
+    - Add tags for related topics and channels
+    - Keep each tag between 1-5 words
+    - Avoid overly generic tags
 
-      4. Indicate which title and description you think is best (by number 1-5)
+    4. Indicate which title and description you think is best (by number 1-5)
 
-      Format your response as a valid JSON object with this exact structure:
-      {
-        "titles": ["title1", "title2", "title3", "title4", "title5"],
-        "descriptions": ["desc1", "desc2", "desc3", "desc4", "desc5"],
-        "tags": ["tag1", "tag2", "tag3", etc.],
-        "bestTitle": 1,
-        "bestDescription": 1
-      }
+    Format your response as a valid JSON object with this exact structure:
+    {
+      "titles": ["title1", "title2", "title3", "title4", "title5"],
+      "descriptions": ["desc1", "desc2", "desc3", "desc4", "desc5"],
+      "tags": ["tag1", "tag2", "tag3", etc.],
+      "bestTitle": 1,
+      "bestDescription": 1
+    }
 
-      Your response should ONLY include this JSON object, nothing else.
-      `;
+    Your response should ONLY include this JSON object, nothing else.
+    `;
     }
 
     // Make the request to the Gemini API with retry mechanism
@@ -254,9 +254,9 @@ export async function POST(request: NextRequest) {
         }
       } else {
         // For full content generation, validate all fields
-        if (!contentData.titles || !contentData.descriptions || !contentData.tags || 
-            !Array.isArray(contentData.titles) || !Array.isArray(contentData.descriptions) || !Array.isArray(contentData.tags)) {
-          throw new Error('Invalid response structure from Gemini API');
+      if (!contentData.titles || !contentData.descriptions || !contentData.tags || 
+          !Array.isArray(contentData.titles) || !Array.isArray(contentData.descriptions) || !Array.isArray(contentData.tags)) {
+        throw new Error('Invalid response structure from Gemini API');
         }
       }
 

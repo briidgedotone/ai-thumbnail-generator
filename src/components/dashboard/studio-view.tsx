@@ -70,6 +70,8 @@ export function StudioView({
     });
     setIsDetailsPanelOpen(true); // Open panel so it can show its loading state
 
+    let newImageUrl: string | null = null; // Variable to hold the newly generated image URL
+
     try {
       // Generate a style-specific structured prompt for thumbnail, now with text overlay if provided
       const structuredPrompt = await generateThumbnailPrompt(
@@ -80,8 +82,7 @@ export function StudioView({
       );
       console.log('[TESTING - Structured Prompt from Gemini]', structuredPrompt); // Log for debugging
 
-      // First, generate the thumbnail image - TEMPORARILY COMMENTING OUT TO SAVE API CREDITS
-      /*
+      // First, generate the thumbnail image
       const thumbnailResponse = await fetch('/api/generate-thumbnail', {
         method: 'POST',
         headers: {
@@ -96,12 +97,8 @@ export function StudioView({
       }
 
       const thumbnailResult = await thumbnailResponse.json();
-      setAiGeneratedImageUrl(thumbnailResult.imageUrl);
-      */
-
-      // Use placeholder thumbnail instead of generated one
-      const placeholderThumbnail = getThumbnailStylePath(selectedThumbnailStyle) || '';
-      setAiGeneratedImageUrl(placeholderThumbnail);
+      newImageUrl = thumbnailResult.imageUrl; // Store the new image URL
+      setAiGeneratedImageUrl(newImageUrl); // Update state as well
 
       // Then, generate optimized content (titles, descriptions, tags)
       const contentResponse = await fetch('/api/generate-content', {
@@ -119,20 +116,17 @@ export function StudioView({
         const errorData = await contentResponse.json();
         console.warn('Failed to generate optimized content:', errorData.error || contentResponse.statusText);
         
-        // Continue with basic content if optimized content generation fails
         const styleName = selectedThumbnailStyle.replace('-style', '');
         const basicTitle = `${styleName} Video: ${videoDescription.slice(0, 40)}${videoDescription.length > 40 ? '...' : ''}`;
-        
-        // Create some basic tags from the description
         const basicTags = videoDescription
           .split(/\s+/)
           .filter(word => word.length > 3)
           .slice(0, 8)
           .map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, ''))
-          .filter(Boolean); // Remove empty strings
+          .filter(Boolean);
         
         setGeneratedData({
-          thumbnail: placeholderThumbnail,
+          thumbnail: newImageUrl || getThumbnailStylePath(selectedThumbnailStyle) || '', // Use newImageUrl
           title: basicTitle,
           description: videoDescription,
           tags: basicTags.length > 0 ? basicTags : ['video', 'content', 'youtube'],
@@ -142,46 +136,41 @@ export function StudioView({
 
       const contentResult = await contentResponse.json();
       
-      // If the content generation was successful, use the best options
       if (contentResult.success && contentResult.titles && contentResult.descriptions && contentResult.tags) {
         const bestTitleIndex = contentResult.bestTitle >= 0 && contentResult.bestTitle < contentResult.titles.length 
           ? contentResult.bestTitle 
           : 0;
-          
         const bestDescriptionIndex = contentResult.bestDescription >= 0 && contentResult.bestDescription < contentResult.descriptions.length 
           ? contentResult.bestDescription 
           : 0;
           
-        // Update generatedData with the AI-generated content
         setGeneratedData({
-          thumbnail: placeholderThumbnail,
+          thumbnail: newImageUrl || getThumbnailStylePath(selectedThumbnailStyle) || '', // Use newImageUrl
           title: contentResult.titles[bestTitleIndex],
           description: contentResult.descriptions[bestDescriptionIndex],
           tags: contentResult.tags,
         });
       } else {
-        // Fallback to basic content if the response structure is invalid
         const styleName = selectedThumbnailStyle.replace('-style', '');
-        setGeneratedData({
-          thumbnail: placeholderThumbnail,
+      setGeneratedData({
+          thumbnail: newImageUrl || getThumbnailStylePath(selectedThumbnailStyle) || '', // Use newImageUrl
           title: `${styleName} Video: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
-          description: videoDescription,
-          tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
-        });
+        description: videoDescription,
+        tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
+      });
       }
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       console.error("Error during content generation:", errorMessage);
       setError(errorMessage);
-      // alert(`Error: ${errorMessage}`); // Consider if you want alerts during testing
       setGeneratedData({
-        thumbnail: getThumbnailStylePath(selectedThumbnailStyle) || '',
+        thumbnail: newImageUrl || getThumbnailStylePath(selectedThumbnailStyle) || '', // Use newImageUrl if available, then style path, then empty
         title: `Error - ${selectedThumbnailStyle}: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
         description: videoDescription,
         tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
       });
-      setAiGeneratedImageUrl(null);
+      // setAiGeneratedImageUrl(null); // Already set to null at the start, or to newImageUrl if successful before error
     } finally {
       setIsLoading(false);
     }
@@ -198,7 +187,7 @@ export function StudioView({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           videoDescription, 
           style: selectedThumbnailStyle,
           contentType: contentType // Specify which content type to regenerate
@@ -260,7 +249,7 @@ export function StudioView({
     onVideoDescriptionChange(prompt);
     
     // Only proceed with submission if a style is selected
-    if (selectedThumbnailStyle) {
+      if (selectedThumbnailStyle) {
       // Use the updated description in a new event loop to ensure state is updated
       Promise.resolve().then(() => {
         // Pass the text and style parameters to handleSubmit
@@ -283,7 +272,7 @@ export function StudioView({
         ) : (
           <StyleSelectionForm
             selectedThumbnailStyle={selectedThumbnailStyle}
-            onSelectStyle={onSelectStyle}
+                onSelectStyle={onSelectStyle}
             videoDescription={videoDescription}
             onVideoDescriptionChange={onVideoDescriptionChange}
             onSubmit={handleSubmit}

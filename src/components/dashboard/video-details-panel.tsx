@@ -68,14 +68,14 @@ export function VideoDetailsPanel({
 
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      
-      // Create a link element
-      const link = document.createElement('a');
+    
+    // Create a link element
+    const link = document.createElement('a');
       link.href = url;
       link.download = `thumbnail-${new Date().getTime()}.${blob.type.split('/')[1] || 'jpg'}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
       
       // Clean up the object URL
       URL.revokeObjectURL(url);
@@ -147,8 +147,8 @@ export function VideoDetailsPanel({
       x: 30,
       transition: { 
         type: "spring", 
-        stiffness: 250, 
-        damping: 25,
+        stiffness: 300, 
+        damping: 30,
         duration: 0.3
       } 
     },
@@ -158,8 +158,8 @@ export function VideoDetailsPanel({
       x: 0,
       transition: { 
         type: "spring", 
-        stiffness: 250, 
-        damping: 25,
+        stiffness: 300, 
+        damping: 30,
         duration: 0.4
       } 
     },
@@ -169,8 +169,8 @@ export function VideoDetailsPanel({
       x: 30,
       transition: { 
         type: "spring", 
-        stiffness: 250, 
-        damping: 25,
+        stiffness: 300, 
+        damping: 30,
         duration: 0.3,
         delay: 0.05 // Small delay before exit animation to coordinate with other elements
       } 
@@ -208,253 +208,388 @@ export function VideoDetailsPanel({
     }
   };
 
+  // Button animation variants
+  const buttonMotionVariants = {
+    hover: {
+      scale: 1.05,
+      transition: {
+        duration: 0.2,
+        type: "spring",
+        stiffness: 400,
+        damping: 10
+      }
+    },
+    tap: {
+      scale: 0.95
+    }
+  };
+
+  // Section variants
+  const sectionVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (custom: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: custom * 0.1,
+        duration: 0.5,
+        type: "spring",
+        stiffness: 300,
+        damping: 25
+      }
+    })
+  };
+
   return (
     <>
       <AnimatePresence mode="wait">
         {isOpen && (
           <motion.div
-            className="fixed top-0 right-0 bottom-0 bg-gradient-to-b from-white to-gray-50 border-l border-gray-200 shadow-xl z-40 overflow-hidden"
+            className="fixed top-0 right-0 bottom-0 border-l shadow-2xl z-40 overflow-hidden backdrop-blur-md"
+            style={{
+              backgroundColor: 'hsla(var(--card), 0.8)', // Use card color with opacity
+              borderColor: 'hsl(var(--border))',
+            }}
             variants={panelVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
           >
             <motion.div 
-              className="h-full flex flex-col p-7 overflow-y-auto"
+              className="h-full flex flex-col p-6 overflow-y-auto"
               variants={contentVariants}
               initial="hidden"
               animate="visible"
             >
-              <div className="flex justify-between items-center mb-8">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">Video Details</h2>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={onClose} 
-                  className="rounded-full hover:bg-gray-100 border-gray-200 transition-all"
+              <motion.div 
+                className="flex justify-between items-center mb-6"
+                variants={sectionVariants}
+                initial="hidden"
+                animate="visible"
+                custom={0}
+              >
+                <h2 className="text-2xl font-semibold" style={{ color: 'hsl(var(--foreground))' }}>Video Details</h2>
+                <motion.div
+                  variants={buttonMotionVariants}
+                  whileHover="hover"
+                  whileTap="tap"
                 >
-                  <X size={18} className="text-gray-500" />
-                </Button>
-              </div>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={onClose} 
+                    className="rounded-md"
+                  >
+                    <X size={18} />
+                  </Button>
+                </motion.div>
+              </motion.div>
               
-              {/* Thumbnail */}
-              <div className="relative aspect-video w-full overflow-hidden rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                {isLoading && !data?.thumbnail && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
-                    <p className="text-gray-500">Generating Thumbnail...</p>
-                  </div>
-                )}
-                {data?.thumbnail && data.thumbnail.trim() !== '' ? (
-                  <Image
-                    src={data.thumbnail}
-                    alt="Generated thumbnail"
-                    fill
-                    unoptimized={
-                      data?.thumbnail?.includes('oaidalleapiprodscus.blob.core.windows.net') || 
-                      data?.thumbnail?.startsWith('data:image/')
-                    } // Skip optimization for OpenAI URLs and data URLs
-                    className={`object-cover ${isLoading ? 'opacity-30' : ''} ${(data?.thumbnail || '') === '' && !isLoading ? 'bg-gray-200' : ''}`} // Add bg if src is empty and not loading
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none'; // Hide image element on error
-                      const parent = target.parentElement;
-                      if (parent && !parent.querySelector('.image-error-message')) {
-                        const errorMsg = document.createElement('div');
-                        errorMsg.className = 'image-error-message absolute inset-0 flex items-center justify-center text-xs text-gray-500';
-                        errorMsg.textContent = 'Image failed to load';
-                        parent.appendChild(errorMsg);
-                      }
+              {/* Thumbnail Container */}
+              <motion.div 
+                className="w-full mb-8"
+                variants={sectionVariants}
+                initial="hidden"
+                animate="visible"
+                custom={1}
+              >
+                <div 
+                  className="relative aspect-video w-full overflow-hidden group"
+                  style={{ borderRadius: 'var(--radius-lg)' }}
+                >
+                  {data?.thumbnail && data.thumbnail.trim() !== '' ? (
+                    <div className="relative w-full h-full overflow-hidden transition-transform duration-300 group-hover:scale-105"
+                         style={{ borderRadius: 'var(--radius-lg)' }}
+                    >
+                      <Image 
+                        key={data.thumbnail}
+                        src={data.thumbnail}
+                        alt="Generated thumbnail"
+                        fill
+                        unoptimized={
+                          data.thumbnail?.includes('oaidalleapiprodscus.blob.core.windows.net') || 
+                          data.thumbnail?.startsWith('data:image/')
+                        }
+                        className={`object-cover ${isLoading ? 'opacity-30' : ''}`}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent && !parent.querySelector('.image-error-message')) {
+                            const errorMsg = document.createElement('div');
+                            errorMsg.className = 'image-error-message absolute inset-0 flex items-center justify-center text-xs';
+                            errorMsg.style.color = 'hsl(var(--muted-foreground))';
+                            errorMsg.textContent = 'Image failed to load';
+                            parent.appendChild(errorMsg);
+                          }
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--muted))' }}>
+                      <p style={{ color: 'hsl(var(--muted-foreground))' }}>Loading Thumbnail...</p>
+                    </div>
+                  )}
+                  {!isLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-3">
+                      <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                        <Button 
+                          size="icon" 
+                          variant="outline"
+                          className="rounded-md shadow-sm"
+                          title="Preview Thumbnail"
+                          onClick={() => setIsPreviewModalOpen(true)}
+                          disabled={!data?.thumbnail}
+                        >
+                          <Eye size={16} />
+                        </Button>
+                      </motion.div>
+                      <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                        <Button 
+                          size="icon" 
+                          variant="outline"
+                          className="rounded-md shadow-sm"
+                          title="Download Thumbnail"
+                          onClick={handleDownload}
+                          disabled={!data?.thumbnail}
+                        >
+                          <Download size={16} />
+                        </Button>
+                      </motion.div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Content Section */}
+              <div className="flex-1 flex flex-col gap-6">
+                {/* Title */}
+                <motion.div 
+                  variants={sectionVariants}
+                  initial="hidden"
+                  animate="visible"
+                  custom={2}
+                >
+                  <h3 className="text-sm font-medium mb-2 flex items-center" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                    <span 
+                      className="w-1.5 h-1.5 rounded-full mr-2"
+                      style={{
+                        backgroundColor: 'hsl(var(--primary))'
+                      }}
+                    ></span>
+                    Video Title
+                    {(isLoading || isRegeneratingTitle) && <Loader2 className="h-3 w-3 ml-2 animate-spin" style={{ color: 'hsl(var(--primary))' }} />}
+                  </h3>
+                  <div 
+                    className="p-4 shadow-sm transition-all duration-300 hover:shadow-md"
+                    style={{
+                      backgroundColor: 'hsl(var(--card))',
+                      borderRadius: 'var(--radius-md)',
+                      border: `1px solid hsl(var(--border))`
                     }}
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-300">
-                    <p className="text-black">Loading Thumbnail...</p>
-                  </div>
-                )}
-                {!isLoading && (
-                  <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <Button 
-                      size="icon" 
-                      className="rounded-full bg-white/90 backdrop-blur-sm text-black border-0 shadow-md hover:bg-white hover:scale-105 transition-transform w-9 h-9"
-                      title="Preview Thumbnail"
-                      onClick={() => setIsPreviewModalOpen(true)}
-                      disabled={!data?.thumbnail}
-                    >
-                      <Eye size={15} />
-                    </Button>
-                    <Button 
-                      size="icon" 
-                      className="rounded-full bg-white/90 backdrop-blur-sm text-black border-0 shadow-md hover:bg-white hover:scale-105 transition-transform w-9 h-9"
-                      title="Download Thumbnail"
-                      onClick={handleDownload}
-                      disabled={!data?.thumbnail}
-                    >
-                      <Download size={15} />
-                    </Button>
-                  </div>
-                )}
-              </div>
-              
-              {/* Title */}
-              <div className="mb-7">
-                <h3 className="text-sm font-medium text-gray-500 mb-2.5 flex items-center">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-2"></span>
-                  Video Title
-                  {isLoading && <Loader2 className="h-3 w-3 ml-2 animate-spin text-indigo-500" />}
-                </h3>
-                <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="font-medium text-gray-900">{data?.title || placeholderTitle}</p>
-                  <div className="flex justify-end mt-3 space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-xs text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 flex items-center gap-1 transition-colors"
-                      onClick={() => copyToClipboard(data?.title || '', setTitleCopied)}
-                      disabled={!data?.title || titleCopied}
-                    >
-                      {titleCopied ? (
-                        <>
-                          <Check size={14} className="text-green-500" /> Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={14} /> Copy
-                        </>
+                  >
+                    <p className="font-medium text-base" style={{ color: 'hsl(var(--foreground))' }}>{data?.title || placeholderTitle}</p>
+                    <div className="flex justify-end mt-3 space-x-2">
+                      <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => copyToClipboard(data?.title || '', setTitleCopied)}
+                          disabled={!data?.title || titleCopied}
+                        >
+                          {(titleCopied) ? (
+                            <>
+                              <Check size={14} className="text-green-500" /> Copied!
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={14} /> Copy
+                            </>
+                          )}
+                        </Button>
+                      </motion.div>
+                      {onRegenerate && (
+                        <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleRegenerateTitle}
+                            disabled={isLoading || isRegeneratingTitle}
+                          >
+                            {(isRegeneratingTitle) ? (
+                              <>
+                                <Loader2 size={14} className="animate-spin" /> Regenerating...
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCw size={14} /> Regenerate
+                              </>
+                            )}
+                          </Button>
+                        </motion.div>
                       )}
-                    </Button>
-                    {onRegenerate && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 flex items-center gap-1 transition-colors"
-                        onClick={handleRegenerateTitle}
-                        disabled={isLoading || isRegeneratingTitle}
-                      >
-                        {isRegeneratingTitle ? (
-                          <>
-                            <Loader2 size={14} className="animate-spin text-indigo-500" /> Regenerating...
-                          </>
-                        ) : (
-                          <>
-                            <RefreshCw size={14} /> Regenerate
-                          </>
-                        )}
-                      </Button>
-                    )}
+                    </div>
                   </div>
-                </div>
-              </div>
-              
-              {/* Description */}
-              <div className="mb-7">
-                <h3 className="text-sm font-medium text-gray-500 mb-2.5 flex items-center">
-                  <span className="w-1.5 h-1.5 rounded-full bg-pink-500 mr-2"></span>
-                  Video Description
-                  {isLoading && <Loader2 className="h-3 w-3 ml-2 animate-spin text-pink-500" />}
-                </h3>
-                <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
-                    {data?.description || placeholderDescription}
-                  </div>
-                  <div className="flex justify-end mt-3 space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-xs text-gray-600 hover:text-pink-600 hover:bg-pink-50 flex items-center gap-1 transition-colors"
-                      onClick={() => copyToClipboard(data?.description || '', setDescriptionCopied)}
-                      disabled={!data?.description || descriptionCopied}
-                    >
-                      {descriptionCopied ? (
-                        <>
-                          <Check size={14} className="text-green-500" /> Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={14} /> Copy
-                        </>
+                </motion.div>
+
+                {/* Description */}
+                <motion.div 
+                  variants={sectionVariants}
+                  initial="hidden"
+                  animate="visible"
+                  custom={3}
+                >
+                  <h3 className="text-sm font-medium mb-2 flex items-center" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                    <span 
+                      className={`w-1.5 h-1.5 rounded-full mr-2`}
+                      style={{
+                        backgroundColor: 'hsl(var(--accent))'
+                      }}
+                    ></span>
+                    Video Description
+                    {(isLoading || isRegeneratingDescription) && <Loader2 className="h-3 w-3 ml-2 animate-spin" style={{ color: 'hsl(var(--accent))' }} />}
+                  </h3>
+                  <div 
+                    className="p-4 shadow-sm transition-all duration-300 hover:shadow-md"
+                    style={{
+                      backgroundColor: 'hsl(var(--card))',
+                      borderRadius: 'var(--radius-md)',
+                      border: `1px solid hsl(var(--border))`
+                    }}
+                  >
+                    <div className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'hsl(var(--foreground))' }}>
+                      {data?.description || placeholderDescription}
+                    </div>
+                    <div className="flex justify-end mt-3 space-x-2">
+                      <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => copyToClipboard(data?.description || '', setDescriptionCopied)}
+                          disabled={!data?.description || descriptionCopied}
+                        >
+                          {(descriptionCopied) ? (
+                            <>
+                              <Check size={14} className="text-green-500" /> Copied!
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={14} /> Copy
+                            </>
+                          )}
+                        </Button>
+                      </motion.div>
+                      {onRegenerate && (
+                        <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleRegenerateDescription}
+                            disabled={isLoading || isRegeneratingDescription}
+                          >
+                            {(isRegeneratingDescription) ? (
+                              <>
+                                <Loader2 size={14} className="animate-spin" /> Regenerating...
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCw size={14} /> Regenerate
+                              </>
+                            )}
+                          </Button>
+                        </motion.div>
                       )}
-                    </Button>
-                    {onRegenerate && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs text-gray-600 hover:text-pink-600 hover:bg-pink-50 flex items-center gap-1 transition-colors"
-                        onClick={handleRegenerateDescription}
-                        disabled={isLoading || isRegeneratingDescription}
-                      >
-                        {isRegeneratingDescription ? (
-                          <>
-                            <Loader2 size={14} className="animate-spin text-pink-500" /> Regenerating...
-                          </>
-                        ) : (
-                          <>
-                            <RefreshCw size={14} /> Regenerate
-                          </>
-                        )}
-                      </Button>
-                    )}
+                    </div>
                   </div>
-                </div>
-              </div>
-              
-              {/* Tags */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2.5 flex items-center">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2"></span>
-                  Video Tags
-                  {isLoading && <Loader2 className="h-3 w-3 ml-2 animate-spin text-amber-500" />}
-                </h3>
-                <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {(data?.tags || placeholderTags).map((tag, index) => (
-                      <span 
-                        key={index} 
-                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors"
-                      >
-                        <Tag size={11} className="mr-1.5 text-amber-500" />
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-xs text-gray-600 hover:text-amber-600 hover:bg-amber-50 flex items-center gap-1 transition-colors"
-                      onClick={() => data?.tags && copyToClipboard(data.tags.join(', '), setTagsCopied)}
-                      disabled={!data?.tags || data.tags.length === 0 || tagsCopied}
-                    >
-                      {tagsCopied ? (
-                        <>
-                          <Check size={14} className="text-green-500" /> Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={14} /> Copy All
-                        </>
+                </motion.div>
+
+                {/* Tags */}
+                <motion.div
+                  variants={sectionVariants}
+                  initial="hidden"
+                  animate="visible"
+                  custom={4}
+                >
+                  <h3 className="text-sm font-medium mb-2 flex items-center" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                    <span 
+                      className={`w-1.5 h-1.5 rounded-full mr-2`}
+                      style={{
+                        backgroundColor: 'hsl(var(--secondary))'
+                      }}
+                    ></span>
+                    Video Tags
+                    {(isLoading || isRegeneratingTags) && <Loader2 className="h-3 w-3 ml-2 animate-spin" style={{ color: 'hsl(var(--secondary))' }} />}
+                  </h3>
+                  <div 
+                    className="p-4 shadow-sm transition-all duration-300 hover:shadow-md"
+                    style={{
+                      backgroundColor: 'hsl(var(--card))',
+                      borderRadius: 'var(--radius-md)',
+                      border: `1px solid hsl(var(--border))`
+                    }}
+                  >
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {(data?.tags || placeholderTags).map((tag, tagIndex) => (
+                        <motion.span
+                          key={tagIndex}
+                          className="inline-flex items-center px-2.5 py-1 text-xs font-medium border"
+                          style={{
+                            backgroundColor: 'hsl(var(--accent))',
+                            color: 'hsl(var(--accent-foreground))',
+                            borderColor: 'hsl(var(--border))',
+                            borderRadius: 'var(--radius-sm)'
+                          }}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1, transition: { delay: tagIndex * 0.05, duration: 0.3, type: "spring", stiffness: 300, damping: 20 } }}
+                          whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+                        >
+                          <Tag size={10} className="mr-1" />
+                          {tag}
+                        </motion.span>
+                      ))}
+                    </div>
+                    <div className="flex justify-end mt-3 space-x-2">
+                      <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => data?.tags && copyToClipboard(data.tags.join(', '), setTagsCopied)}
+                          disabled={!data?.tags || data.tags.length === 0 || tagsCopied}
+                        >
+                          {(tagsCopied) ? (
+                            <>
+                              <Check size={14} className="text-green-500" /> Copied!
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={14} /> Copy All
+                            </>
+                          )}
+                        </Button>
+                      </motion.div>
+                      {onRegenerate && (
+                        <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleRegenerateTags}
+                            disabled={isLoading || isRegeneratingTags}
+                          >
+                            {(isRegeneratingTags) ? (
+                              <>
+                                <Loader2 size={14} className="animate-spin" /> Regenerating...
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCw size={14} /> Regenerate
+                              </>
+                            )}
+                          </Button>
+                        </motion.div>
                       )}
-                    </Button>
-                    {onRegenerate && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs text-gray-600 hover:text-amber-600 hover:bg-amber-50 flex items-center gap-1 transition-colors"
-                        onClick={handleRegenerateTags}
-                        disabled={isLoading || isRegeneratingTags}
-                      >
-                        {isRegeneratingTags ? (
-                          <>
-                            <Loader2 size={14} className="animate-spin text-amber-500" /> Regenerating...
-                          </>
-                        ) : (
-                          <>
-                            <RefreshCw size={14} /> Regenerate
-                          </>
-                        )}
-                      </Button>
-                    )}
+                    </div>
                   </div>
-                </div>
+                </motion.div>
               </div>
             </motion.div>
           </motion.div>
@@ -465,14 +600,20 @@ export function VideoDetailsPanel({
       <AnimatePresence>
         {isPreviewModalOpen && data?.thumbnail && (
           <motion.div 
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-lg"
+            style={{ backgroundColor: 'hsla(var(--foreground), 0.6)' }} // Darker backdrop for modal
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsPreviewModalOpen(false)}
           >
             <motion.div
-              className="relative max-w-3xl max-h-[80vh] rounded-xl overflow-hidden shadow-2xl"
+              className="relative max-w-2xl max-h-[90vh] shadow-xl overflow-hidden"
+              style={{
+                backgroundColor: 'hsl(var(--card))',
+                borderRadius: 'var(--radius-xl)', // Larger radius for modal
+                border: `1px solid hsl(var(--border))`
+              }}
               variants={modalVariants}
               initial="hidden"
               animate="visible"
@@ -482,15 +623,19 @@ export function VideoDetailsPanel({
               <img
                 src={data.thumbnail}
                 alt={data.title || "Thumbnail preview"}
-                className="max-w-full max-h-[80vh] object-contain"
+                className="block max-w-full max-h-[85vh] object-contain"
+                style={{ borderRadius: 'var(--radius-xl)' }}
               />
-              <Button
-                className="absolute top-4 right-4 rounded-full bg-black/50 text-white hover:bg-black/80 border-0"
-                size="icon"
-                onClick={() => setIsPreviewModalOpen(false)}
-              >
-                <X size={18} />
-              </Button>
+              <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute top-3 right-3 rounded-md shadow-sm"
+                  onClick={() => setIsPreviewModalOpen(false)}
+                >
+                  <X size={16} />
+                </Button>
+              </motion.div>
             </motion.div>
           </motion.div>
         )}
