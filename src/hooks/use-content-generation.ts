@@ -1,36 +1,54 @@
-'use client';
-
-import React, { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
-import { StyleSelectionForm } from "@/components/dashboard/studio/StyleSelectionForm";
-import { GenerationResults } from "@/components/dashboard/studio/GenerationResults";
+import { useState, useEffect } from 'react';
 import { generateThumbnailPrompt } from '@/utils/prompt-generators';
 
-interface StudioViewProps {
-  selectedThumbnailStyle: string | null;
-  onSelectStyle: (style: string | null) => void;
-  videoDescription: string;
-  onVideoDescriptionChange: (value: string) => void;
+interface GeneratedData {
+  thumbnail: string;
+  title: string;
+  description: string;
+  tags: string[];
+}
+
+interface UseContentGenerationProps {
   onDetailsPanelStateChange?: (isOpen: boolean) => void;
 }
 
-export function StudioView({
-  selectedThumbnailStyle,
-  onSelectStyle,
-  videoDescription,
-  onVideoDescriptionChange,
+interface UseContentGenerationReturn {
+  isDetailsPanelOpen: boolean;
+  setIsDetailsPanelOpen: (isOpen: boolean) => void;
+  generatedData: GeneratedData | undefined;
+  aiGeneratedImageUrl: string | null;
+  isLoading: boolean;
+  error: string | null;
+  handleSubmit: (
+    videoDescription: string,
+    selectedThumbnailStyle: string,
+    e?: React.FormEvent,
+    thumbnailText?: string,
+    textStyle?: string,
+    aiChatInput?: string
+  ) => Promise<void>;
+  getThumbnailStylePath: (styleId: string | null) => string | null;
+  handleCloseDetailsPanel: () => void;
+}
+
+/**
+ * Custom hook to handle content generation logic
+ */
+export function useContentGeneration({
   onDetailsPanelStateChange,
-}: StudioViewProps) {
+}: UseContentGenerationProps = {}): UseContentGenerationReturn {
   const [isDetailsPanelOpen, setIsDetailsPanelOpen] = useState(false);
-  const [generatedData, setGeneratedData] = useState<{
-    thumbnail: string;
-    title: string;
-    description: string;
-    tags: string[];
-  } | undefined>(undefined);
+  const [generatedData, setGeneratedData] = useState<GeneratedData | undefined>(undefined);
   const [aiGeneratedImageUrl, setAiGeneratedImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Notify parent component when details panel state changes
+  useEffect(() => {
+    if (onDetailsPanelStateChange) {
+      onDetailsPanelStateChange(isDetailsPanelOpen);
+    }
+  }, [isDetailsPanelOpen, onDetailsPanelStateChange]);
 
   // Get thumbnail style image path based on the selected style
   const getThumbnailStylePath = (styleId: string | null): string | null => {
@@ -46,15 +64,16 @@ export function StudioView({
     return stylePathMap[styleId] || null;
   };
 
-  // Notify parent component when details panel state changes
-  React.useEffect(() => {
-    if (onDetailsPanelStateChange) {
-      onDetailsPanelStateChange(isDetailsPanelOpen);
-    }
-  }, [isDetailsPanelOpen, onDetailsPanelStateChange]);
-
-  const handleSubmit = async (e?: React.FormEvent, thumbnailText?: string, textStyle?: string) => {
+  const handleSubmit = async (
+    videoDescription: string,
+    selectedThumbnailStyle: string,
+    e?: React.FormEvent, 
+    thumbnailText?: string, 
+    textStyle?: string,
+    aiChatInput: string = ''
+  ) => {
     if (e) e.preventDefault();
+    
     if (videoDescription.trim() === '' || !selectedThumbnailStyle) return;
 
     setIsLoading(true);
@@ -63,7 +82,7 @@ export function StudioView({
 
     // Set initial generatedData for the panel to render with loading indicators
     setGeneratedData({
-      thumbnail: aiGeneratedImageUrl || getThumbnailStylePath(selectedThumbnailStyle) || '', // Use empty string if no image path yet, Image component will handle onError or show alt
+      thumbnail: aiGeneratedImageUrl || getThumbnailStylePath(selectedThumbnailStyle) || '', 
       title: `Generating prompt for: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
       description: videoDescription,
       tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
@@ -71,14 +90,15 @@ export function StudioView({
     setIsDetailsPanelOpen(true); // Open panel so it can show its loading state
 
     try {
-      // Generate a style-specific structured prompt for thumbnail, now with text overlay if provided
+      // Generate a style-specific structured prompt for thumbnail
       const structuredPrompt = await generateThumbnailPrompt(
         videoDescription, 
         selectedThumbnailStyle, 
         thumbnailText, 
-        textStyle
+        textStyle,
+        aiChatInput
       );
-      console.log('[TESTING - Structured Prompt from Gemini]', structuredPrompt); // Log for debugging
+      console.log('[TESTING - Structured Prompt from Gemini]', structuredPrompt);
 
       // First, generate the thumbnail image - TEMPORARILY COMMENTING OUT TO SAVE API CREDITS
       /*
@@ -174,7 +194,7 @@ export function StudioView({
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       console.error("Error during content generation:", errorMessage);
       setError(errorMessage);
-      // alert(`Error: ${errorMessage}`); // Consider if you want alerts during testing
+      
       setGeneratedData({
         thumbnail: getThumbnailStylePath(selectedThumbnailStyle) || '',
         title: `Error - ${selectedThumbnailStyle}: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
@@ -192,42 +212,15 @@ export function StudioView({
     setIsDetailsPanelOpen(false);
   };
 
-  const handleChatSubmit = (prompt: string, thumbnailText?: string, textStyle?: string) => {
-    // Update the video description
-    onVideoDescriptionChange(prompt);
-    
-    // Only proceed with submission if a style is selected
-    if (selectedThumbnailStyle) {
-      // Use the updated description in a new event loop to ensure state is updated
-      Promise.resolve().then(() => {
-        // Pass the text and style parameters to handleSubmit
-        handleSubmit(undefined, thumbnailText, textStyle);
-      });
-    }
+  return {
+    isDetailsPanelOpen,
+    setIsDetailsPanelOpen,
+    generatedData,
+    aiGeneratedImageUrl,
+    isLoading,
+    error,
+    handleSubmit,
+    getThumbnailStylePath,
+    handleCloseDetailsPanel
   };
-
-  return (
-    <div className="relative w-full">
-      <AnimatePresence mode="wait">
-        {isDetailsPanelOpen && generatedData ? (
-          <GenerationResults
-            isOpen={isDetailsPanelOpen}
-            onClose={handleCloseDetailsPanel}
-            data={generatedData}
-            isLoading={isLoading}
-          />
-        ) : (
-          <StyleSelectionForm
-            selectedThumbnailStyle={selectedThumbnailStyle}
-            onSelectStyle={onSelectStyle}
-            videoDescription={videoDescription}
-            onVideoDescriptionChange={onVideoDescriptionChange}
-            onSubmit={handleSubmit}
-            onChatSubmit={handleChatSubmit}
-            isLoading={isLoading}
-          />
-        )}
-      </AnimatePresence>
-    </div>
-  );
 } 
