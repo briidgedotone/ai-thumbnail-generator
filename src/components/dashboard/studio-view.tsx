@@ -85,12 +85,11 @@ export function StudioView({
     setIsDetailsPanelOpen(true); // Open panel so it can show its loading state
 
     try {
-    // Generate a style-specific structured prompt, now with text overlay if provided
+      // Generate a style-specific structured prompt, now with text overlay if provided
       const structuredPrompt = await generateThumbnailPrompt(videoDescription, selectedThumbnailStyle, thumbnailText, textStyle);
       console.log('[TESTING - Structured Prompt from Gemini]', structuredPrompt); // Log for debugging
 
-      // Temporarily comment out the actual image generation call for testing
-      /*
+      // Uncomment the actual image generation call
       const response = await fetch('/api/generate-thumbnail', {
         method: 'POST',
         headers: {
@@ -114,17 +113,6 @@ export function StudioView({
         description: videoDescription,
         tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
       });
-      */
-
-      // Simulate data that would have come from image generation for UI purposes during testing
-      console.log("Image generation call is commented out for testing. Simulating data.");
-      setGeneratedData({
-        thumbnail: getThumbnailStylePath(selectedThumbnailStyle) || '/thumbnail-styles/placeholder.png', // Use placeholder or style image
-        title: `[TEST MODE] ${selectedThumbnailStyle.replace('-style', '')} Video: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
-        description: videoDescription,
-        tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
-      });
-      // setAiGeneratedImageUrl(null); // Keep it null or set to a placeholder if you have one
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -254,10 +242,10 @@ export function StudioView({
         prompt = await generateMinimalistStylePrompt(description, keyThemes);
         break;
       case 'cinematic-style':
-        prompt = generateCinematicStylePrompt(description, keyThemes);
+        prompt = await generateCinematicStylePrompt(description, keyThemes, '');
         break;
       case 'clickbait-style':
-        prompt = generateClickbaitStylePrompt(description, keyThemes);
+        prompt = await generateClickbaitStylePrompt(description, keyThemes, '');
         break;
       default:
         prompt = generateBeastStylePrompt(description, keyThemes); // Default to beast style
@@ -470,97 +458,123 @@ The thumbnail should be ${promptSection.styleAdjective} and instantly communicat
   };
 
   /**
-   * Generates a detailed prompt for Cinematic Style thumbnails
+   * Generates a detailed prompt for Cinematic Style thumbnails using Gemini API
    */
-  const generateCinematicStylePrompt = (description: string, themes: ExtractedThemes): string => {
-    const cinematicStylePrompt: PromptSection = {
-      composition: [
-        "Frame the scene with cinematic proportions that adapt to YouTube's format while suggesting a wider film aspect ratio",
-        "Use cinematic principles of framing and composition that best complement the subject matter",
-        "Create a sense of depth with distinct foreground, midground, and background elements",
-        "Design with intentional perspective and sightlines that draw viewers into the scene"
-      ],
-      subjects: [
-        "Present subjects with authentic emotional expressions that fit the narrative tone - prioritize nuanced, cinematically appropriate emotions",
-        "Capture a compelling moment that suggests an entire story around it - avoid default shock expressions in favor of emotionally rich alternatives",
-        "Consider spatial relationships between elements to suggest narrative connections",
-        "Use body language, positioning, and expressions to convey depth of character and emotional complexity"
-      ],
-      visualTreatment: [
-        "Apply professional-quality cinematic color grading appropriate to the content's genre",
-        "Use atmospheric elements (like fog, light rays, particles) where they enhance the mood",
-        "Implement thoughtful lighting that shapes subjects and creates appropriate atmosphere",
-        "Consider film-inspired visual effects like subtle lens artifacts that enhance realism"
-      ],
-      storytelling: [
-        "Frame a moment that implies a complete narrative and makes viewers want to see more",
-        "Create visual intrigue suggesting an emotional or intellectual journey within the video",
-        "Include thoughtful details that reward closer inspection and suggest production value",
-        "Ensure the thumbnail conveys the genre and tone of the video's content"
-      ],
-      technical: [
-        "Render with film-like quality including appropriate texture for the content",
-        "Use thoughtful depth of field to direct attention to key elements",
-        "Apply cinematic aspect ratio treatments that work within YouTube's container format",
-        "Create an image with excellent dynamic range and shadow detail that works across devices"
-      ],
-      styleAdjective: "cinematically compelling",
-      styleNoun: "story"
-    };
+  const generateCinematicStylePrompt = async (description: string, themes: ExtractedThemes, aiChatInput: string): Promise<string> => {
+    try {
+      // Call Gemini API to analyze the description and AI chat input for cinematic style
+      const response = await fetch('/api/analyze-prompt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          description,
+          aiChatInput, // Include AI chat input
+          style: 'cinematic-style',
+          themes: JSON.stringify(themes) // Pass themes for context if Gemini needs it
+        }),
+      });
 
-    return createPromptFromTemplate(
-      description, 
-      themes, 
-      "professional, cinematic",
-      cinematicStylePrompt
-    );
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Gemini API call failed for cinematic style:', errorData?.error || response.statusText);
+        // If Gemini fails, return a simple, generic prompt as a last resort.
+        // This ensures the application doesn't break if the Gemini endpoint has issues.
+        return `Cinematic style thumbnail for: "${description}". Focus on key elements like ${themes.mainSubject} with a ${themes.mood} mood.`;
+      }
+
+      const result = await response.json();
+      
+      if (result.structuredPrompt) {
+        console.log('[Gemini Generated Cinematic Prompt]', result.structuredPrompt);
+        return result.structuredPrompt;
+      } else {
+        console.warn('[Gemini Response Issue - Cinematic] No structured prompt returned, using basic fallback.');
+        return `Cinematic style thumbnail for: "${description}". Emphasize core visual elements. Main subject: ${themes.mainSubject}. Mood: ${themes.mood}.`;
+      }
+
+    } catch (error: any) {
+      console.error('Error calling Gemini for cinematic prompt generation:', error.message);
+      // Fallback to a very basic prompt if the API call itself fails (e.g., network issue)
+      return `Error during cinematic prompt generation. Video content: "${description}". Key subject: ${themes.mainSubject}.`;
+    }
   };
 
   /**
-   * Generates a detailed prompt for Clickbait Style thumbnails
+   * Generates a detailed prompt for Clickbait Style thumbnails using Gemini API
    */
-  const generateClickbaitStylePrompt = (description: string, themes: ExtractedThemes): string => {
-    const clickbaitStylePrompt: PromptSection = {
-      composition: [
-        "Design with a bold, attention-grabbing layout that immediately draws the eye",
-        "Organize elements to create maximum visual impact while remaining clear on different devices",
-        "Use strategic empty space that accommodates text while keeping the main subject prominent",
-        "Create a composition that stands out in YouTube's crowded recommendation feeds"
-      ],
-      subjects: [
-        "Feature subjects with varied emotional expressions beyond just shock/surprise - use curiosity, amazement, focus, or enthusiasm",
-        "Consider diverse poses and expressions that create interest without defaulting to the standard surprised open-mouth look",
-        "Position subjects to break the fourth wall when appropriate, creating direct connection with natural expressions",
-        "Use dynamic body language that suggests action, reaction, or authentic emotional response suited to the content"
-      ],
-      visualTreatment: [
-        "Use bright, attention-grabbing colors that pop against YouTube's interface",
-        "Apply strategic color contrast to emphasize key elements and create visual hierarchy",
-        "Consider strategic graphic elements (arrows, highlights, etc.) where they enhance understanding",
-        "Implement lighting that creates drama and directs attention to the most important elements"
-      ],
-      storytelling: [
-        "Create a visual moment that generates immediate curiosity about what happens in the video",
-        "Suggest something surprising, unexpected, or impressive that encourages clicking",
-        "Balance engaging 'clickability' with authentic representation of the actual content",
-        "Design to trigger viewer interest while accurately representing what they'll find in the video"
-      ],
-      technical: [
-        "Render with high clarity and excellent detail that works at all YouTube display sizes",
-        "Use subtle motion effects or dynamic elements where appropriate to suggest action",
-        "Ensure perfect focus on the key emotional or narrative elements",
-        "Create a polished final image with enhanced details that feels professionally produced"
-      ],
-      styleAdjective: "instantly intriguing",
-      styleNoun: "curiosity"
-    };
+  const generateClickbaitStylePrompt = async (description: string, themes: ExtractedThemes, aiChatInput: string): Promise<string> => {
+    try {
+      // Call Gemini API to analyze the description and AI chat input for clickbait style
+      const response = await fetch('/api/analyze-prompt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          description,
+          aiChatInput, // Include AI chat input
+          style: 'clickbait-style',
+          themes: JSON.stringify(themes) // Pass themes for context if Gemini needs it
+        }),
+      });
 
-    return createPromptFromTemplate(
-      description, 
-      themes, 
-      "attention-grabbing, engaging",
-      clickbaitStylePrompt
-    );
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Gemini API call failed for clickbait style:', errorData?.error || response.statusText);
+        // If Gemini fails, return a simple, generic prompt as a last resort.
+        // This ensures the application doesn't break if the Gemini endpoint has issues.
+        return `Clickbait style thumbnail for: "${description}". Focus on key elements like ${themes.mainSubject} with a ${themes.mood} mood.`;
+      }
+
+      const result = await response.json();
+      
+      if (result.structuredPrompt) {
+        console.log('[Gemini Generated Clickbait Prompt]', result.structuredPrompt);
+        return result.structuredPrompt;
+      } else {
+        console.warn('[Gemini Response Issue - Clickbait] No structured prompt returned, using basic fallback.');
+        return `Create a clickbait YouTube thumbnail for a video about: "${description}"
+
+COMPOSITION:
+- Design with a bold, attention-grabbing layout that immediately draws the eye
+- Organize elements to create maximum visual impact while remaining clear on different devices
+- Use strategic empty space that accommodates text while keeping the main subject prominent
+- Create a composition that stands out in YouTube's crowded recommendation feeds
+
+SUBJECTS & EXPRESSIONS:
+- Feature subjects with varied emotional expressions beyond just shock/surprise - use curiosity, amazement, focus, or enthusiasm
+- Consider diverse poses and expressions that create interest without defaulting to the standard surprised open-mouth look
+- Position subjects to break the fourth wall when appropriate, creating direct connection with natural expressions
+- Use dynamic body language that suggests action, reaction, or authentic emotional response suited to the content
+
+VISUAL TREATMENT:
+- Use bright, attention-grabbing colors that pop against YouTube's interface
+- Apply strategic color contrast to emphasize key elements and create visual hierarchy
+- Consider strategic graphic elements (arrows, highlights, etc.) where they enhance understanding
+- Implement lighting that creates drama and directs attention to the most important elements
+
+STORYTELLING ELEMENTS:
+- Create a visual moment that generates immediate curiosity about what happens in the video
+- Suggest something surprising, unexpected, or impressive that encourages clicking
+- Balance engaging 'clickability' with authentic representation of the actual content
+- Design to trigger viewer interest while accurately representing what they'll find in the video
+
+TECHNICAL SPECIFICATIONS:
+- Render with high clarity and excellent detail that works at all YouTube display sizes
+- Use subtle motion effects or dynamic elements where appropriate to suggest action
+- Ensure perfect focus on the key emotional or narrative elements
+- Create a polished final image with enhanced details that feels professionally produced
+
+The thumbnail should be instantly intriguing and communicate the curiosity of: "${description}"`;
+      }
+
+    } catch (error: any) {
+      console.error('Error calling Gemini for clickbait prompt generation:', error.message);
+      // Fallback to a very basic prompt if the API call itself fails (e.g., network issue)
+      return `Error during clickbait prompt generation. Video content: "${description}". Key subject: ${themes.mainSubject}.`;
+    }
   };
 
   const handleCloseDetailsPanel = () => {
