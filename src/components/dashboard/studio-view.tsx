@@ -78,17 +78,19 @@ export function StudioView({
     // Set initial generatedData for the panel to render with loading indicators
     setGeneratedData({
       thumbnail: aiGeneratedImageUrl || getThumbnailStylePath(selectedThumbnailStyle) || '', // Use empty string if no image path yet, Image component will handle onError or show alt
-      title: `Generating for: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
+      title: `Generating prompt for: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
       description: videoDescription,
       tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
     });
     setIsDetailsPanelOpen(true); // Open panel so it can show its loading state
 
-    // Generate a style-specific structured prompt, now with text overlay if provided
-    const structuredPrompt = generateThumbnailPrompt(videoDescription, selectedThumbnailStyle, thumbnailText, textStyle);
-    console.log('[Structured Prompt]', structuredPrompt); // Log for debugging
-
     try {
+    // Generate a style-specific structured prompt, now with text overlay if provided
+      const structuredPrompt = await generateThumbnailPrompt(videoDescription, selectedThumbnailStyle, thumbnailText, textStyle);
+      console.log('[TESTING - Structured Prompt from Gemini]', structuredPrompt); // Log for debugging
+
+      // Temporarily comment out the actual image generation call for testing
+      /*
       const response = await fetch('/api/generate-thumbnail', {
         method: 'POST',
         headers: {
@@ -112,22 +114,30 @@ export function StudioView({
         description: videoDescription,
         tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
       });
-      // setIsDetailsPanelOpen(true); // Already open
+      */
+
+      // Simulate data that would have come from image generation for UI purposes during testing
+      console.log("Image generation call is commented out for testing. Simulating data.");
+      setGeneratedData({
+        thumbnail: getThumbnailStylePath(selectedThumbnailStyle) || '/thumbnail-styles/placeholder.png', // Use placeholder or style image
+        title: `[TEST MODE] ${selectedThumbnailStyle.replace('-style', '')} Video: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
+        description: videoDescription,
+        tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
+      });
+      // setAiGeneratedImageUrl(null); // Keep it null or set to a placeholder if you have one
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      console.error("Error generating thumbnail:", errorMessage);
+      console.error("Error during prompt generation or simulated image step:", errorMessage);
       setError(errorMessage);
-      alert(`Error generating thumbnail: ${errorMessage}`);
-      // Fallback if AI generation fails and update title
+      // alert(`Error: ${errorMessage}`); // Consider if you want alerts during testing
       setGeneratedData({
         thumbnail: getThumbnailStylePath(selectedThumbnailStyle) || '',
         title: `Error - ${selectedThumbnailStyle}: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
         description: videoDescription,
         tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
       });
-      setAiGeneratedImageUrl(null); // Clear any potentially old AI image URL
-      // setIsDetailsPanelOpen(true); // Already open
+      setAiGeneratedImageUrl(null);
     } finally {
       setIsLoading(false);
     }
@@ -225,12 +235,12 @@ export function StudioView({
   /**
    * Generates a structured, detailed prompt for thumbnail generation based on the video description and selected style
    */
-  const generateThumbnailPrompt = (
+  const generateThumbnailPrompt = async (
     description: string, 
     style: string,
     thumbnailText?: string,
     textStyle?: string
-  ): string => {
+  ): Promise<string> => {
     // Extract key subjects and themes from the description
     const keyThemes = extractKeyThemes(description);
     
@@ -241,7 +251,7 @@ export function StudioView({
         prompt = generateBeastStylePrompt(description, keyThemes);
         break;
       case 'minimalist-style':
-        prompt = generateMinimalistStylePrompt(description, keyThemes);
+        prompt = await generateMinimalistStylePrompt(description, keyThemes);
         break;
       case 'cinematic-style':
         prompt = generateCinematicStylePrompt(description, keyThemes);
@@ -370,6 +380,49 @@ The thumbnail should be ${promptSection.styleAdjective} and instantly communicat
   };
 
   /**
+   * Generates a detailed prompt for Minimalist Style thumbnails using Gemini API
+   */
+  const generateMinimalistStylePrompt = async (description: string, themes: ExtractedThemes): Promise<string> => {
+    try {
+      // Call Gemini API to analyze the description and extract relevant details for minimalist style
+      const response = await fetch('/api/analyze-prompt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          description,
+          style: 'minimalist-style',
+          themes: JSON.stringify(themes) // Pass themes for context if Gemini needs it
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Gemini API call failed for minimalist style:', errorData?.error || response.statusText);
+        // If Gemini fails, return a simple, generic prompt as a last resort.
+        // This ensures the application doesn't break if the Gemini endpoint has issues.
+        return `Minimalist style thumbnail for: "${description}". Focus on key elements like ${themes.mainSubject} with a ${themes.mood} mood.`;
+      }
+
+      const result = await response.json();
+      
+      if (result.structuredPrompt) {
+        console.log('[Gemini Generated Minimalist Prompt]', result.structuredPrompt);
+        return result.structuredPrompt;
+      } else {
+        console.warn('[Gemini Response Issue - Minimalist] No structured prompt returned, using basic fallback.');
+        return `Minimalist style thumbnail for: "${description}". Emphasize core visual elements. Main subject: ${themes.mainSubject}. Mood: ${themes.mood}.`;
+      }
+
+    } catch (error: any) {
+      console.error('Error calling Gemini for minimalist prompt generation:', error.message);
+      // Fallback to a very basic prompt if the API call itself fails (e.g., network issue)
+      return `Error during minimalist prompt generation. Video content: "${description}". Key subject: ${themes.mainSubject}.`;
+    }
+  };
+
+  /**
    * Generates a detailed prompt for Beast Style thumbnails following specific format guidelines
    */
   const generateBeastStylePrompt = (description: string, themes: ExtractedThemes): string => {
@@ -413,53 +466,6 @@ The thumbnail should be ${promptSection.styleAdjective} and instantly communicat
       themes, 
       "high-impact, attention-grabbing",
       beastStylePrompt
-    );
-  };
-
-  /**
-   * Generates a detailed prompt for Minimalist Style thumbnails
-   */
-  const generateMinimalistStylePrompt = (description: string, themes: ExtractedThemes): string => {
-    const minimalistStylePrompt: PromptSection = {
-      composition: [
-        "Use strategic negative space to create a clean, focused composition that adapts to the content",
-        "Position elements with intentional, balanced arrangement that guides the viewer's eye",
-        "Embrace simplicity while ensuring the core message is clearly communicated",
-        "Consider how the design will appear at different scales on the YouTube platform"
-      ],
-      subjects: [
-        "Represent the subject with simplified, iconic visuals that capture its essence",
-        "If featuring people, use thoughtful, subtle expressions that convey intelligence and intentionality - avoid surprised expressions",
-        "Remove unnecessary details to focus attention on what truly matters to the content",
-        "Use simplified forms that communicate clearly even at small thumbnail sizes"
-      ],
-      visualTreatment: [
-        "Apply a thoughtful, limited color palette (2-4 colors) that creates visual harmony",
-        "Use color and contrast intentionally to highlight the most important elements",
-        "Consider using subtle textures or gradients only where they enhance understanding",
-        "Create visual hierarchy through thoughtful use of scale, weight, and positioning"
-      ],
-      storytelling: [
-        "Communicate the video's concept through elegant visual metaphors or symbols",
-        "Create intrigue through what is purposefully omitted rather than what is shown",
-        "Design for a sophisticated audience that appreciates subtlety and clarity",
-        "Ensure the thumbnail functions well in YouTube's content-dense environment"
-      ],
-      technical: [
-        "Render with precise edges and thoughtful geometry that maintains integrity at all sizes",
-        "Use careful alignment and consistent spacing between elements",
-        "Ensure consistent treatment of all visual elements (line weights, corners, etc.)",
-        "Create a refined final image that feels intentionally designed rather than accidentally simple"
-      ],
-      styleAdjective: "elegant, purposeful",
-      styleNoun: "essence"
-    };
-
-    return createPromptFromTemplate(
-      description, 
-      themes, 
-      "clean, minimalist",
-      minimalistStylePrompt
     );
   };
 
