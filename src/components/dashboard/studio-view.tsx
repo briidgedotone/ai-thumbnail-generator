@@ -5,6 +5,7 @@ import { AnimatePresence } from 'framer-motion';
 import { StyleSelectionForm } from "@/components/dashboard/studio/StyleSelectionForm";
 import { GenerationResults } from "@/components/dashboard/studio/GenerationResults";
 import { generateThumbnailPrompt } from '@/utils/prompt-generators';
+import { toast } from "sonner";
 
 interface StudioViewProps {
   selectedThumbnailStyle: string | null;
@@ -34,6 +35,8 @@ export function StudioView({
   // State for storing text overlay parameters for regeneration
   const [currentThumbnailText, setCurrentThumbnailText] = useState<string | undefined>(undefined);
   const [currentTextStyle, setCurrentTextStyle] = useState<string | undefined>(undefined);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   // Get thumbnail style image path based on the selected style
   const getThumbnailStylePath = (styleId: string | null): string | null => {
@@ -67,6 +70,7 @@ export function StudioView({
     setIsLoading(true);
     setError(null);
     setAiGeneratedImageUrl(null); // Reset previous image
+    setIsSaved(false); // Reset saved state for new generation
 
     // Set initial generatedData for the panel to render with loading indicators
     setGeneratedData({
@@ -78,6 +82,9 @@ export function StudioView({
     setIsDetailsPanelOpen(true); // Open panel so it can show its loading state
 
     let newImageUrl: string | null = null; // Variable to hold the newly generated image URL
+    let generatedTitle = '';
+    let generatedDescription = '';
+    let generatedTags: string[] = [];
 
     try {
       // Generate a style-specific structured prompt for thumbnail, now with text overlay if provided
@@ -132,39 +139,57 @@ export function StudioView({
           .map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, ''))
           .filter(Boolean);
         
+        // Set fallback data
+        generatedTitle = basicTitle;
+        generatedDescription = videoDescription;
+        generatedTags = basicTags.length > 0 ? basicTags : ['video', 'content', 'youtube'];
+        
         setGeneratedData({
           thumbnail: newImageUrl || getThumbnailStylePath(selectedThumbnailStyle) || '', // Use newImageUrl
-          title: basicTitle,
-          description: videoDescription,
-          tags: basicTags.length > 0 ? basicTags : ['video', 'content', 'youtube'],
-        });
-        return;
-      }
-
-      const contentResult = await contentResponse.json();
-      
-      if (contentResult.success && contentResult.titles && contentResult.descriptions && contentResult.tags) {
-        const bestTitleIndex = contentResult.bestTitle >= 0 && contentResult.bestTitle < contentResult.titles.length 
-          ? contentResult.bestTitle 
-          : 0;
-        const bestDescriptionIndex = contentResult.bestDescription >= 0 && contentResult.bestDescription < contentResult.descriptions.length 
-          ? contentResult.bestDescription 
-          : 0;
-          
-        setGeneratedData({
-          thumbnail: newImageUrl || getThumbnailStylePath(selectedThumbnailStyle) || '', // Use newImageUrl
-          title: contentResult.titles[bestTitleIndex],
-          description: contentResult.descriptions[bestDescriptionIndex],
-          tags: contentResult.tags,
+          title: generatedTitle,
+          description: generatedDescription,
+          tags: generatedTags,
         });
       } else {
-        const styleName = selectedThumbnailStyle.replace('-style', '');
-      setGeneratedData({
-          thumbnail: newImageUrl || getThumbnailStylePath(selectedThumbnailStyle) || '', // Use newImageUrl
-          title: `${styleName} Video: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
-        description: videoDescription,
-        tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
-      });
+        const contentResult = await contentResponse.json();
+        
+        if (contentResult.success && contentResult.titles && contentResult.descriptions && contentResult.tags) {
+          const bestTitleIndex = contentResult.bestTitle >= 0 && contentResult.bestTitle < contentResult.titles.length 
+            ? contentResult.bestTitle 
+            : 0;
+          const bestDescriptionIndex = contentResult.bestDescription >= 0 && contentResult.bestDescription < contentResult.descriptions.length 
+            ? contentResult.bestDescription 
+            : 0;
+          
+          generatedTitle = contentResult.titles[bestTitleIndex];
+          generatedDescription = contentResult.descriptions[bestDescriptionIndex];
+          generatedTags = contentResult.tags;
+              
+          setGeneratedData({
+            thumbnail: newImageUrl || getThumbnailStylePath(selectedThumbnailStyle) || '', // Use newImageUrl
+            title: generatedTitle,
+            description: generatedDescription,
+            tags: generatedTags,
+          });
+        } else {
+          // Fallback if content generation API returns success: false
+          const styleName = selectedThumbnailStyle.replace('-style', '');
+          generatedTitle = `${styleName} Video: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`;
+          generatedDescription = videoDescription;
+          generatedTags = videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, ''));
+          
+          setGeneratedData({
+            thumbnail: newImageUrl || getThumbnailStylePath(selectedThumbnailStyle) || '', // Use newImageUrl
+            title: generatedTitle,
+            description: generatedDescription,
+            tags: generatedTags,
+          });
+        }
+      }
+
+      // Now that we have generated all the data, save the project
+      if (newImageUrl) {
+        await saveProject(newImageUrl, generatedTitle, generatedDescription, generatedTags.join(','));
       }
 
     } catch (err) {
@@ -180,6 +205,51 @@ export function StudioView({
       // setAiGeneratedImageUrl(null); // Already set to null at the start, or to newImageUrl if successful before error
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // New function to save the project to the database
+  const saveProject = async (
+    imageUrl: string, 
+    title: string, 
+    description: string, 
+    tags: string
+  ) => {
+    if (!imageUrl || !selectedThumbnailStyle) return;
+    
+    setIsSaving(true);
+    
+    try {
+      const response = await fetch('/api/save-project', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageUrl,
+          selectedStyleId: selectedThumbnailStyle,
+          generatedTitle: title,
+          generatedDescription: description,
+          generatedTags: tags
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save project');
+      }
+
+      const result = await response.json();
+      setIsSaved(true);
+      toast.success('Project saved successfully!');
+      console.log('Project saved:', result);
+      
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      console.error('Error saving project:', errorMessage);
+      toast.error(`Failed to save project: ${errorMessage}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -303,10 +373,27 @@ export function StudioView({
       const newImageUrl = thumbnailResult.imageUrl;
 
       setAiGeneratedImageUrl(newImageUrl);
-      setGeneratedData(prevData => ({
-        ...prevData!, // Assert prevData is not null due to initial check
-        thumbnail: newImageUrl || '', 
-      }));
+      setGeneratedData(prevData => {
+        // Get the updated data with the new image
+        const updatedData = {
+          ...prevData!, // Assert prevData is not null due to initial check
+          thumbnail: newImageUrl || '', 
+        };
+        
+        // Save the updated project with the new image
+        if (newImageUrl) {
+          Promise.resolve().then(() => {
+            saveProject(
+              newImageUrl,
+              updatedData.title,
+              updatedData.description,
+              updatedData.tags.join(',')
+            );
+          });
+        }
+        
+        return updatedData;
+      });
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred during image regeneration';
