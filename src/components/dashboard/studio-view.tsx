@@ -187,9 +187,18 @@ export function StudioView({
         }
       }
 
-      // Now that we have generated all the data, save the project
+      // End the loading state now that content generation is complete
+      setIsLoading(false);
+
+      // Save the project in the background
       if (newImageUrl) {
-        await saveProject(newImageUrl, generatedTitle, generatedDescription, generatedTags.join(','));
+        // We don't await this call so it happens in the background
+        saveProject(newImageUrl, generatedTitle, generatedDescription, generatedTags.join(','))
+          .catch(error => {
+            console.error('Background project save failed:', error);
+            // Optional: Show a toast error if background save fails
+            toast.error(`Failed to save project in background: ${error.message}`);
+          });
       }
 
     } catch (err) {
@@ -203,8 +212,7 @@ export function StudioView({
         tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
       });
       // setAiGeneratedImageUrl(null); // Already set to null at the start, or to newImageUrl if successful before error
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Make sure to end loading state in case of error too
     }
   };
 
@@ -373,34 +381,38 @@ export function StudioView({
       const newImageUrl = thumbnailResult.imageUrl;
 
       setAiGeneratedImageUrl(newImageUrl);
-      setGeneratedData(prevData => {
-        // Get the updated data with the new image
-        const updatedData = {
-          ...prevData!, // Assert prevData is not null due to initial check
-          thumbnail: newImageUrl || '', 
-        };
-        
-        // Save the updated project with the new image
-        if (newImageUrl) {
-          Promise.resolve().then(() => {
-            saveProject(
-              newImageUrl,
-              updatedData.title,
-              updatedData.description,
-              updatedData.tags.join(',')
-            );
-          });
-        }
-        
-        return updatedData;
-      });
+      
+      // Update the UI with the new image immediately
+      const updatedData = {
+        ...generatedData,
+        thumbnail: newImageUrl || '',
+      };
+      
+      setGeneratedData(updatedData);
+      
+      // End loading state as soon as image is shown
+      setIsLoading(false);
+      
+      // Save the project in the background if we have a new image
+      if (newImageUrl) {
+        // We don't await this call so it happens in the background
+        saveProject(
+          newImageUrl,
+          updatedData.title,
+          updatedData.description,
+          updatedData.tags.join(',')
+        ).catch(error => {
+          console.error('Background project save failed:', error);
+          // Optional: Show a toast error if background save fails
+          toast.error(`Failed to save project in background: ${error.message}`);
+        });
+      }
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred during image regeneration';
       console.error("Error during image regeneration:", errorMessage);
       setError(errorMessage);
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Make sure to end loading state in case of error too
     }
   };
 
