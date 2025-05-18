@@ -16,6 +16,7 @@ import Image from "next/image"; // Import Next.js Image component
 import Link from "next/link"; // Import Next.js Link component
 import { createSupabaseClient } from "@/lib/supabase/client"; // Import Supabase client
 import { useRouter } from "next/navigation"; // Import useRouter for redirects
+import { ProjectInfoPanel } from "@/components/dashboard/ProjectInfoPanel"; // Import the new panel
 
 // New CircularProgress component
 interface CircularProgressProps {
@@ -75,6 +76,19 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
   );
 };
 
+// Define Project type locally (as defined in ProjectInfoPanel and used for state)
+interface Project {
+  id: string;
+  title: string;
+  thumbnailUrl: string;
+  description?: string;
+  tags?: string[];
+  createdAt: string;
+  user_id?: string; // Added to match state, ensure it exists if needed by panel
+  updatedAt?: string;
+  selected_style_id?: string;
+}
+
 export default function DashboardPage() {
   // const [chatInputValue, setChatInputValue] = useState(""); // Removed state for old input
   const [videoDescription, setVideoDescription] = useState("");
@@ -96,6 +110,10 @@ export default function DashboardPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [avatarName, setAvatarName] = useState<string>("User"); // For boring-avatars, default
   const [isLoadingUser, setIsLoadingUser] = useState(true); // Still true by default for initial load
+
+  // State for the project info panel
+  const [projectToView, setProjectToView] = useState<Project | null>(null);
+  const [isProjectInfoPanelOpen, setIsProjectInfoPanelOpen] = useState(false);
 
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const supabase = createSupabaseClient();
@@ -258,6 +276,21 @@ export default function DashboardPage() {
     // If you want to reset the style as well, uncomment the line below:
     // setSelectedThumbnailStyle(null);
   }, []); // Empty dependency array
+
+  // Handler to open the project info panel
+  const handleOpenProjectInfoPanel = useCallback((project: Project) => {
+    console.log("[DashboardPage] Opening project info panel for:", project.title);
+    setProjectToView(project);
+    setIsProjectInfoPanelOpen(true);
+  }, []);
+
+  // Handler to close the project info panel
+  const handleCloseProjectInfoPanel = useCallback(() => {
+    console.log("[DashboardPage] Closing project info panel.");
+    setIsProjectInfoPanelOpen(false);
+    // Delay clearing projectToView to allow for panel exit animation
+    // The ProjectInfoPanel itself handles not rendering if project is null during animation
+  }, []);
 
   if (isLoadingUser) {
     return (
@@ -438,7 +471,7 @@ export default function DashboardPage() {
       <div className={cn(
         "max-w-3xl w-full flex flex-col items-stretch",
         "transition-[margin-right] duration-400 ease-in-out",
-        isDetailsPanelOpen ? "mr-[450px]" : "mr-0"
+        (isDetailsPanelOpen || isProjectInfoPanelOpen) ? "mr-[450px]" : "mr-0"
       )}>
         {activeView === 'studio' ? (
           <StudioView 
@@ -450,7 +483,10 @@ export default function DashboardPage() {
             onPrepareNewGeneration={handlePrepareNewGeneration}
           />
         ) : (
-          <ProjectsView onCreateNew={handleCreateNew} />
+          <ProjectsView 
+            onCreateNew={handleCreateNew} 
+            onProjectClick={handleOpenProjectInfoPanel}
+          />
         )}
       </div>
 
@@ -460,6 +496,13 @@ export default function DashboardPage() {
         userName={userName}
         userEmail={userEmail}
         avatarName={avatarName}
+      />
+
+      {/* Render ProjectInfoPanel */}
+      <ProjectInfoPanel 
+        project={projectToView} 
+        isOpen={isProjectInfoPanelOpen} 
+        onClose={handleCloseProjectInfoPanel} 
       />
     </div>
   );

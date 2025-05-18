@@ -17,12 +17,16 @@ interface Project {
   updatedAt?: string;
   thumbnailUrl: string;
   selected_style_id?: string;
+  description?: string;
+  tags?: string[];
 }
 
 // Define a type for the raw data structure from Supabase projects table
 interface SupabaseProject {
   id: string;
   generated_yt_title: string | null;
+  generated_yt_description: string | null;
+  generated_yt_tags: string | null;
   created_at: string;
   updated_at: string | null;
   thumbnail_storage_path: string | null;
@@ -84,9 +88,10 @@ const getRelativeTime = (dateString: string) => {
 
 interface ProjectsViewProps {
   onCreateNew?: () => void;
+  onProjectClick?: (project: Project) => void;
 }
 
-export function ProjectsView({ onCreateNew }: ProjectsViewProps) {
+export function ProjectsView({ onCreateNew, onProjectClick }: ProjectsViewProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -111,7 +116,7 @@ export function ProjectsView({ onCreateNew }: ProjectsViewProps) {
 
         const { data: fetchedProjectsData, error: dbError } = await supabase
           .from('projects')
-          .select('id, generated_yt_title, created_at, updated_at, thumbnail_storage_path, selected_style_id, user_id')
+          .select('id, user_id, generated_yt_title, created_at, updated_at, thumbnail_storage_path, selected_style_id, generated_yt_description, generated_yt_tags')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
@@ -122,12 +127,14 @@ export function ProjectsView({ onCreateNew }: ProjectsViewProps) {
         if (fetchedProjectsData) {
           const mappedProjects: Project[] = (fetchedProjectsData as SupabaseProject[]).map((dbProject: SupabaseProject) => ({
             id: dbProject.id,
+            user_id: dbProject.user_id,
             title: dbProject.generated_yt_title || "Untitled Project",
             createdAt: dbProject.created_at,
-            updatedAt: dbProject.updated_at || undefined, // Handle possible null from DB
+            updatedAt: dbProject.updated_at || undefined,
             thumbnailUrl: dbProject.thumbnail_storage_path || "/placeholder-thumbnail.png",
-            selected_style_id: dbProject.selected_style_id || undefined, // Handle possible null
-            user_id: dbProject.user_id
+            selected_style_id: dbProject.selected_style_id || undefined,
+            description: dbProject.generated_yt_description || "No description available.",
+            tags: dbProject.generated_yt_tags ? dbProject.generated_yt_tags.split(',').map(tag => tag.trim()).filter(tag => tag) : []
           }));
           setProjects(mappedProjects);
         } else {
@@ -154,6 +161,12 @@ export function ProjectsView({ onCreateNew }: ProjectsViewProps) {
       onCreateNew();
     } else {
       console.log("Create new project");
+    }
+  };
+
+  const handleProjectCardClick = (project: Project) => {
+    if (onProjectClick) {
+      onProjectClick(project);
     }
   };
 
@@ -221,6 +234,7 @@ export function ProjectsView({ onCreateNew }: ProjectsViewProps) {
                 delay: index * 0.1,
                 ease: [0.25, 0.1, 0.25, 1]
               }}
+              onClick={() => handleProjectCardClick(project)}
             >
               <div 
                 className="group relative overflow-hidden rounded-xl transition-all duration-300 bg-white hover:bg-gray-50 cursor-pointer"
@@ -273,11 +287,6 @@ export function ProjectsView({ onCreateNew }: ProjectsViewProps) {
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-1 leading-tight group-hover:text-black transition-colors">{project.title}</h3>
                     </div>
-                    
-                    {/* Time badge */}
-                    <span className="text-gray-400 text-xs px-2 py-1 bg-gray-100 rounded-full group-hover:bg-gray-200 transition-colors">
-                      {getRelativeTime(project.createdAt)}
-                    </span>
                   </div>
                 </div>
               </div>
