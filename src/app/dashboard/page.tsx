@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 // import { ChatInput } from "@/components/ui/chat-input"; // No longer needed directly here
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -244,10 +244,20 @@ export default function DashboardPage() {
     };
   }, [supabase, router, userEmail]); // Added userEmail to dependencies to control isBackgroundRefresh correctly
 
-  // Handler for details panel state change
-  const handleDetailsPanelStateChange = (isOpen: boolean) => {
+  // Handler for details panel visibility state change from StudioView
+  const handleDetailsPanelVisibilityChange = useCallback((isOpen: boolean) => {
+    console.log("[DashboardPage] handleDetailsPanelVisibilityChange called. isOpen:", isOpen);
     setIsDetailsPanelOpen(isOpen);
-  };
+  }, []); // Empty dependency array means this function is stable
+
+  // Handler to reset inputs for a new generation, called by StudioView
+  const handlePrepareNewGeneration = useCallback(() => {
+    console.log("[DashboardPage] handlePrepareNewGeneration called, clearing videoDescription.");
+    setVideoDescription("");
+    // We decided to keep the style selected, so setSelectedThumbnailStyle(null) remains commented out.
+    // If you want to reset the style as well, uncomment the line below:
+    // setSelectedThumbnailStyle(null);
+  }, []); // Empty dependency array
 
   if (isLoadingUser) {
     return (
@@ -421,7 +431,8 @@ export default function DashboardPage() {
             onSelectStyle={setSelectedThumbnailStyle}
             videoDescription={videoDescription}
             onVideoDescriptionChange={setVideoDescription}
-            onDetailsPanelStateChange={handleDetailsPanelStateChange}
+            onDetailsPanelStateChange={handleDetailsPanelVisibilityChange}
+            onPrepareNewGeneration={handlePrepareNewGeneration}
           />
         ) : (
           <ProjectsView onCreateNew={handleCreateNew} />

@@ -13,6 +13,7 @@ interface StudioViewProps {
   videoDescription: string;
   onVideoDescriptionChange: (value: string) => void;
   onDetailsPanelStateChange?: (isOpen: boolean) => void;
+  onPrepareNewGeneration?: () => void;
 }
 
 export function StudioView({
@@ -21,6 +22,7 @@ export function StudioView({
   videoDescription,
   onVideoDescriptionChange,
   onDetailsPanelStateChange,
+  onPrepareNewGeneration,
 }: StudioViewProps) {
   const [isDetailsPanelOpen, setIsDetailsPanelOpen] = useState(false);
   const [generatedData, setGeneratedData] = useState<{
@@ -94,7 +96,6 @@ export function StudioView({
         thumbnailText, 
         textStyle
       );
-      console.log('[TESTING - Structured Prompt from Gemini]', structuredPrompt); // Log for debugging
 
       // First, generate the thumbnail image
       const thumbnailResponse = await fetch('/api/generate-thumbnail', {
@@ -325,8 +326,10 @@ export function StudioView({
   };
 
   const handleCloseDetailsPanel = () => {
-    // Add a small delay when closing to make the animation smoother
     setIsDetailsPanelOpen(false);
+    if (onPrepareNewGeneration) {
+      onPrepareNewGeneration();
+    }
   };
 
   const handleChatSubmit = (prompt: string, thumbnailText?: string, textStyle?: string) => {
@@ -364,7 +367,6 @@ export function StudioView({
         currentThumbnailText, // Stored thumbnail text from initial generation
         currentTextStyle    // Stored text style from initial generation
       );
-      console.log('[TESTING - Regenerate Image - Structured Prompt from Gemini]', structuredPrompt);
 
       const thumbnailResponse = await fetch('/api/generate-thumbnail', {
         method: 'POST',

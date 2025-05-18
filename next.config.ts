@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "jgsydhdmzbxlwyphplae.supabase.co",
+        port: "",
+        pathname: "/storage/v1/object/public/**",
+      },
     ],
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',

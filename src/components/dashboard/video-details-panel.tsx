@@ -273,16 +273,17 @@ export function VideoDetailsPanel({
                 <h2 className="text-2xl font-semibold" style={{ color: 'hsl(var(--foreground))' }}>Video Details</h2>
                 <motion.div
                   variants={buttonMotionVariants}
-                  whileHover="hover"
-                  whileTap="tap"
+                  whileHover={{ ...buttonMotionVariants.hover, scale: 1.05 }}
+                  whileTap={{ ...buttonMotionVariants.tap, scale: 0.95 }}
                 >
                   <Button 
-                    variant="outline" 
+                    variant="ghost"
                     size="icon" 
-                    onClick={onClose} 
-                    className="rounded-md"
+                    onClick={onClose}
+                    className="rounded-md w-9 h-9 p-0 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                    title="Close Panel"
                   >
-                    <X size={18} />
+                    <X size={20} />
                   </Button>
                 </motion.div>
               </motion.div>
@@ -335,6 +336,18 @@ export function VideoDetailsPanel({
                   {!isLoading && (
                     <div className="absolute bottom-3 right-3 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2">
                       <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                        <Button
+                          size="icon"
+                          className="rounded-full shadow-sm bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
+                          title="Regenerate Image"
+                          onClick={onRegenerateImage}
+                          disabled={!data?.thumbnail || isLoading}
+                        >
+                          <RefreshCw size={18} />
+                        </Button>
+                      </motion.div>
+
+                      <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                         <Button 
                           size="icon" 
                           className="rounded-full shadow-sm bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
@@ -345,6 +358,7 @@ export function VideoDetailsPanel({
                           <Eye size={18} />
                         </Button>
                       </motion.div>
+
                       <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                         <Button 
                           size="icon" 
@@ -356,19 +370,6 @@ export function VideoDetailsPanel({
                           <Download size={18} />
                         </Button>
                       </motion.div>
-
-                        <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
-                          <Button
-                            size="icon"
-                            className="rounded-full shadow-sm bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
-                            title="Regenerate Image"
-                            onClick={onRegenerateImage}
-                            disabled={!data?.thumbnail || isLoading}
-                          >
-                            <RefreshCw size={18} />
-                          </Button>
-                        </motion.div>
-
                     </div>
                   )}
                 </div>
