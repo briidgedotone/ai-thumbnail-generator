@@ -121,188 +121,192 @@ export function ProjectInfoPanel({ project, isOpen, onClose }: ProjectInfoPanelP
     <MotionConfig transition={{ type: 'spring', bounce: 0.1, duration: 0.4 }}>
       <AnimatePresence>
         {isOpen && project && (
-          <motion.div
-            key="project-info-panel"
-            className="fixed top-0 right-0 bottom-0 border-l border-zinc-200 shadow-lg z-40 overflow-hidden bg-white dark:bg-zinc-900 dark:border-zinc-800"
-            variants={panelVariants} 
-            initial="hidden" 
-            animate="visible" 
-            exit="exit"
-          >
-            {/* Backdrop for mobile */}
+          <>
+            {/* Full screen backdrop overlay */}
             <motion.div 
-              className="fixed inset-0 bg-black/25 backdrop-blur-sm z-30 lg:hidden"
+              className="fixed inset-0 bg-black/25 z-30"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={onClose}
             />
             
-            {/* Header */}
-            <motion.div 
-              className="flex items-center px-6 py-4 border-b border-zinc-100 dark:border-zinc-800"
-              variants={itemVariants}
+            <motion.div
+              key="project-info-panel"
+              className="fixed top-0 right-0 bottom-0 border-l border-zinc-200 shadow-lg z-40 overflow-hidden bg-white dark:bg-zinc-900 dark:border-zinc-800"
+              variants={panelVariants} 
+              initial="hidden" 
+              animate="visible" 
+              exit="exit"
             >
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={onClose} 
-                className="mr-3 rounded-full w-8 h-8 text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors" 
-                title="Close Panel"
+              {/* Removed mobile-only backdrop since we now have a full-screen one */}
+              
+              {/* Header */}
+              <motion.div 
+                className="flex items-center px-6 py-4 border-b border-zinc-100 dark:border-zinc-800"
+                variants={itemVariants}
               >
-                <ArrowLeft size={18} />
-              </Button>
-              <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Project Details</h2>
-            </motion.div>
-
-            <div className="h-full flex flex-col overflow-y-auto pb-6">
-              {/* Thumbnail */}
-              {project.thumbnailUrl && project.thumbnailUrl !== '/placeholder-thumbnail.png' && (
-                <motion.div 
-                  className="px-6 pt-6" 
-                  variants={itemVariants}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={onClose} 
+                  className="mr-3 rounded-full w-8 h-8 text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors" 
+                  title="Close Panel"
                 >
-                  <div className="relative aspect-video w-full overflow-hidden rounded-xl mb-4 shadow-md group bg-zinc-100 dark:bg-zinc-800">
-                    <Image 
-                      src={project.thumbnailUrl} 
-                      alt={`Thumbnail for ${project.title}`} 
-                      fill 
-                      className="object-cover transition-transform duration-300 group-hover:scale-105" 
-                      unoptimized={project.thumbnailUrl?.includes('oaidalleapiprodscus.blob.core.windows.net') || project.thumbnailUrl?.startsWith('data:image/')} 
-                    />
-                    <div 
-                      className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    />
-                    <div className="absolute bottom-3 right-3 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2">
+                  <ArrowLeft size={18} />
+                </Button>
+                <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Project Details</h2>
+              </motion.div>
+
+              <div className="h-full flex flex-col overflow-y-auto pb-6">
+                {/* Thumbnail */}
+                {project.thumbnailUrl && project.thumbnailUrl !== '/placeholder-thumbnail.png' && (
+                  <motion.div 
+                    className="px-6 pt-6" 
+                    variants={itemVariants}
+                  >
+                    <div className="relative aspect-video w-full overflow-hidden rounded-xl mb-4 shadow-md group bg-zinc-100 dark:bg-zinc-800">
+                      <Image 
+                        src={project.thumbnailUrl} 
+                        alt={`Thumbnail for ${project.title}`} 
+                        fill 
+                        className="object-cover transition-transform duration-300 group-hover:scale-105" 
+                        unoptimized={project.thumbnailUrl?.includes('oaidalleapiprodscus.blob.core.windows.net') || project.thumbnailUrl?.startsWith('data:image/')} 
+                      />
+                      <div 
+                        className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      />
+                      <div className="absolute bottom-3 right-3 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2">
+                        <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                          <Button 
+                            size="icon" 
+                            className="rounded-full shadow-md bg-white/90 hover:bg-white text-zinc-700 cursor-pointer w-9 h-9" 
+                            title="Preview Thumbnail" 
+                            onClick={() => setIsPreviewModalOpen(true)}
+                          >
+                            <Eye size={16} />
+                          </Button>
+                        </motion.div>
+                        <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                          <Button 
+                            size="icon" 
+                            className="rounded-full shadow-md bg-white/90 hover:bg-white text-zinc-700 cursor-pointer w-9 h-9" 
+                            title="Download Thumbnail" 
+                            onClick={handleDownload}
+                          >
+                            <Download size={16} />
+                          </Button>
+                        </motion.div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                <div className="px-6 flex-1">
+                  {/* Title */}
+                  <motion.div className="mb-6" variants={itemVariants}>
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Title</h3>
                       <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                         <Button 
+                          variant="ghost" 
                           size="icon" 
-                          className="rounded-full shadow-md bg-white/90 hover:bg-white text-zinc-700 cursor-pointer w-9 h-9" 
-                          title="Preview Thumbnail" 
-                          onClick={() => setIsPreviewModalOpen(true)}
+                          onClick={() => copyToClipboard(project.title, setTitleCopied)} 
+                          title={titleCopied ? "Copied!" : "Copy Title"} 
+                          className="w-8 h-8 rounded-full"
                         >
-                          <Eye size={16} />
-                        </Button>
-                      </motion.div>
-                      <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
-                        <Button 
-                          size="icon" 
-                          className="rounded-full shadow-md bg-white/90 hover:bg-white text-zinc-700 cursor-pointer w-9 h-9" 
-                          title="Download Thumbnail" 
-                          onClick={handleDownload}
-                        >
-                          <Download size={16} />
+                          {titleCopied ? 
+                            <Check size={16} className="text-green-500" /> : 
+                            <Copy size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+                          }
                         </Button>
                       </motion.div>
                     </div>
-                  </div>
-                </motion.div>
-              )}
+                    <p className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">{project.title}</p>
+                  </motion.div>
 
-              <div className="px-6 flex-1">
-                {/* Title */}
-                <motion.div className="mb-6" variants={itemVariants}>
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Title</h3>
-                    <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => copyToClipboard(project.title, setTitleCopied)} 
-                        title={titleCopied ? "Copied!" : "Copy Title"} 
-                        className="w-8 h-8 rounded-full"
-                      >
-                        {titleCopied ? 
-                          <Check size={16} className="text-green-500" /> : 
-                          <Copy size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
-                        }
-                      </Button>
+                  {/* Description */}
+                  {project.description && (
+                    <motion.div className="mb-6" variants={itemVariants}>
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Description</h3>
+                        <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => copyToClipboard(project.description!, setDescriptionCopied)} 
+                            title={descriptionCopied ? "Copied!" : "Copy Description"} 
+                            className="w-8 h-8 rounded-full"
+                          >
+                            {descriptionCopied ? 
+                              <Check size={16} className="text-green-500" /> : 
+                              <Copy size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+                            }
+                          </Button>
+                        </motion.div>
+                      </div>
+                      <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800">
+                        <p className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-line leading-relaxed">{project.description}</p>
+                      </div>
                     </motion.div>
-                  </div>
-                  <p className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">{project.title}</p>
-                </motion.div>
+                  )}
 
-                {/* Description */}
-                {project.description && (
-                  <motion.div className="mb-6" variants={itemVariants}>
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Description</h3>
-                      <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => copyToClipboard(project.description!, setDescriptionCopied)} 
-                          title={descriptionCopied ? "Copied!" : "Copy Description"} 
-                          className="w-8 h-8 rounded-full"
-                        >
-                          {descriptionCopied ? 
-                            <Check size={16} className="text-green-500" /> : 
-                            <Copy size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
-                          }
-                        </Button>
-                      </motion.div>
-                    </div>
-                    <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800">
-                      <p className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-line leading-relaxed">{project.description}</p>
+                  {/* Tags */}
+                  {project.tags && project.tags.length > 0 && (
+                    <motion.div className="mb-6" variants={itemVariants}>
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Tags</h3>
+                        <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => copyToClipboard(project.tags!.join(', '), setTagsCopied)} 
+                            title={tagsCopied ? "Copied!" : "Copy Tags"} 
+                            className="w-8 h-8 rounded-full"
+                          >
+                            {tagsCopied ? 
+                              <Check size={16} className="text-green-500" /> : 
+                              <Copy size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+                            }
+                          </Button>
+                        </motion.div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {project.tags.map((tag, index) => (
+                          <motion.span 
+                            key={index} 
+                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-zinc-100 text-zinc-800 rounded-full border border-zinc-200 hover:bg-zinc-200 transition-colors dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 dark:hover:bg-zinc-700"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ 
+                              opacity: 1, 
+                              scale: 1,
+                              transition: { delay: 0.1 + (index * 0.05) } 
+                            }}
+                          >
+                            <Tag size={12} className="mr-1.5" />{tag}
+                          </motion.span>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                  
+                  {/* Created At */}
+                  <motion.div 
+                    className="pt-4 border-t border-zinc-100 dark:border-zinc-800 mt-auto"
+                    variants={itemVariants}
+                  >
+                    <div className="flex items-center">
+                      <Clock size={16} className="text-zinc-400 mr-2" />
+                      <div>
+                        <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Created</h3>
+                        <p className="text-sm text-zinc-700 dark:text-zinc-300">{formatDateForPanel(project.createdAt)}</p>
+                      </div>
                     </div>
                   </motion.div>
-                )}
-
-                {/* Tags */}
-                {project.tags && project.tags.length > 0 && (
-                  <motion.div className="mb-6" variants={itemVariants}>
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Tags</h3>
-                      <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => copyToClipboard(project.tags!.join(', '), setTagsCopied)} 
-                          title={tagsCopied ? "Copied!" : "Copy Tags"} 
-                          className="w-8 h-8 rounded-full"
-                        >
-                          {tagsCopied ? 
-                            <Check size={16} className="text-green-500" /> : 
-                            <Copy size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
-                          }
-                        </Button>
-                      </motion.div>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {project.tags.map((tag, index) => (
-                        <motion.span 
-                          key={index} 
-                          className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-zinc-100 text-zinc-800 rounded-full border border-zinc-200 hover:bg-zinc-200 transition-colors dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 dark:hover:bg-zinc-700"
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ 
-                            opacity: 1, 
-                            scale: 1,
-                            transition: { delay: 0.1 + (index * 0.05) } 
-                          }}
-                        >
-                          <Tag size={12} className="mr-1.5" />{tag}
-                        </motion.span>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-                
-                {/* Created At */}
-                <motion.div 
-                  className="pt-4 border-t border-zinc-100 dark:border-zinc-800 mt-auto"
-                  variants={itemVariants}
-                >
-                  <div className="flex items-center">
-                    <Clock size={16} className="text-zinc-400 mr-2" />
-                    <div>
-                      <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Created</h3>
-                      <p className="text-sm text-zinc-700 dark:text-zinc-300">{formatDateForPanel(project.createdAt)}</p>
-                    </div>
-                  </div>
-                </motion.div>
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 

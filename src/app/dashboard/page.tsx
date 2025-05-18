@@ -313,7 +313,7 @@ export default function DashboardPage() {
 
       {/* Top Center Fixed Elements: Studio/Projects Button Group */}
       <AnimatePresence mode="wait">
-        {!isDetailsPanelOpen && (
+        {!isDetailsPanelOpen && !isProjectInfoPanelOpen && (
           <motion.div 
             key="studio-projects-switcher"
             className="fixed top-6 left-1/2 -translate-x-1/2 z-50"
@@ -388,7 +388,7 @@ export default function DashboardPage() {
 
       {/* Top Right Fixed Elements: Credits & Profile */}
       <AnimatePresence mode="wait">
-        {!isDetailsPanelOpen && (
+        {!isDetailsPanelOpen && !isProjectInfoPanelOpen && (
           <motion.div 
             className="fixed top-6 right-6 z-50 flex items-center gap-3"
             initial={{ opacity: 0, y: -10 }}
@@ -399,7 +399,7 @@ export default function DashboardPage() {
               stiffness: 250,
               damping: 25,
               duration: 0.4,
-              delay: isDetailsPanelOpen ? 0 : 0.1 // Small delay when reappearing
+              delay: (isDetailsPanelOpen || isProjectInfoPanelOpen) ? 0 : 0.1 // Small delay when reappearing
             }}
           >
             {/* Credit Counter Element - Changed to pill shape with text, and set to 44px height */}
