@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 // import { ChatInput } from "@/components/ui/chat-input"; // No longer needed directly here
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +16,7 @@ import Image from "next/image"; // Import Next.js Image component
 import Link from "next/link"; // Import Next.js Link component
 import { createSupabaseClient } from "@/lib/supabase/client"; // Import Supabase client
 import { useRouter } from "next/navigation"; // Import useRouter for redirects
+import { ProjectInfoPanel } from "@/components/dashboard/ProjectInfoPanel"; // Import the new panel
 
 // New CircularProgress component
 interface CircularProgressProps {
@@ -75,6 +76,19 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
   );
 };
 
+// Define Project type locally (as defined in ProjectInfoPanel and used for state)
+interface Project {
+  id: string;
+  title: string;
+  thumbnailUrl: string;
+  description?: string;
+  tags?: string[];
+  createdAt: string;
+  user_id?: string; // Added to match state, ensure it exists if needed by panel
+  updatedAt?: string;
+  selected_style_id?: string;
+}
+
 export default function DashboardPage() {
   // const [chatInputValue, setChatInputValue] = useState(""); // Removed state for old input
   const [videoDescription, setVideoDescription] = useState("");
@@ -96,6 +110,10 @@ export default function DashboardPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [avatarName, setAvatarName] = useState<string>("User"); // For boring-avatars, default
   const [isLoadingUser, setIsLoadingUser] = useState(true); // Still true by default for initial load
+
+  // State for the project info panel
+  const [projectToView, setProjectToView] = useState<Project | null>(null);
+  const [isProjectInfoPanelOpen, setIsProjectInfoPanelOpen] = useState(false);
 
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const supabase = createSupabaseClient();
@@ -244,10 +262,35 @@ export default function DashboardPage() {
     };
   }, [supabase, router, userEmail]); // Added userEmail to dependencies to control isBackgroundRefresh correctly
 
-  // Handler for details panel state change
-  const handleDetailsPanelStateChange = (isOpen: boolean) => {
+  // Handler for details panel visibility state change from StudioView
+  const handleDetailsPanelVisibilityChange = useCallback((isOpen: boolean) => {
+    console.log("[DashboardPage] handleDetailsPanelVisibilityChange called. isOpen:", isOpen);
     setIsDetailsPanelOpen(isOpen);
-  };
+  }, []); // Empty dependency array means this function is stable
+
+  // Handler to reset inputs for a new generation, called by StudioView
+  const handlePrepareNewGeneration = useCallback(() => {
+    console.log("[DashboardPage] handlePrepareNewGeneration called, clearing videoDescription.");
+    setVideoDescription("");
+    // We decided to keep the style selected, so setSelectedThumbnailStyle(null) remains commented out.
+    // If you want to reset the style as well, uncomment the line below:
+    // setSelectedThumbnailStyle(null);
+  }, []); // Empty dependency array
+
+  // Handler to open the project info panel
+  const handleOpenProjectInfoPanel = useCallback((project: Project) => {
+    console.log("[DashboardPage] Opening project info panel for:", project.title);
+    setProjectToView(project);
+    setIsProjectInfoPanelOpen(true);
+  }, []);
+
+  // Handler to close the project info panel
+  const handleCloseProjectInfoPanel = useCallback(() => {
+    console.log("[DashboardPage] Closing project info panel.");
+    setIsProjectInfoPanelOpen(false);
+    // Delay clearing projectToView to allow for panel exit animation
+    // The ProjectInfoPanel itself handles not rendering if project is null during animation
+  }, []);
 
   if (isLoadingUser) {
     return (
@@ -269,68 +312,83 @@ export default function DashboardPage() {
       </div>
 
       {/* Top Center Fixed Elements: Studio/Projects Button Group */}
-      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
-        <div className="relative flex items-center gap-1 p-1 h-11 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-gray-300">
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "relative rounded-full px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-colors duration-200 ease-in-out z-20 cursor-pointer", // Added cursor-pointer
-              activeView !== 'studio' && "hover:bg-gray-200/70"
-            )}
-            onClick={() => {
-              setActiveView('studio');
-              console.log("Studio view selected");
+      <AnimatePresence mode="wait">
+        {!isDetailsPanelOpen && !isProjectInfoPanelOpen && (
+          <motion.div 
+            key="studio-projects-switcher"
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-50"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ 
+              type: "spring",
+              stiffness: 260,
+              damping: 25,
+              duration: 0.3
             }}
           >
-            {activeView === 'studio' && (
-              <motion.div
-                layoutId="activePill"
-                className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] shadow-md z-10"
-                transition={{ type: "spring", stiffness: 350, damping: 30 }}
-              />
-            )}
-            <span className={cn(
-              "relative z-30 flex items-center gap-2",
-              activeView === 'studio' ? "text-white" : "text-gray-600 hover:text-gray-800" 
-            )}>
-              <Palette size={16} /> Studio
-            </span>
-          </Button>
+            <div className="relative flex items-center gap-1 p-1 h-11 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-gray-300">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "relative rounded-full px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-colors duration-200 ease-in-out z-20 cursor-pointer",
+                  activeView !== 'studio' && "hover:bg-gray-200/70"
+                )}
+                onClick={() => {
+                  setActiveView('studio');
+                  console.log("Studio view selected");
+                }}
+              >
+                {activeView === 'studio' && (
+                  <motion.div
+                    layoutId="activePill"
+                    className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] shadow-md z-10"
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  />
+                )}
+                <span className={cn(
+                  "relative z-30 flex items-center gap-2",
+                  activeView === 'studio' ? "text-white" : "text-gray-600 hover:text-gray-800" 
+                )}>
+                  <Palette size={16} /> Studio
+                </span>
+              </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "relative rounded-full px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-colors duration-200 ease-in-out z-20 cursor-pointer", // Added cursor-pointer
-              activeView !== 'projects' && "hover:bg-gray-200/70"
-            )}
-            onClick={() => {
-              setActiveView('projects');
-              console.log("Projects view selected");
-            }}
-          >
-            {activeView === 'projects' && (
-              <motion.div
-                layoutId="activePill" 
-                className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] shadow-md z-10"
-                transition={{ type: "spring", stiffness: 350, damping: 30 }}
-              />
-            )}
-            <span className={cn(
-              "relative z-30 flex items-center gap-2",
-              activeView === 'projects' ? "text-white" : "text-gray-600 hover:text-gray-800" 
-            )}>
-              <LayoutGrid size={16} /> Projects
-            </span>
-          </Button>
-        </div>
-      </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "relative rounded-full px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-colors duration-200 ease-in-out z-20 cursor-pointer",
+                  activeView !== 'projects' && "hover:bg-gray-200/70"
+                )}
+                onClick={() => {
+                  setActiveView('projects');
+                  console.log("Projects view selected");
+                }}
+              >
+                {activeView === 'projects' && (
+                  <motion.div
+                    layoutId="activePill" 
+                    className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] shadow-md z-10"
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  />
+                )}
+                <span className={cn(
+                  "relative z-30 flex items-center gap-2",
+                  activeView === 'projects' ? "text-white" : "text-gray-600 hover:text-gray-800" 
+                )}>
+                  <LayoutGrid size={16} /> Projects
+                </span>
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Top Right Fixed Elements: Credits & Profile */}
       <AnimatePresence mode="wait">
-        {!isDetailsPanelOpen && (
+        {!isDetailsPanelOpen && !isProjectInfoPanelOpen && (
           <motion.div 
             className="fixed top-6 right-6 z-50 flex items-center gap-3"
             initial={{ opacity: 0, y: -10 }}
@@ -341,7 +399,7 @@ export default function DashboardPage() {
               stiffness: 250,
               damping: 25,
               duration: 0.4,
-              delay: isDetailsPanelOpen ? 0 : 0.1 // Small delay when reappearing
+              delay: (isDetailsPanelOpen || isProjectInfoPanelOpen) ? 0 : 0.1 // Small delay when reappearing
             }}
           >
             {/* Credit Counter Element - Changed to pill shape with text, and set to 44px height */}
@@ -413,7 +471,7 @@ export default function DashboardPage() {
       <div className={cn(
         "max-w-3xl w-full flex flex-col items-stretch",
         "transition-[margin-right] duration-400 ease-in-out",
-        isDetailsPanelOpen ? "mr-[450px]" : "mr-0"
+        (isDetailsPanelOpen || isProjectInfoPanelOpen) ? "mr-[450px]" : "mr-0"
       )}>
         {activeView === 'studio' ? (
           <StudioView 
@@ -421,10 +479,14 @@ export default function DashboardPage() {
             onSelectStyle={setSelectedThumbnailStyle}
             videoDescription={videoDescription}
             onVideoDescriptionChange={setVideoDescription}
-            onDetailsPanelStateChange={handleDetailsPanelStateChange}
+            onDetailsPanelStateChange={handleDetailsPanelVisibilityChange}
+            onPrepareNewGeneration={handlePrepareNewGeneration}
           />
         ) : (
-          <ProjectsView onCreateNew={handleCreateNew} />
+          <ProjectsView 
+            onCreateNew={handleCreateNew} 
+            onProjectClick={handleOpenProjectInfoPanel}
+          />
         )}
       </div>
 
@@ -434,6 +496,13 @@ export default function DashboardPage() {
         userName={userName}
         userEmail={userEmail}
         avatarName={avatarName}
+      />
+
+      {/* Render ProjectInfoPanel */}
+      <ProjectInfoPanel 
+        project={projectToView} 
+        isOpen={isProjectInfoPanelOpen} 
+        onClose={handleCloseProjectInfoPanel} 
       />
     </div>
   );

@@ -1,41 +1,65 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Download, Trash2, Plus, Video, Search, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { createSupabaseClient } from "@/lib/supabase/client";
 
-// Mock data for projects
-const mockProjects = [
+// Define a type for our project data from the frontend perspective
+interface Project {
+  id: string;
+  user_id?: string;
+  title: string;
+  createdAt: string;
+  updatedAt?: string;
+  thumbnailUrl: string;
+  selected_style_id?: string;
+  description?: string;
+  tags?: string[];
+}
+
+// Define a type for the raw data structure from Supabase projects table
+interface SupabaseProject {
+  id: string;
+  generated_yt_title: string | null;
+  generated_yt_description: string | null;
+  generated_yt_tags: string | null;
+  created_at: string;
+  updated_at: string | null;
+  thumbnail_storage_path: string | null;
+  selected_style_id: string | null;
+  user_id: string;
+}
+
+// Mock data for projects - will be replaced by API call
+// Note: This mock data should also be updated to reflect the new Project interface if used for testing.
+const mockProjectsData: Project[] = [
   {
     id: "p1",
     title: "Gaming Highlights Montage",
     createdAt: "2024-07-01T12:00:00Z",
     thumbnailUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=250&q=80",
-    videoLength: "10:24",
   },
   {
     id: "p2",
     title: "Cooking Tutorial: Italian Pasta",
     createdAt: "2024-06-28T15:30:00Z",
     thumbnailUrl: "https://images.unsplash.com/photo-1498579397066-22750a3cb424?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=250&q=80",
-    videoLength: "15:37",
   },
   {
     id: "p3",
     title: "Travel Vlog: Bali Adventures",
     createdAt: "2024-06-20T09:15:00Z",
     thumbnailUrl: "https://images.unsplash.com/photo-1539367628448-4bc5c9d171c8?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=250&q=80",
-    videoLength: "22:15",
   },
   {
     id: "p4",
     title: "Productivity Tips For Devs",
     createdAt: "2024-06-10T14:00:00Z",
     thumbnailUrl: "https://images.unsplash.com/photo-1484417894907-623942c8ee29?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=250&q=80",
-    videoLength: "08:47",
   },
 ];
 
@@ -64,16 +88,85 @@ const getRelativeTime = (dateString: string) => {
 
 interface ProjectsViewProps {
   onCreateNew?: () => void;
+  onProjectClick?: (project: Project) => void;
 }
 
-export function ProjectsView({ onCreateNew }: ProjectsViewProps) {
-  const hasProjects = mockProjects.length > 0;
+export function ProjectsView({ onCreateNew, onProjectClick }: ProjectsViewProps) {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Instantiate the Supabase client
+  // useMemo ensures the client is created only once per component instance
+  const supabase = useMemo(() => createSupabaseClient(), []);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+        if (userError) {
+          throw new Error("Error fetching user: " + userError.message);
+        }
+        if (!user) {
+          throw new Error("No user logged in. Please log in to see your projects.");
+        }
+
+        const { data: fetchedProjectsData, error: dbError } = await supabase
+          .from('projects')
+          .select('id, user_id, generated_yt_title, created_at, updated_at, thumbnail_storage_path, selected_style_id, generated_yt_description, generated_yt_tags')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (dbError) {
+          throw new Error("Failed to fetch projects: " + dbError.message);
+        }
+
+        if (fetchedProjectsData) {
+          const mappedProjects: Project[] = (fetchedProjectsData as SupabaseProject[]).map((dbProject: SupabaseProject) => ({
+            id: dbProject.id,
+            user_id: dbProject.user_id,
+            title: dbProject.generated_yt_title || "Untitled Project",
+            createdAt: dbProject.created_at,
+            updatedAt: dbProject.updated_at || undefined,
+            thumbnailUrl: dbProject.thumbnail_storage_path || "/placeholder-thumbnail.png",
+            selected_style_id: dbProject.selected_style_id || undefined,
+            description: dbProject.generated_yt_description || "No description available.",
+            tags: dbProject.generated_yt_tags ? dbProject.generated_yt_tags.split(',').map(tag => tag.trim()).filter(tag => tag) : []
+          }));
+          setProjects(mappedProjects);
+        } else {
+          setProjects([]);
+        }
+
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
+        console.error("Error in fetchProjects:", errorMessage);
+        setError(errorMessage);
+        setProjects([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, [supabase]);
+
+  const hasProjects = projects.length > 0;
 
   const handleCreateNew = () => {
     if (onCreateNew) {
       onCreateNew();
     } else {
       console.log("Create new project");
+    }
+  };
+
+  const handleProjectCardClick = (project: Project) => {
+    if (onProjectClick) {
+      onProjectClick(project);
     }
   };
 
@@ -101,9 +194,37 @@ export function ProjectsView({ onCreateNew }: ProjectsViewProps) {
         </div>
       </div>
 
-      {hasProjects ? (
+      {isLoading && (
+        <div className="flex justify-center items-center h-64">
+          <p className="text-gray-500">Loading projects...</p>
+          {/* You can replace this with a spinner component */}
+        </div>
+      )}
+
+      {!isLoading && error && (
+        <div className="flex flex-col items-center justify-center text-center p-6 bg-red-50 border border-red-200 rounded-lg">
+          <Video size={32} className="text-red-500 mb-3" />
+          <h3 className="text-xl font-semibold text-red-700 mb-2">Error Loading Projects</h3>
+          <p className="text-red-600 max-w-md mb-4">{error}</p>
+          <Button 
+            onClick={() => { /* Add retry logic here if needed */ 
+              // For now, just re-trigger the fetch (though useEffect dependency is empty)
+              // You might want to make fetchProjects a standalone function to call it here
+              // or add a dependency to useEffect if appropriate
+              // fetchProjects(); // This won't work directly due to useEffect scope
+              // For a simple retry, you could force a re-render or reload:
+              window.location.reload(); // Simplistic retry
+            }}
+            className="rounded-lg border-2 border-red-600 bg-red-500 text-white px-4 py-2 text-sm font-medium h-10 shadow-[2px_2px_0px_0px_#B91C1C] transition-all duration-300 hover:shadow-[4px_4px_0px_0px_#B91C1C] hover:translate-x-[-2px] hover:translate-y-[-2px] cursor-pointer"
+          >
+            Try Again
+          </Button>
+        </div>
+      )}
+
+      {!isLoading && !error && hasProjects && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {mockProjects.map((project, index) => (
+          {projects.map((project, index) => (
             <motion.div
               key={project.id}
               initial={{ opacity: 0, y: 20 }}
@@ -113,6 +234,7 @@ export function ProjectsView({ onCreateNew }: ProjectsViewProps) {
                 delay: index * 0.1,
                 ease: [0.25, 0.1, 0.25, 1]
               }}
+              onClick={() => handleProjectCardClick(project)}
             >
               <div 
                 className="group relative overflow-hidden rounded-xl transition-all duration-300 bg-white hover:bg-gray-50 cursor-pointer"
@@ -165,18 +287,15 @@ export function ProjectsView({ onCreateNew }: ProjectsViewProps) {
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-1 leading-tight group-hover:text-black transition-colors">{project.title}</h3>
                     </div>
-                    
-                    {/* Time badge */}
-                    <span className="text-gray-400 text-xs px-2 py-1 bg-gray-100 rounded-full group-hover:bg-gray-200 transition-colors">
-                      {getRelativeTime(project.createdAt)}
-                    </span>
                   </div>
                 </div>
               </div>
             </motion.div>
           ))}
         </div>
-      ) : (
+      )}
+
+      {!isLoading && !error && !hasProjects && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}

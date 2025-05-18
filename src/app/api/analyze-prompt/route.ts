@@ -26,8 +26,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ structuredPrompt: null });
     }
 
-    // Convert the themes JSON string back to an object if needed
-    const parsedThemes = typeof themes === 'string' ? JSON.parse(themes) : themes;
+    let parsedThemes: any = {}; // Default to empty object
+
+    if (typeof themes === 'string') {
+      try {
+        parsedThemes = JSON.parse(themes);
+      } catch (e) {
+        console.error("Failed to parse themes JSON:", e);
+        return NextResponse.json(
+          { error: "Invalid 'themes' format. Expected a JSON string." },
+          { status: 400 }
+        );
+      }
+    } else if (themes != null) { // themes is not a string and not null/undefined
+        console.warn("'themes' parameter was not a string, received:", typeof themes);
+        // Optionally, you could return an error here if themes is provided but not a string
+        // For now, we let it proceed with parsedThemes as {}
+    }
+
+    // Validate that parsedThemes is an object (it could be an array or primitive if JSON was valid but not an object)
+    if (typeof parsedThemes !== 'object' || parsedThemes === null || Array.isArray(parsedThemes)) {
+        console.error("Parsed 'themes' is not a valid object:", parsedThemes);
+        return NextResponse.json(
+            { error: "Invalid 'themes' content. Expected a JSON object." },
+            { status: 400 }
+        );
+    }
 
     // Refined prompt for Gemini
     const geminiPrompt = `

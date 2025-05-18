@@ -12,6 +12,7 @@ interface VideoPreviewProps {
   timeAgo?: string;
   channelName?: string;
   isGenerating?: boolean;
+  profilePicture?: string;
 }
 
 const VideoPreview: React.FC<VideoPreviewProps> = ({
@@ -21,6 +22,7 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({
   timeAgo = "just now",
   channelName = "Your Channel",
   isGenerating = false,
+  profilePicture,
 }) => {
   return (
     <div className="flex flex-col w-full cursor-pointer group">
@@ -51,10 +53,20 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({
 
       {/* Video Info */}
       <div className="flex gap-3">
-        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gray-200 overflow-hidden mt-1">
-          <div className="w-full h-full flex items-center justify-center text-gray-400">
-            <User size={18} />
-          </div>
+        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gray-200 overflow-hidden mt-1 relative">
+          {profilePicture ? (
+            <Image
+              src={profilePicture}
+              alt={`${channelName} profile picture`}
+              fill
+              unoptimized={true}
+              className="object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-400">
+              <User size={18} />
+            </div>
+          )}
         </div>
         <div className="flex-1">
           <h3 className="font-medium text-sm leading-5 text-gray-900 line-clamp-2 mb-1">
@@ -113,9 +125,17 @@ export function YouTubePreviewGrid({
     visible: { opacity: 1, y: 0 }
   };
 
+  const sampleItems = [
+    { title: "The Weeknd - Hurry Up Tomorrow", channelName: "The Weeknd", viewCount: "340K views", timeAgo: "7 hours ago", thumbnail: "/thumbnail2.jpg", profilePicture: "/pfp2.jpg" },
+    { title: "I Cooked Against Robots", channelName: "Nick DiGiovanni", viewCount: "28M views", timeAgo: "6 months ago", thumbnail: "/thumbnail3.jpg", profilePicture: "/pfp3.jpg" },
+    { title: "Living on $20/day in VIETNAM (World's Cheapest Country)", channelName: "Brett Conti", viewCount: "154K views", timeAgo: "3 weeks ago", thumbnail: "/thumbnail4.jpg", profilePicture: "/pfp4.jpg" },
+    { title: "NEPAL - Why Do These Mountains Make Me Feel so Free?", channelName: "JustKay", viewCount: "354K views", timeAgo: "4 months ago", thumbnail: "/thumbnail5.jpg", profilePicture: "/pfp5.jpg" },
+    { title: "Two Men Build MASSIVE $750,000 Barndominium in ONLY 1 Year", channelName: "Quantum Tech HD", viewCount: "5.2M views", timeAgo: "1 month ago", thumbnail: "/thumbnail6.jpg", profilePicture: "/pfp6.jpg" }
+  ];
+
   return (
     <motion.div
-      className="w-full bg-white px-6 py-8 border-t border-gray-200 mt-4"
+      className="w-full bg-white px-6 py-8 border-t border-gray-200 mt-4 rounded-xl"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -126,7 +146,7 @@ export function YouTubePreviewGrid({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Original video based on user input */}
+        {/* Original video based on user input and AI generation */}
         <motion.div variants={itemVariants}>
           <VideoPreview
             thumbnail={thumbnailStyleImagePath}
@@ -138,56 +158,19 @@ export function YouTubePreviewGrid({
           />
         </motion.div>
 
-        {/* 5 more sample videos with the same thumbnail but different titles */}
-        <motion.div variants={itemVariants}>
-          <VideoPreview
-            thumbnail={thumbnailStyleImagePath}
-            title={`Top 10 ${tags[0] || "Tips"} for Beginners`}
-            viewCount="1.2K views"
-            timeAgo="2 days ago"
-            channelName="Your Channel"
-          />
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <VideoPreview
-            thumbnail={thumbnailStyleImagePath}
-            title={`How to Master ${tags[1] || "Skills"} Quickly`}
-            viewCount="4.5K views"
-            timeAgo="1 week ago"
-            channelName="Your Channel"
-          />
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <VideoPreview
-            thumbnail={thumbnailStyleImagePath}
-            title={`The Ultimate Guide to ${tags[0] || "Success"}`}
-            viewCount="8.7K views"
-            timeAgo="2 weeks ago"
-            channelName="Your Channel"
-          />
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <VideoPreview
-            thumbnail={thumbnailStyleImagePath}
-            title={`${tags[1] || "Amazing"} Techniques You Should Know`}
-            viewCount="12K views"
-            timeAgo="3 weeks ago"
-            channelName="Your Channel"
-          />
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <VideoPreview
-            thumbnail={thumbnailStyleImagePath}
-            title={`Why ${tags[2] || "This"} Is Important for Your Growth`}
-            viewCount="20K views"
-            timeAgo="1 month ago"
-            channelName="Your Channel"
-          />
-        </motion.div>
+        {/* 5 more sample videos with predefined details */}
+        {sampleItems.map((item, index) => (
+          <motion.div variants={itemVariants} key={index}>
+            <VideoPreview
+              thumbnail={item.thumbnail}
+              title={item.title}
+              channelName={item.channelName}
+              viewCount={item.viewCount}
+              timeAgo={item.timeAgo}
+              profilePicture={item.profilePicture}
+            />
+          </motion.div>
+        ))}
       </div>
     </motion.div>
   );
