@@ -247,9 +247,9 @@ export function VideoDetailsPanel({
       <AnimatePresence mode="wait">
         {isOpen && (
           <motion.div
-            className="fixed top-0 right-0 bottom-0 border-l shadow-2xl z-40 overflow-hidden backdrop-blur-md rounded-tl-xl rounded-bl-xl"
+            className="fixed top-0 right-0 bottom-0 border-l shadow-2xl z-40 overflow-hidden rounded-tl-xl rounded-bl-xl"
             style={{
-              backgroundColor: 'hsla(var(--card), 0.8)', // Use card color with opacity
+              backgroundColor: 'white',
               borderColor: 'hsl(var(--border))',
             }}
             variants={panelVariants}
@@ -384,12 +384,6 @@ export function VideoDetailsPanel({
                   custom={2}
                 >
                   <h3 className="text-sm font-medium mb-2 flex items-center" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    <span 
-                      className="w-1.5 h-1.5 rounded-full mr-2"
-                      style={{
-                        backgroundColor: 'hsl(var(--primary))'
-                      }}
-                    ></span>
                     Video Title
                     {(isLoading || isRegeneratingTitle) && <Loader2 className="h-3 w-3 ml-2 animate-spin" style={{ color: 'hsl(var(--primary))' }} />}
                   </h3>
@@ -402,22 +396,20 @@ export function VideoDetailsPanel({
                     }}
                   >
                     <p className="font-medium text-base" style={{ color: 'hsl(var(--foreground))' }}>{data?.title || placeholderTitle}</p>
-                    <div className="flex justify-end mt-3 space-x-2">
+                    <div className="flex justify-end mt-3 space-x-1">
                       <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                         <Button 
                           variant="ghost" 
-                          size="sm" 
+                          size="icon"
                           onClick={() => copyToClipboard(data?.title || '', setTitleCopied)}
                           disabled={!data?.title || titleCopied}
+                          className="rounded-md w-8 h-8 cursor-pointer"
+                          title={titleCopied ? "Copied!" : "Copy Title"}
                         >
-                          {(titleCopied) ? (
-                            <>
-                              <Check size={14} className="text-green-500" /> Copied!
-                            </>
+                          {titleCopied ? (
+                            <Check size={16} className="text-green-500" /> 
                           ) : (
-                            <>
-                              <Copy size={14} /> Copy
-                            </>
+                            <Copy size={16} /> 
                           )}
                         </Button>
                       </motion.div>
@@ -425,18 +417,16 @@ export function VideoDetailsPanel({
                         <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="icon"
                             onClick={handleRegenerateTitle}
                             disabled={isLoading || isRegeneratingTitle}
+                            className="rounded-md w-8 h-8 cursor-pointer"
+                            title={isRegeneratingTitle ? "Regenerating..." : "Regenerate Title"}
                           >
-                            {(isRegeneratingTitle) ? (
-                              <>
-                                <Loader2 size={14} className="animate-spin" /> Regenerating...
-                              </>
+                            {isRegeneratingTitle ? (
+                              <Loader2 size={16} className="animate-spin" />
                             ) : (
-                              <>
-                                <RefreshCw size={14} /> Regenerate
-                              </>
+                              <RefreshCw size={16} />
                             )}
                           </Button>
                         </motion.div>
@@ -453,12 +443,6 @@ export function VideoDetailsPanel({
                   custom={3}
                 >
                   <h3 className="text-sm font-medium mb-2 flex items-center" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    <span 
-                      className={`w-1.5 h-1.5 rounded-full mr-2`}
-                      style={{
-                        backgroundColor: 'hsl(var(--accent))'
-                      }}
-                    ></span>
                     Video Description
                     {(isLoading || isRegeneratingDescription) && <Loader2 className="h-3 w-3 ml-2 animate-spin" style={{ color: 'hsl(var(--accent))' }} />}
                   </h3>
@@ -473,22 +457,20 @@ export function VideoDetailsPanel({
                     <div className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'hsl(var(--foreground))' }}>
                       {data?.description || placeholderDescription}
                     </div>
-                    <div className="flex justify-end mt-3 space-x-2">
+                    <div className="flex justify-end mt-3 space-x-1">
                       <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                         <Button 
                           variant="ghost" 
-                          size="sm" 
+                          size="icon"
                           onClick={() => copyToClipboard(data?.description || '', setDescriptionCopied)}
                           disabled={!data?.description || descriptionCopied}
+                          className="rounded-md w-8 h-8 cursor-pointer"
+                          title={descriptionCopied ? "Copied!" : "Copy Description"}
                         >
-                          {(descriptionCopied) ? (
-                            <>
-                              <Check size={14} className="text-green-500" /> Copied!
-                            </>
+                          {descriptionCopied ? (
+                            <Check size={16} className="text-green-500" />
                           ) : (
-                            <>
-                              <Copy size={14} /> Copy
-                            </>
+                            <Copy size={16} />
                           )}
                         </Button>
                       </motion.div>
@@ -496,18 +478,16 @@ export function VideoDetailsPanel({
                         <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="icon"
                             onClick={handleRegenerateDescription}
                             disabled={isLoading || isRegeneratingDescription}
+                            className="rounded-md w-8 h-8 cursor-pointer"
+                            title={isRegeneratingDescription ? "Regenerating..." : "Regenerate Description"}
                           >
-                            {(isRegeneratingDescription) ? (
-                              <>
-                                <Loader2 size={14} className="animate-spin" /> Regenerating...
-                              </>
+                            {isRegeneratingDescription ? (
+                              <Loader2 size={16} className="animate-spin" />
                             ) : (
-                              <>
-                                <RefreshCw size={14} /> Regenerate
-                              </>
+                              <RefreshCw size={16} />
                             )}
                           </Button>
                         </motion.div>
@@ -524,12 +504,6 @@ export function VideoDetailsPanel({
                   custom={4}
                 >
                   <h3 className="text-sm font-medium mb-2 flex items-center" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    <span 
-                      className={`w-1.5 h-1.5 rounded-full mr-2`}
-                      style={{
-                        backgroundColor: 'hsl(var(--secondary))'
-                      }}
-                    ></span>
                     Video Tags
                     {(isLoading || isRegeneratingTags) && <Loader2 className="h-3 w-3 ml-2 animate-spin" style={{ color: 'hsl(var(--secondary))' }} />}
                   </h3>
@@ -561,22 +535,20 @@ export function VideoDetailsPanel({
                         </motion.span>
                       ))}
                     </div>
-                    <div className="flex justify-end mt-3 space-x-2">
+                    <div className="flex justify-end mt-3 space-x-1">
                       <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                         <Button 
                           variant="ghost" 
-                          size="sm" 
+                          size="icon"
                           onClick={() => data?.tags && copyToClipboard(data.tags.join(', '), setTagsCopied)}
                           disabled={!data?.tags || data.tags.length === 0 || tagsCopied}
+                          className="rounded-md w-8 h-8 cursor-pointer"
+                          title={tagsCopied ? "Copied!" : "Copy All Tags"}
                         >
-                          {(tagsCopied) ? (
-                            <>
-                              <Check size={14} className="text-green-500" /> Copied!
-                            </>
+                          {tagsCopied ? (
+                            <Check size={16} className="text-green-500" />
                           ) : (
-                            <>
-                              <Copy size={14} /> Copy All
-                            </>
+                            <Copy size={16} />
                           )}
                         </Button>
                       </motion.div>
@@ -584,18 +556,16 @@ export function VideoDetailsPanel({
                         <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="icon"
                             onClick={handleRegenerateTags}
                             disabled={isLoading || isRegeneratingTags}
+                            className="rounded-md w-8 h-8 cursor-pointer"
+                            title={isRegeneratingTags ? "Regenerating..." : "Regenerate Tags"}
                           >
-                            {(isRegeneratingTags) ? (
-                              <>
-                                <Loader2 size={14} className="animate-spin" /> Regenerating...
-                              </>
+                            {isRegeneratingTags ? (
+                              <Loader2 size={16} className="animate-spin" />
                             ) : (
-                              <>
-                                <RefreshCw size={14} /> Regenerate
-                              </>
+                              <RefreshCw size={16} />
                             )}
                           </Button>
                         </motion.div>
