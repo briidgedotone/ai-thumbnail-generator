@@ -280,7 +280,7 @@ export function VideoDetailsPanel({
                     variant="ghost"
                     size="icon" 
                     onClick={onClose}
-                    className="rounded-md w-9 h-9 p-0 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                    className="rounded-md w-9 h-9 p-0 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
                     title="Close Panel"
                   >
                     <X size={20} />

@@ -279,64 +279,79 @@ export default function DashboardPage() {
       </div>
 
       {/* Top Center Fixed Elements: Studio/Projects Button Group */}
-      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
-        <div className="relative flex items-center gap-1 p-1 h-11 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-gray-300">
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "relative rounded-full px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-colors duration-200 ease-in-out z-20 cursor-pointer", // Added cursor-pointer
-              activeView !== 'studio' && "hover:bg-gray-200/70"
-            )}
-            onClick={() => {
-              setActiveView('studio');
-              console.log("Studio view selected");
+      <AnimatePresence mode="wait">
+        {!isDetailsPanelOpen && (
+          <motion.div 
+            key="studio-projects-switcher"
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-50"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ 
+              type: "spring",
+              stiffness: 260,
+              damping: 25,
+              duration: 0.3
             }}
           >
-            {activeView === 'studio' && (
-              <motion.div
-                layoutId="activePill"
-                className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] shadow-md z-10"
-                transition={{ type: "spring", stiffness: 350, damping: 30 }}
-              />
-            )}
-            <span className={cn(
-              "relative z-30 flex items-center gap-2",
-              activeView === 'studio' ? "text-white" : "text-gray-600 hover:text-gray-800" 
-            )}>
-              <Palette size={16} /> Studio
-            </span>
-          </Button>
+            <div className="relative flex items-center gap-1 p-1 h-11 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-gray-300">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "relative rounded-full px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-colors duration-200 ease-in-out z-20 cursor-pointer",
+                  activeView !== 'studio' && "hover:bg-gray-200/70"
+                )}
+                onClick={() => {
+                  setActiveView('studio');
+                  console.log("Studio view selected");
+                }}
+              >
+                {activeView === 'studio' && (
+                  <motion.div
+                    layoutId="activePill"
+                    className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] shadow-md z-10"
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  />
+                )}
+                <span className={cn(
+                  "relative z-30 flex items-center gap-2",
+                  activeView === 'studio' ? "text-white" : "text-gray-600 hover:text-gray-800" 
+                )}>
+                  <Palette size={16} /> Studio
+                </span>
+              </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "relative rounded-full px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-colors duration-200 ease-in-out z-20 cursor-pointer", // Added cursor-pointer
-              activeView !== 'projects' && "hover:bg-gray-200/70"
-            )}
-            onClick={() => {
-              setActiveView('projects');
-              console.log("Projects view selected");
-            }}
-          >
-            {activeView === 'projects' && (
-              <motion.div
-                layoutId="activePill" 
-                className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] shadow-md z-10"
-                transition={{ type: "spring", stiffness: 350, damping: 30 }}
-              />
-            )}
-            <span className={cn(
-              "relative z-30 flex items-center gap-2",
-              activeView === 'projects' ? "text-white" : "text-gray-600 hover:text-gray-800" 
-            )}>
-              <LayoutGrid size={16} /> Projects
-            </span>
-          </Button>
-        </div>
-      </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "relative rounded-full px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-colors duration-200 ease-in-out z-20 cursor-pointer",
+                  activeView !== 'projects' && "hover:bg-gray-200/70"
+                )}
+                onClick={() => {
+                  setActiveView('projects');
+                  console.log("Projects view selected");
+                }}
+              >
+                {activeView === 'projects' && (
+                  <motion.div
+                    layoutId="activePill" 
+                    className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] shadow-md z-10"
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  />
+                )}
+                <span className={cn(
+                  "relative z-30 flex items-center gap-2",
+                  activeView === 'projects' ? "text-white" : "text-gray-600 hover:text-gray-800" 
+                )}>
+                  <LayoutGrid size={16} /> Projects
+                </span>
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Top Right Fixed Elements: Credits & Profile */}
       <AnimatePresence mode="wait">
