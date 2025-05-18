@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import Image from "next/image";
-import { X, Download, Copy, Tag, Loader2, Eye, Maximize, Check, RefreshCw } from "lucide-react";
+import { X, Download, Copy, Tag, Loader2, Eye, RefreshCw, Check, ArrowLeft, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface VideoDetailsPanelProps {
   isOpen: boolean;
@@ -28,8 +29,7 @@ export function VideoDetailsPanel({
   onRegenerate,
   onRegenerateImage
 }: VideoDetailsPanelProps) {
-  // Use a placeholder thumbnail if no data is provided
-  // const placeholderThumbnail = "/placeholder-thumbnail.jpg"; // Removed
+  // Use placeholders if no data is provided
   const placeholderTitle = "How to Achieve Success with These 5 Simple Tips";
   const placeholderDescription = "In this video, I share my top 5 productivity tips that have helped me achieve success in my career and personal life.";
   const placeholderTags = ["productivity", "success", "tips", "motivation", "personal growth"];
@@ -62,7 +62,6 @@ export function VideoDetailsPanel({
         if (newTab) {
           newTab.focus();
         } else {
-          // If window.open is blocked (e.g., by popup blocker)
           alert('Could not open image in a new tab. Please check your popup blocker settings or try right-clicking the image to save.');
         }
         return;
@@ -71,20 +70,20 @@ export function VideoDetailsPanel({
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
     
-    // Create a link element
-    const link = document.createElement('a');
+      // Create a link element
+      const link = document.createElement('a');
       link.href = url;
       link.download = `thumbnail-${new Date().getTime()}.${blob.type.split('/')[1] || 'jpg'}`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       
       // Clean up the object URL
       URL.revokeObjectURL(url);
 
     } catch (error) {
       console.error('Error downloading thumbnail:', error);
-      // Fallback for other errors (e.g. network, or if window.open also failed previously)
+      // Fallback for other errors
       alert('Failed to download image. You can try right-clicking the preview to save it, or check the console for more details.');
       // As a last resort, try opening in a new tab if not already attempted
       if (!(error instanceof DOMException && error.name === 'NetworkError')) { // Avoid re-opening if it was a NetworkError from fetch
@@ -146,71 +145,47 @@ export function VideoDetailsPanel({
     hidden: { 
       width: 0,
       opacity: 0,
-      x: 30,
+      x: 50,
       transition: { 
         type: "spring", 
         stiffness: 300, 
         damping: 30,
-        duration: 0.3
+        staggerChildren: 0.05,
+        staggerDirection: -1
       } 
     },
     visible: { 
-      width: "420px", 
+      width: "450px", 
       opacity: 1,
       x: 0,
       transition: { 
         type: "spring", 
         stiffness: 300, 
         damping: 30,
-        duration: 0.4
+        staggerChildren: 0.07,
+        delayChildren: 0.1
       } 
     },
     exit: { 
       width: 0, 
       opacity: 0,
-      x: 30,
+      x: 50,
       transition: { 
         type: "spring", 
         stiffness: 300, 
         damping: 30,
-        duration: 0.3,
-        delay: 0.05 // Small delay before exit animation to coordinate with other elements
+        staggerChildren: 0.05,
+        staggerDirection: -1
       } 
     }
   };
 
-  const contentVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { 
-        delay: 0.1,
-        duration: 0.3
-      } 
-    }
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -10 }
   };
 
-  const modalVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      transition: { 
-        type: "spring", 
-        stiffness: 300, 
-        damping: 25 
-      } 
-    },
-    exit: { 
-      opacity: 0, 
-      scale: 0.8,
-      transition: { 
-        duration: 0.2 
-      } 
-    }
-  };
-
-  // Button animation variants
   const buttonMotionVariants = {
     hover: {
       scale: 1.05,
@@ -226,84 +201,52 @@ export function VideoDetailsPanel({
     }
   };
 
-  // Section variants
-  const sectionVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: (custom: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: custom * 0.1,
-        duration: 0.5,
-        type: "spring",
-        stiffness: 300,
-        damping: 25
-      }
-    })
-  };
-
   return (
-    <>
-      <AnimatePresence mode="wait">
+    <MotionConfig transition={{ type: 'spring', bounce: 0.1, duration: 0.4 }}>
+      <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="fixed top-0 right-0 bottom-0 border-l shadow-2xl z-40 overflow-hidden rounded-tl-xl rounded-bl-xl"
-            style={{
-              backgroundColor: 'white',
-              borderColor: 'hsl(var(--border))',
-            }}
+            className="fixed top-0 right-0 bottom-0 border-l border-zinc-200 shadow-lg z-40 overflow-hidden bg-white dark:bg-zinc-900 dark:border-zinc-800"
             variants={panelVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
           >
+            {/* Backdrop for mobile */}
             <motion.div 
-              className="h-full flex flex-col p-6 overflow-y-auto"
-              variants={contentVariants}
-              initial="hidden"
-              animate="visible"
+              className="fixed inset-0 bg-black/25 backdrop-blur-sm z-30 lg:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+            />
+            
+            {/* Header */}
+            <motion.div 
+              className="flex items-center px-6 py-4 border-b border-zinc-100 dark:border-zinc-800"
+              variants={itemVariants}
             >
-              <motion.div 
-                className="flex justify-between items-center mb-6"
-                variants={sectionVariants}
-                initial="hidden"
-                animate="visible"
-                custom={0}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={onClose} 
+                className="mr-3 rounded-full w-8 h-8 text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors" 
+                title="Close Panel"
               >
-                <h2 className="text-2xl font-semibold" style={{ color: 'hsl(var(--foreground))' }}>Video Details</h2>
-                <motion.div
-                  variants={buttonMotionVariants}
-                  whileHover={{ ...buttonMotionVariants.hover, scale: 1.05 }}
-                  whileTap={{ ...buttonMotionVariants.tap, scale: 0.95 }}
-                >
-                  <Button 
-                    variant="ghost"
-                    size="icon" 
-                    onClick={onClose}
-                    className="rounded-md w-9 h-9 p-0 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
-                    title="Close Panel"
-                  >
-                    <X size={20} />
-                  </Button>
-                </motion.div>
-              </motion.div>
-              
+                <ArrowLeft size={18} />
+              </Button>
+              <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Video Details</h2>
+            </motion.div>
+
+            <div className="h-full flex flex-col overflow-y-auto pb-6">
               {/* Thumbnail Container */}
               <motion.div 
-                className="w-full mb-8"
-                variants={sectionVariants}
-                initial="hidden"
-                animate="visible"
-                custom={1}
+                className="px-6 pt-6" 
+                variants={itemVariants}
               >
-                <div 
-                  className="relative aspect-video w-full overflow-hidden group"
-                  style={{ borderRadius: 'var(--radius-lg)' }}
-                >
+                <div className="relative aspect-video w-full overflow-hidden rounded-xl mb-6 shadow-md group bg-zinc-100 dark:bg-zinc-800">
                   {data?.thumbnail && data.thumbnail.trim() !== '' ? (
-                    <div className="relative w-full h-full overflow-hidden transition-transform duration-300 group-hover:scale-105"
-                         style={{ borderRadius: 'var(--radius-lg)' }}
-                    >
+                    <div className="relative w-full h-full overflow-hidden">
                       <Image 
                         key={data.thumbnail}
                         src={data.thumbnail}
@@ -313,7 +256,7 @@ export function VideoDetailsPanel({
                           data.thumbnail?.includes('oaidalleapiprodscus.blob.core.windows.net') || 
                           data.thumbnail?.startsWith('data:image/')
                         }
-                        className={`object-cover ${isLoading ? 'opacity-30' : ''}`}
+                        className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isLoading ? 'opacity-30' : ''}`}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
@@ -329,45 +272,50 @@ export function VideoDetailsPanel({
                       />
                     </div>
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--muted))' }}>
-                      <p style={{ color: 'hsl(var(--muted-foreground))' }}>Loading Thumbnail...</p>
+                    <div className="absolute inset-0 flex items-center justify-center bg-zinc-200 dark:bg-zinc-700">
+                      <p className="text-zinc-600 dark:text-zinc-300">Loading Thumbnail...</p>
                     </div>
                   )}
+                  
+                  <div 
+                    className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  />
+                  
                   {!isLoading && (
                     <div className="absolute bottom-3 right-3 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2">
                       <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                         <Button
                           size="icon"
-                          className="rounded-full shadow-sm bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
+                          className="rounded-full shadow-md bg-white/90 hover:bg-white text-zinc-700 cursor-pointer w-9 h-9"
                           title="Regenerate Image"
                           onClick={onRegenerateImage}
                           disabled={!data?.thumbnail || isLoading}
                         >
-                          <RefreshCw size={18} />
+                          <RefreshCw size={16} />
                         </Button>
                       </motion.div>
 
                       <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                         <Button 
                           size="icon" 
-                          className="rounded-full shadow-sm bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
+                          className="rounded-full shadow-md bg-white/90 hover:bg-white text-zinc-700 cursor-pointer w-9 h-9"
                           title="Preview Thumbnail"
                           onClick={() => setIsPreviewModalOpen(true)}
                           disabled={!data?.thumbnail}
                         >
-                          <Eye size={18} />
+                          <Eye size={16} />
                         </Button>
                       </motion.div>
 
                       <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                         <Button 
                           size="icon" 
-                          className="rounded-full shadow-sm bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
+                          className="rounded-full shadow-md bg-white/90 hover:bg-white text-zinc-700 cursor-pointer w-9 h-9"
                           title="Download Thumbnail"
                           onClick={handleDownload}
                           disabled={!data?.thumbnail}
                         >
-                          <Download size={18} />
+                          <Download size={16} />
                         </Button>
                       </motion.div>
                     </div>
@@ -375,43 +323,35 @@ export function VideoDetailsPanel({
                 </div>
               </motion.div>
 
-              {/* Content Section */}
-              <div className="flex-1 flex flex-col gap-6">
+              <div className="px-6 flex-1">
                 {/* Title */}
-                <motion.div 
-                  variants={sectionVariants}
-                  initial="hidden"
-                  animate="visible"
-                  custom={2}
-                >
-                  <h3 className="text-sm font-medium mb-2 flex items-center" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    Video Title
-                    {(isLoading || isRegeneratingTitle) && <Loader2 className="h-3 w-3 ml-2 animate-spin" style={{ color: 'hsl(var(--primary))' }} />}
-                  </h3>
-                  <div 
-                    className="p-4 shadow-sm transition-all duration-300 hover:shadow-md"
-                    style={{
-                      backgroundColor: 'hsl(var(--card))',
-                      borderRadius: 'var(--radius-md)',
-                      border: `1px solid hsl(var(--border))`
-                    }}
-                  >
-                    <p className="font-medium text-base" style={{ color: 'hsl(var(--foreground))' }}>{data?.title || placeholderTitle}</p>
-                    <div className="flex justify-end mt-3 space-x-1">
+                <motion.div className="mb-6" variants={itemVariants}>
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center">
+                      Video Title
+                      {(isLoading || isRegeneratingTitle) && 
+                        <Loader2 className="h-3 w-3 ml-2 animate-spin text-zinc-500 dark:text-zinc-400" />
+                      }
+                    </h3>
+                  </div>
+                  <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800">
+                    <p className="text-base font-medium text-zinc-900 dark:text-zinc-50">
+                      {data?.title || placeholderTitle}
+                    </p>
+                    <div className="flex justify-end mt-3 space-x-2">
                       <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                         <Button 
                           variant="ghost" 
                           size="icon"
                           onClick={() => copyToClipboard(data?.title || '', setTitleCopied)}
                           disabled={!data?.title || titleCopied}
-                          className="rounded-md w-8 h-8 cursor-pointer"
+                          className="rounded-full w-8 h-8"
                           title={titleCopied ? "Copied!" : "Copy Title"}
                         >
-                          {titleCopied ? (
-                            <Check size={16} className="text-green-500" /> 
-                          ) : (
-                            <Copy size={16} /> 
-                          )}
+                          {titleCopied ? 
+                            <Check size={16} className="text-green-500" /> : 
+                            <Copy size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+                          }
                         </Button>
                       </motion.div>
                       {onRegenerate && (
@@ -421,13 +361,13 @@ export function VideoDetailsPanel({
                             size="icon"
                             onClick={handleRegenerateTitle}
                             disabled={isLoading || isRegeneratingTitle}
-                            className="rounded-md w-8 h-8 cursor-pointer"
+                            className="rounded-full w-8 h-8"
                             title={isRegeneratingTitle ? "Regenerating..." : "Regenerate Title"}
                           >
                             {isRegeneratingTitle ? (
-                              <Loader2 size={16} className="animate-spin" />
+                              <Loader2 size={16} className="animate-spin text-zinc-400 dark:text-zinc-300" />
                             ) : (
-                              <RefreshCw size={16} />
+                              <RefreshCw size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
                             )}
                           </Button>
                         </motion.div>
@@ -437,42 +377,33 @@ export function VideoDetailsPanel({
                 </motion.div>
 
                 {/* Description */}
-                <motion.div 
-                  variants={sectionVariants}
-                  initial="hidden"
-                  animate="visible"
-                  custom={3}
-                >
-                  <h3 className="text-sm font-medium mb-2 flex items-center" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    Video Description
-                    {(isLoading || isRegeneratingDescription) && <Loader2 className="h-3 w-3 ml-2 animate-spin" style={{ color: 'hsl(var(--accent))' }} />}
-                  </h3>
-                  <div 
-                    className="p-4 shadow-sm transition-all duration-300 hover:shadow-md"
-                    style={{
-                      backgroundColor: 'hsl(var(--card))',
-                      borderRadius: 'var(--radius-md)',
-                      border: `1px solid hsl(var(--border))`
-                    }}
-                  >
-                    <div className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'hsl(var(--foreground))' }}>
+                <motion.div className="mb-6" variants={itemVariants}>
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center">
+                      Video Description
+                      {(isLoading || isRegeneratingDescription) && 
+                        <Loader2 className="h-3 w-3 ml-2 animate-spin text-zinc-500 dark:text-zinc-400" />
+                      }
+                    </h3>
+                  </div>
+                  <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800">
+                    <div className="text-sm leading-relaxed whitespace-pre-line text-zinc-700 dark:text-zinc-300">
                       {data?.description || placeholderDescription}
                     </div>
-                    <div className="flex justify-end mt-3 space-x-1">
+                    <div className="flex justify-end mt-3 space-x-2">
                       <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                         <Button 
                           variant="ghost" 
                           size="icon"
                           onClick={() => copyToClipboard(data?.description || '', setDescriptionCopied)}
                           disabled={!data?.description || descriptionCopied}
-                          className="rounded-md w-8 h-8 cursor-pointer"
+                          className="rounded-full w-8 h-8"
                           title={descriptionCopied ? "Copied!" : "Copy Description"}
                         >
-                          {descriptionCopied ? (
-                            <Check size={16} className="text-green-500" />
-                          ) : (
-                            <Copy size={16} />
-                          )}
+                          {descriptionCopied ? 
+                            <Check size={16} className="text-green-500" /> : 
+                            <Copy size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+                          }
                         </Button>
                       </motion.div>
                       {onRegenerate && (
@@ -482,13 +413,13 @@ export function VideoDetailsPanel({
                             size="icon"
                             onClick={handleRegenerateDescription}
                             disabled={isLoading || isRegeneratingDescription}
-                            className="rounded-md w-8 h-8 cursor-pointer"
+                            className="rounded-full w-8 h-8"
                             title={isRegeneratingDescription ? "Regenerating..." : "Regenerate Description"}
                           >
                             {isRegeneratingDescription ? (
-                              <Loader2 size={16} className="animate-spin" />
+                              <Loader2 size={16} className="animate-spin text-zinc-400 dark:text-zinc-300" />
                             ) : (
-                              <RefreshCw size={16} />
+                              <RefreshCw size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
                             )}
                           </Button>
                         </motion.div>
@@ -498,59 +429,46 @@ export function VideoDetailsPanel({
                 </motion.div>
 
                 {/* Tags */}
-                <motion.div
-                  variants={sectionVariants}
-                  initial="hidden"
-                  animate="visible"
-                  custom={4}
-                >
-                  <h3 className="text-sm font-medium mb-2 flex items-center" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    Video Tags
-                    {(isLoading || isRegeneratingTags) && <Loader2 className="h-3 w-3 ml-2 animate-spin" style={{ color: 'hsl(var(--secondary))' }} />}
-                  </h3>
-                  <div 
-                    className="p-4 shadow-sm transition-all duration-300 hover:shadow-md"
-                    style={{
-                      backgroundColor: 'hsl(var(--card))',
-                      borderRadius: 'var(--radius-md)',
-                      border: `1px solid hsl(var(--border))`
-                    }}
-                  >
-                    <div className="flex flex-wrap gap-2 mb-3">
+                <motion.div className="mb-6" variants={itemVariants}>
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center">
+                      Video Tags
+                      {(isLoading || isRegeneratingTags) && 
+                        <Loader2 className="h-3 w-3 ml-2 animate-spin text-zinc-500 dark:text-zinc-400" />
+                      }
+                    </h3>
+                  </div>
+                  <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800">
+                    <div className="flex flex-wrap gap-2">
                       {(data?.tags || placeholderTags).map((tag, tagIndex) => (
                         <motion.span
                           key={tagIndex}
-                          className="inline-flex items-center px-2.5 py-1 text-xs font-medium border"
-                          style={{
-                            backgroundColor: 'hsl(var(--accent))',
-                            color: 'hsl(var(--accent-foreground))',
-                            borderColor: 'hsl(var(--border))',
-                            borderRadius: 'var(--radius-sm)'
-                          }}
+                          className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-zinc-100 text-zinc-800 rounded-full border border-zinc-200 hover:bg-zinc-200 transition-colors dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700"
                           initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1, transition: { delay: tagIndex * 0.05, duration: 0.3, type: "spring", stiffness: 300, damping: 20 } }}
-                          whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+                          animate={{ 
+                            opacity: 1, 
+                            scale: 1,
+                            transition: { delay: 0.1 + (tagIndex * 0.05) } 
+                          }}
                         >
-                          <Tag size={10} className="mr-1" />
-                          {tag}
+                          <Tag size={12} className="mr-1.5" />{tag}
                         </motion.span>
                       ))}
                     </div>
-                    <div className="flex justify-end mt-3 space-x-1">
+                    <div className="flex justify-end mt-3 space-x-2">
                       <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                         <Button 
                           variant="ghost" 
                           size="icon"
                           onClick={() => data?.tags && copyToClipboard(data.tags.join(', '), setTagsCopied)}
                           disabled={!data?.tags || data.tags.length === 0 || tagsCopied}
-                          className="rounded-md w-8 h-8 cursor-pointer"
+                          className="rounded-full w-8 h-8"
                           title={tagsCopied ? "Copied!" : "Copy All Tags"}
                         >
-                          {tagsCopied ? (
-                            <Check size={16} className="text-green-500" />
-                          ) : (
-                            <Copy size={16} />
-                          )}
+                          {tagsCopied ? 
+                            <Check size={16} className="text-green-500" /> : 
+                            <Copy size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+                          }
                         </Button>
                       </motion.div>
                       {onRegenerate && (
@@ -560,13 +478,13 @@ export function VideoDetailsPanel({
                             size="icon"
                             onClick={handleRegenerateTags}
                             disabled={isLoading || isRegeneratingTags}
-                            className="rounded-md w-8 h-8 cursor-pointer"
+                            className="rounded-full w-8 h-8"
                             title={isRegeneratingTags ? "Regenerating..." : "Regenerate Tags"}
                           >
                             {isRegeneratingTags ? (
-                              <Loader2 size={16} className="animate-spin" />
+                              <Loader2 size={16} className="animate-spin text-zinc-400 dark:text-zinc-300" />
                             ) : (
-                              <RefreshCw size={16} />
+                              <RefreshCw size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
                             )}
                           </Button>
                         </motion.div>
@@ -574,8 +492,28 @@ export function VideoDetailsPanel({
                     </div>
                   </div>
                 </motion.div>
+                
+                {/* Creation date - placeholder since it's not in the data interface */}
+                <motion.div 
+                  className="pt-4 border-t border-zinc-100 dark:border-zinc-800 mt-auto"
+                  variants={itemVariants}
+                >
+                  <div className="flex items-center">
+                    <Clock size={16} className="text-zinc-400 mr-2" />
+                    <div>
+                      <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Last Updated</h3>
+                      <p className="text-sm text-zinc-700 dark:text-zinc-300">{new Date().toLocaleDateString('en-US', { 
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}</p>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
-            </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -584,45 +522,55 @@ export function VideoDetailsPanel({
       <AnimatePresence>
         {isPreviewModalOpen && data?.thumbnail && (
           <motion.div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-lg"
-            style={{ backgroundColor: 'hsla(var(--foreground), 0.6)' }} // Darker backdrop for modal
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-black/60"
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }}
             onClick={() => setIsPreviewModalOpen(false)}
           >
             <motion.div
-              className="relative max-w-2xl max-h-[90vh] shadow-xl overflow-hidden"
-              style={{
-                backgroundColor: 'hsl(var(--card))',
-                borderRadius: 'var(--radius-xl)', // Larger radius for modal
-                border: `1px solid hsl(var(--border))`
-              }}
-              variants={modalVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
+              className="relative max-w-4xl max-h-[90vh] bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-700"
+              initial={{ scale: 0.9, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <img
-                src={data.thumbnail}
-                alt={data.title || "Thumbnail preview"}
-                className="block max-w-full max-h-[85vh] object-contain"
-                style={{ borderRadius: 'var(--radius-xl)' }}
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute top-3 right-3 rounded-md shadow-sm bg-white hover:bg-gray-100 text-gray-700 cursor-pointer focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                onClick={() => setIsPreviewModalOpen(false)}
+              <div className="p-4">
+                <Image
+                  src={data.thumbnail}
+                  alt="Video thumbnail preview"
+                  width={1280} 
+                  height={720}
+                  className="block object-contain rounded-lg"
+                  unoptimized={data.thumbnail?.includes('oaidalleapiprodscus.blob.core.windows.net') || data.thumbnail?.startsWith('data:image/')}
+                />
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute top-4 right-4 rounded-full bg-black/20 hover:bg-black/40 text-white w-9 h-9 backdrop-blur-sm" 
+                onClick={() => setIsPreviewModalOpen(false)} 
                 aria-label="Close preview"
               >
                 <X size={18} />
               </Button>
+              
+              <div className="absolute bottom-4 right-4 flex gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="rounded-full px-4 shadow-lg backdrop-blur-sm bg-white/80 hover:bg-white"
+                  onClick={handleDownload}
+                >
+                  <Download size={16} className="mr-2" />
+                  Download
+                </Button>
+              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </MotionConfig>
   );
 } 
