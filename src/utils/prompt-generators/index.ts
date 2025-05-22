@@ -12,6 +12,7 @@ import { generateBeastStylePrompt } from './style-prompts/beast-style';
 import { generateMinimalistStylePrompt } from './style-prompts/minimalist-style';
 import { generateCinematicStylePrompt } from './style-prompts/cinematic-style';
 import { generateClickbaitStylePrompt } from './style-prompts/clickbait-style';
+import { generateAestheticStylePrompt } from './style-prompts/aesthetic-style';
 
 // Re-export everything for external use
 export { 
@@ -23,7 +24,8 @@ export {
   generateBeastStylePrompt,
   generateMinimalistStylePrompt,
   generateCinematicStylePrompt,
-  generateClickbaitStylePrompt
+  generateClickbaitStylePrompt,
+  generateAestheticStylePrompt
 };
 
 /**
@@ -53,6 +55,9 @@ export const generateThumbnailPrompt = async (
       break;
     case 'clickbait-style':
       prompt = await generateClickbaitStylePrompt(description, keyThemes, aiChatInput);
+      break;
+    case 'aesthetic-style':
+      prompt = await generateAestheticStylePrompt(description, keyThemes, aiChatInput);
       break;
     default:
       prompt = generateBeastStylePrompt(description, keyThemes); // Default to beast style

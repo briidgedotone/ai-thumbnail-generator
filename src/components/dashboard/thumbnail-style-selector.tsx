@@ -15,6 +15,7 @@ const stylesData = [
   { id: 'minimalist-style', name: 'Minimalist Style', emoji: '✨', imagePath: '/thumbnail-styles/02-minimalist-style.png' },
   { id: 'cinematic-style', name: 'Cinematic Style', emoji: '🎬', imagePath: '/thumbnail-styles/03-cinematic-style.png' },
   { id: 'clickbait-style', name: 'Clickbait Style', emoji: '😮', imagePath: '/thumbnail-styles/04-clickbait-style.jpg' },
+  { id: 'aesthetic-style', name: 'Aesthetic Style', emoji: '🌸', imagePath: '/thumbnail-styles/05-aesthetic-style.png' },
 ];
 
 interface StyleItemProps {

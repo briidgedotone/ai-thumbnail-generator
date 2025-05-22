@@ -59,6 +59,7 @@ export function useContentGeneration({
       'minimalist-style': '/thumbnail-styles/02-minimalist-style.png',
       'cinematic-style': '/thumbnail-styles/03-cinematic-style.png',
       'clickbait-style': '/thumbnail-styles/04-clickbait-style.jpg',
+      'aesthetic-style': '/thumbnail-styles/05-aesthetic-style.png',
     };
     
     return stylePathMap[styleId] || null;
