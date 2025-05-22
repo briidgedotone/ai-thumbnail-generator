@@ -263,6 +263,38 @@ export default function DashboardPage() {
     };
   }, [supabase, router, userEmail]); // Added userEmail to dependencies to control isBackgroundRefresh correctly
 
+  useEffect(() => {
+    const fetchUserCredits = async () => {
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          throw new Error("Error fetching user: " + userError?.message);
+        }
+
+        const { data: creditsData, error: creditsError } = await supabase
+          .from('user_credits')
+          .select('balance')
+          .eq('user_id', user.id)
+          .single();
+
+        if (creditsError) {
+          throw new Error("Error fetching credits: " + creditsError.message);
+        }
+
+        if (creditsData) {
+          setCurrentCredits(creditsData.balance);
+          setTotalCredits(20); // Assuming 20 is the max credits for display
+        }
+      } catch (err) {
+        console.error("Error fetching user credits:", err);
+        setCurrentCredits(0); // Default to 0 on error
+        setTotalCredits(20);
+      }
+    };
+
+    fetchUserCredits();
+  }, [supabase]);
+
   // Handler for details panel visibility state change from StudioView
   const handleDetailsPanelVisibilityChange = useCallback((isOpen: boolean) => {
     console.log("[DashboardPage] handleDetailsPanelVisibilityChange called. isOpen:", isOpen);
