@@ -129,7 +129,7 @@ export function StudioView({
 
       if (!contentResponse.ok) {
         const errorData = await contentResponse.json();
-        console.warn('Failed to generate optimized content:', errorData.error || contentResponse.statusText);
+        toast.warning('Could not generate optimized content. Using basic content instead.');
         
         const styleName = selectedThumbnailStyle.replace('-style', '');
         const basicTitle = `${styleName} Video: ${videoDescription.slice(0, 40)}${videoDescription.length > 40 ? '...' : ''}`;
@@ -196,8 +196,8 @@ export function StudioView({
         // We don't await this call so it happens in the background
         saveProject(newImageUrl, generatedTitle, generatedDescription, generatedTags.join(','))
           .catch(error => {
+            // Keep error logging for critical errors, but ensure user is notified
             console.error('Background project save failed:', error);
-            // Optional: Show a toast error if background save fails
             toast.error(`Failed to save project in background: ${error.message}`);
           });
       }
@@ -251,7 +251,6 @@ export function StudioView({
       const result = await response.json();
       setIsSaved(true);
       toast.success('Project saved successfully!');
-      console.log('Project saved:', result);
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -282,7 +281,7 @@ export function StudioView({
 
       if (!contentResponse.ok) {
         const errorData = await contentResponse.json();
-        console.warn(`Failed to regenerate ${contentType}:`, errorData.error || contentResponse.statusText);
+        toast.warning(`Failed to regenerate ${contentType}. Please try again.`);
         return;
       }
 
@@ -317,11 +316,12 @@ export function StudioView({
           });
         }
       } else {
-        console.warn(`Regeneration of ${contentType} returned success: false`);
+        toast.warning(`Could not regenerate ${contentType}. Please try again later.`);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       console.error(`Error regenerating ${contentType}:`, errorMessage);
+      toast.error(`Error regenerating ${contentType}: ${errorMessage}`);
     }
   };
 
@@ -353,7 +353,7 @@ export function StudioView({
   // Handle regeneration of a new image using current settings
   const handleRegenerateImage = async () => {
     if (!videoDescription || !selectedThumbnailStyle || !generatedData) {
-      console.warn("Cannot regenerate image: missing video description, style, or existing generated data.");
+      toast.warning("Cannot regenerate image. Please ensure you have a video description and style selected.");
       return;
     }
 
@@ -362,10 +362,10 @@ export function StudioView({
 
     try {
       const structuredPrompt = await generateThumbnailPrompt(
-        videoDescription, // Current video description
-        selectedThumbnailStyle, // Current selected style
-        currentThumbnailText, // Stored thumbnail text from initial generation
-        currentTextStyle    // Stored text style from initial generation
+        videoDescription, 
+        selectedThumbnailStyle, 
+        currentThumbnailText, 
+        currentTextStyle  
       );
 
       const thumbnailResponse = await fetch('/api/generate-thumbnail', {

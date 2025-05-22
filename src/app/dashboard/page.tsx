@@ -126,7 +126,6 @@ export default function DashboardPage() {
   const handleGenerate = () => {
     // Temporarily remove chatInputValue check. We will need to find a way to get this value from AIChatInput if it moves out of StudioView.
     if (/*!chatInputValue.trim() ||*/ !videoDescription.trim() || !selectedThumbnailStyle) {
-      console.log("Cannot generate, inputs or style selection missing");
       if (!videoDescription.trim()) {
         toast.warning("Please describe your video.");
       }
@@ -135,14 +134,11 @@ export default function DashboardPage() {
       }
       return;
     }
-    console.log("Generating thumbnails with:");
-    console.log("Video Description:", videoDescription);
-    console.log("Selected Style:", selectedThumbnailStyle);
     // AIChatInput state might need to be accessed here if it's not self-contained for generation logic
   };
 
   const handleUploadStyle = () => {
-    console.log("Upload your style button clicked");
+    // Remove development console log
   };
 
   // Temporarily remove chatInputValue from canGenerate logic
@@ -184,7 +180,7 @@ export default function DashboardPage() {
   // New handler to switch from Projects to Studio view
   const handleCreateNew = () => {
     setActiveView('studio');
-    console.log("Switching to Studio view to create new thumbnail");
+    // Remove development console log
   };
 
   const creditPercentage = totalCredits > 0 ? (currentCredits / totalCredits) * 100 : 0;
@@ -265,13 +261,11 @@ export default function DashboardPage() {
 
   // Handler for details panel visibility state change from StudioView
   const handleDetailsPanelVisibilityChange = useCallback((isOpen: boolean) => {
-    console.log("[DashboardPage] handleDetailsPanelVisibilityChange called. isOpen:", isOpen);
     setIsDetailsPanelOpen(isOpen);
   }, []); // Empty dependency array means this function is stable
 
   // Handler to reset inputs for a new generation, called by StudioView
   const handlePrepareNewGeneration = useCallback(() => {
-    console.log("[DashboardPage] handlePrepareNewGeneration called, clearing videoDescription.");
     setVideoDescription("");
     // We decided to keep the style selected, so setSelectedThumbnailStyle(null) remains commented out.
     // If you want to reset the style as well, uncomment the line below:
@@ -280,14 +274,12 @@ export default function DashboardPage() {
 
   // Handler to open the project info panel
   const handleOpenProjectInfoPanel = useCallback((project: Project) => {
-    console.log("[DashboardPage] Opening project info panel for:", project.title);
     setProjectToView(project);
     setIsProjectInfoPanelOpen(true);
   }, []);
 
   // Handler to close the project info panel
   const handleCloseProjectInfoPanel = useCallback(() => {
-    console.log("[DashboardPage] Closing project info panel.");
     setIsProjectInfoPanelOpen(false);
     // Delay clearing projectToView to allow for panel exit animation
     // The ProjectInfoPanel itself handles not rendering if project is null during animation
@@ -338,7 +330,6 @@ export default function DashboardPage() {
                 )}
                 onClick={() => {
                   setActiveView('studio');
-                  console.log("Studio view selected");
                 }}
               >
                 {activeView === 'studio' && (
@@ -365,7 +356,6 @@ export default function DashboardPage() {
                 )}
                 onClick={() => {
                   setActiveView('projects');
-                  console.log("Projects view selected");
                 }}
               >
                 {activeView === 'projects' && (
