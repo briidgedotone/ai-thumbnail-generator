@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 export async function POST(request: Request) {
   const { prompt } = await request.json();
@@ -12,6 +14,39 @@ export async function POST(request: Request) {
   if (!apiKey) {
     console.error('OpenAI API key not found.');
     return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
+  }
+
+  // Create a Supabase client for server-side operations
+  const supabase = createRouteHandlerClient({ cookies });
+
+  // Verify user is authenticated
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    console.error('Authentication error:', authError);
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Check user credits
+  const { data: creditsData, error: creditsError } = await supabase
+    .from('user_credits')
+    .select('balance')
+    .eq('user_id', user.id)
+    .single();
+
+  if (creditsError || !creditsData || creditsData.balance < 1) {
+    console.error('Insufficient credits or error fetching credits:', creditsError);
+    return NextResponse.json({ error: 'Insufficient credits' }, { status: 400 });
+  }
+
+  // Deduct 1 credit
+  const { error: updateError } = await supabase
+    .from('user_credits')
+    .update({ balance: creditsData.balance - 1 })
+    .eq('user_id', user.id);
+
+  if (updateError) {
+    console.error('Error updating credits:', updateError);
+    return NextResponse.json({ error: 'Failed to update credits' }, { status: 500 });
   }
 
   // Check if the prompt includes text overlay instructions
