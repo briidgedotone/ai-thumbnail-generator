@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -10,6 +10,14 @@ import { createSupabaseClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function AuthPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AuthContent />
+    </Suspense>
+  );
+}
+
+function AuthContent() {
   const [isLoginView, setIsLoginView] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
