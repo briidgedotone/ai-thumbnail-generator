@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiKeys, features } from '@/lib/env';
 
 export async function POST(request: Request) {
   const { prompt } = await request.json();
@@ -7,15 +8,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
-
-  if (!apiKey) {
+  // Check if OpenAI is configured
+  if (!features.hasOpenAI()) {
     console.error('OpenAI API key not configured in environment variables.');
     return NextResponse.json({ 
       error: 'OpenAI API key not configured', 
       code: 'MISSING_API_KEY' 
     }, { status: 500 });
   }
+
+  const apiKey = apiKeys.openai();
 
   // Check if the prompt includes text overlay instructions
   const hasTextOverlay = prompt.includes('TEXT OVERLAY INSTRUCTIONS');

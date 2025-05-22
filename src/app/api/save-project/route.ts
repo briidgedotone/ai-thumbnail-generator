@@ -14,7 +14,11 @@ export async function POST(request: Request) {
     
     if (authError || !user) {
       console.error('Authentication error:', authError);
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ 
+        error: 'Authentication failed',
+        code: 'UNAUTHORIZED',
+        details: authError?.message || 'User not authenticated'
+      }, { status: 401 });
     }
     
     // Parse the request body
@@ -28,7 +32,11 @@ export async function POST(request: Request) {
     
     // Validate required fields
     if (!imageUrl) {
-      return NextResponse.json({ error: 'Image URL is required' }, { status: 400 });
+      return NextResponse.json({ 
+        error: 'Image URL is required',
+        code: 'MISSING_FIELD',
+        details: 'The imageUrl field is required for saving a project'
+      }, { status: 400 });
     }
     
     // Check if the image URL is a base64 data URL
@@ -36,7 +44,11 @@ export async function POST(request: Request) {
       // Extract the base64 data from the data URL
       const base64Data = imageUrl.split(',')[1];
       if (!base64Data) {
-        return NextResponse.json({ error: 'Invalid image data' }, { status: 400 });
+        return NextResponse.json({ 
+          error: 'Invalid image data',
+          code: 'INVALID_IMAGE_DATA',
+          details: 'The image data URL is malformed or does not contain valid base64 data'
+        }, { status: 400 });
       }
       
       // Convert base64 to Uint8Array for Supabase Storage
@@ -57,7 +69,11 @@ export async function POST(request: Request) {
       
       if (storageError) {
         console.error('Storage error:', storageError);
-        return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 });
+        return NextResponse.json({ 
+          error: 'Failed to upload image to storage',
+          code: 'STORAGE_ERROR',
+          details: storageError.message
+        }, { status: 500 });
       }
       
       // Get the public URL for the uploaded image
@@ -86,7 +102,11 @@ export async function POST(request: Request) {
       
       if (projectError) {
         console.error('Database error:', projectError);
-        return NextResponse.json({ error: 'Failed to save project' }, { status: 500 });
+        return NextResponse.json({ 
+          error: 'Failed to save project to database',
+          code: 'DATABASE_ERROR',
+          details: projectError.message
+        }, { status: 500 });
       }
       
       return NextResponse.json({ 
@@ -113,7 +133,11 @@ export async function POST(request: Request) {
       
       if (projectError) {
         console.error('Database error:', projectError);
-        return NextResponse.json({ error: 'Failed to save project' }, { status: 500 });
+        return NextResponse.json({ 
+          error: 'Failed to save project to database',
+          code: 'DATABASE_ERROR',
+          details: projectError.message
+        }, { status: 500 });
       }
       
       return NextResponse.json({ 
@@ -125,7 +149,8 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Unexpected error:', error);
     return NextResponse.json({ 
-      error: 'Internal server error', 
+      error: 'Internal server error',
+      code: 'INTERNAL_SERVER_ERROR', 
       details: error instanceof Error ? error.message : 'Unknown error' 
     }, { status: 500 });
   }

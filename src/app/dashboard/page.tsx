@@ -18,6 +18,7 @@ import { createSupabaseClient } from "@/lib/supabase/client"; // Import Supabase
 import { useRouter } from "next/navigation"; // Import useRouter for redirects
 import { ProjectInfoPanel } from "@/components/dashboard/ProjectInfoPanel"; // Import the new panel
 import { toast } from "sonner"; // Import toast for notifications
+import { ErrorBoundary } from "@/components/ui/error-boundary"; // Import the ErrorBoundary
 
 // New CircularProgress component
 interface CircularProgressProps {
@@ -465,19 +466,29 @@ export default function DashboardPage() {
         (isDetailsPanelOpen || isProjectInfoPanelOpen) ? "mr-[450px]" : "mr-0"
       )}>
         {activeView === 'studio' ? (
-          <StudioView 
-            selectedThumbnailStyle={selectedThumbnailStyle}
-            onSelectStyle={setSelectedThumbnailStyle}
-            videoDescription={videoDescription}
-            onVideoDescriptionChange={setVideoDescription}
-            onDetailsPanelStateChange={handleDetailsPanelVisibilityChange}
-            onPrepareNewGeneration={handlePrepareNewGeneration}
-          />
+          <ErrorBoundary
+            onReset={() => {
+              // Reset any state that might have caused the error
+              setVideoDescription("");
+              setSelectedThumbnailStyle(null);
+            }}
+          >
+            <StudioView 
+              selectedThumbnailStyle={selectedThumbnailStyle}
+              onSelectStyle={setSelectedThumbnailStyle}
+              videoDescription={videoDescription}
+              onVideoDescriptionChange={setVideoDescription}
+              onDetailsPanelStateChange={handleDetailsPanelVisibilityChange}
+              onPrepareNewGeneration={handlePrepareNewGeneration}
+            />
+          </ErrorBoundary>
         ) : (
-          <ProjectsView 
-            onCreateNew={handleCreateNew} 
-            onProjectClick={handleOpenProjectInfoPanel}
-          />
+          <ErrorBoundary>
+            <ProjectsView 
+              onCreateNew={handleCreateNew} 
+              onProjectClick={handleOpenProjectInfoPanel}
+            />
+          </ErrorBoundary>
         )}
       </div>
 
