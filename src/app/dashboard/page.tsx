@@ -17,6 +17,7 @@ import Link from "next/link"; // Import Next.js Link component
 import { createSupabaseClient } from "@/lib/supabase/client"; // Import Supabase client
 import { useRouter } from "next/navigation"; // Import useRouter for redirects
 import { ProjectInfoPanel } from "@/components/dashboard/ProjectInfoPanel"; // Import the new panel
+import { toast } from "sonner"; // Import toast for notifications
 
 // New CircularProgress component
 interface CircularProgressProps {
@@ -127,10 +128,10 @@ export default function DashboardPage() {
     if (/*!chatInputValue.trim() ||*/ !videoDescription.trim() || !selectedThumbnailStyle) {
       console.log("Cannot generate, inputs or style selection missing");
       if (!videoDescription.trim()) {
-        alert("Please describe your video.");
+        toast.warning("Please describe your video.");
       }
       if (!selectedThumbnailStyle) {
-        alert("Please select a thumbnail style before generating.");
+        toast.warning("Please select a thumbnail style before generating.");
       }
       return;
     }

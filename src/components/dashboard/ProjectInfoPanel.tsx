@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { X, Tag, Copy, Check, Download, Eye, ArrowLeft, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 // Define Project type - This should ideally be a shared type
 interface Project {
@@ -91,7 +92,7 @@ export function ProjectInfoPanel({ project, isOpen, onClose }: ProjectInfoPanelP
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
-      alert('Failed to copy text.'); // Simple feedback for user
+      toast.error('Failed to copy text.'); // Replaced alert with toast.error
     }
   };
 
@@ -111,7 +112,7 @@ export function ProjectInfoPanel({ project, isOpen, onClose }: ProjectInfoPanelP
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading thumbnail:', error);
-      alert('Failed to download image. You can try right-clicking the preview to save it.');
+      toast.error('Failed to download image. You can try right-clicking the preview to save it.'); // Replaced alert with toast.error
       // Fallback: try opening in new tab
       window.open(project.thumbnailUrl, '_blank', 'noopener,noreferrer');
     }

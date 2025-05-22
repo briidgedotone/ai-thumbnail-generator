@@ -6,6 +6,7 @@ import Image from "next/image";
 import { X, Download, Copy, Tag, Loader2, Eye, RefreshCw, Check, ArrowLeft, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface VideoDetailsPanelProps {
   isOpen: boolean;
@@ -62,7 +63,7 @@ export function VideoDetailsPanel({
         if (newTab) {
           newTab.focus();
         } else {
-          alert('Could not open image in a new tab. Please check your popup blocker settings or try right-clicking the image to save.');
+          toast.error('Could not open image in a new tab. Please check your popup blocker settings or try right-clicking the image to save.');
         }
         return;
       }
@@ -84,7 +85,7 @@ export function VideoDetailsPanel({
     } catch (error) {
       console.error('Error downloading thumbnail:', error);
       // Fallback for other errors
-      alert('Failed to download image. You can try right-clicking the preview to save it, or check the console for more details.');
+      toast.error('Failed to download image. You can try right-clicking the preview to save it, or check the console for more details.');
       // As a last resort, try opening in a new tab if not already attempted
       if (!(error instanceof DOMException && error.name === 'NetworkError')) { // Avoid re-opening if it was a NetworkError from fetch
         const newTab = window.open(data.thumbnail, '_blank', 'noopener');
