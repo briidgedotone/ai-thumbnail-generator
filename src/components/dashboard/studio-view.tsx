@@ -92,94 +92,9 @@ export function StudioView({
     }
   };
 
-  // Test mode - simulates generation without API calls
-  const runTestGeneration = async () => {
-    console.log('🧪 Running test generation mode - no credits will be used!');
-    
-    setGenerationState('initializing');
-    setError(null);
-    setAiGeneratedImageUrl(null);
-    
-    // Mock data for testing
-    const mockThumbnailUrl = getThumbnailStylePath(selectedThumbnailStyle) || '/thumbnail-styles/01-beast-style.png';
-    const styleName = selectedThumbnailStyle?.replace('-style', '').replace('-', ' ') || 'Test';
-    const mockTitle = `${styleName.charAt(0).toUpperCase() + styleName.slice(1)} Style: ${videoDescription.slice(0, 40)}${videoDescription.length > 40 ? '...' : ''}`;
-    const mockDescription = `This is a test description for "${videoDescription}". In this amazing video, we explore the fascinating world of content creation and thumbnail design. Perfect for testing our new loading states!`;
-    const mockTags = ['test', 'mockdata', 'youtube', 'thumbnail', 'content'];
-
-    // Set initial placeholder data
-    setGeneratedData({
-      thumbnail: mockThumbnailUrl,
-      title: `Generating content for: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
-      description: videoDescription,
-      tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean),
-    });
-    setIsDetailsPanelOpen(true);
-
-    try {
-      // Phase 1: Initializing (1 second)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Phase 2: Generating thumbnail (2 seconds)
-      setGenerationState('generating-thumbnail');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Update with thumbnail
-      setGeneratedData(prev => prev ? {
-        ...prev,
-        thumbnail: mockThumbnailUrl,
-        title: 'Generating optimized content...'
-      } : undefined);
-      
-      // Phase 3: Generating content (1.5 seconds)
-      setGenerationState('generating-content');
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Update with content
-      setGeneratedData(prev => prev ? {
-        ...prev,
-        title: mockTitle,
-        description: mockDescription,
-        tags: mockTags
-      } : undefined);
-      
-      // Phase 4: Finalizing (0.5 seconds)
-      setGenerationState('finalizing');
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Complete generation
-      setGenerationState(null);
-      
-      toast.success('🧪 Test generation completed!', {
-        description: 'This was a mock generation - no credits were used.'
-      });
-      
-    } catch (error) {
-      console.error('Test generation error:', error);
-      setGenerationState(null);
-      toast.error('Test generation failed');
-    }
-  };
-
-  // Check if we should use test mode (when in development or with a special flag)
-  const shouldUseTestMode = process.env.NODE_ENV === 'development' && videoDescription.toLowerCase().includes('test');
-
-  // Notify parent component when details panel state changes
-  React.useEffect(() => {
-    if (onDetailsPanelStateChange) {
-      onDetailsPanelStateChange(isDetailsPanelOpen);
-    }
-  }, [isDetailsPanelOpen, onDetailsPanelStateChange]);
-
   const handleSubmit = async (e?: React.FormEvent, thumbnailText?: string, textStyle?: string) => {
     if (e) e.preventDefault();
     if (videoDescription.trim() === '' || !selectedThumbnailStyle) return;
-
-    // Use test mode if conditions are met
-    if (shouldUseTestMode) {
-      await runTestGeneration();
-      return;
-    }
 
     // Check if user has sufficient credits
     const { hasCredits } = await checkUserCredits();
@@ -376,9 +291,9 @@ export function StudioView({
           generatedDescription,
           generatedTags.join(',')
         ).catch(error => {
-          console.error('Background project save failed:', error);
-          toast.error(`Failed to save project in background: ${error.message}`);
-        });
+            console.error('Background project save failed:', error);
+            toast.error(`Failed to save project in background: ${error.message}`);
+          });
       }
 
     } catch (err) {
@@ -612,7 +527,7 @@ export function StudioView({
       const thumbnailResult = await thumbnailResponse.json();
       newImageUrl = thumbnailResult.imageUrl;
       setAiGeneratedImageUrl(newImageUrl);
-
+      
       // Refresh credits after successful generation
       if (onCreditsUsed) {
         onCreditsUsed();
@@ -661,23 +576,15 @@ export function StudioView({
     setContentPolicyError(null);
   };
 
+  // Notify parent component when details panel state changes
+  React.useEffect(() => {
+    if (onDetailsPanelStateChange) {
+      onDetailsPanelStateChange(isDetailsPanelOpen);
+    }
+  }, [isDetailsPanelOpen, onDetailsPanelStateChange]);
+
   return (
     <div className="relative w-full">
-      {/* Test Mode Button - Only in development */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-4 right-4 z-50">
-          <Button
-            onClick={runTestGeneration}
-            disabled={isLoading || !selectedThumbnailStyle}
-            variant="outline"
-            size="sm"
-            className="bg-yellow-50 border-yellow-200 text-yellow-800 hover:bg-yellow-100 shadow-lg"
-          >
-            🧪 Test Loading States
-          </Button>
-        </div>
-      )}
-
       <AnimatePresence mode="wait">
         {isDetailsPanelOpen && generatedData ? (
           <GenerationResults
