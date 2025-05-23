@@ -15,6 +15,7 @@ import { useTextareaResize } from "@/hooks/use-textarea-resize";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
 import { ContentPolicyModal } from "@/components/ui/content-policy-modal";
+import { GenerationPhase, GENERATION_PHASES } from "@/types/generation";
 
 interface StudioViewProps {
   selectedThumbnailStyle: string | null;
@@ -45,7 +46,11 @@ export function StudioView({
     tags: string[];
   } | undefined>(undefined);
   const [aiGeneratedImageUrl, setAiGeneratedImageUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  
+  // Replace isLoading with phase-based generation state
+  const [generationPhase, setGenerationPhase] = useState<GenerationPhase | null>(null);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  
   const [error, setError] = useState<string | null>(null);
   // State for storing text overlay parameters for regeneration
   const [currentThumbnailText, setCurrentThumbnailText] = useState<string | undefined>(undefined);
@@ -59,6 +64,9 @@ export function StudioView({
     suggestions: string[];
     creditRefunded: boolean;
   } | null>(null);
+
+  // Derived state for backwards compatibility
+  const isLoading = generationPhase !== null;
 
   // Get thumbnail style image path based on the selected style
   const getThumbnailStylePath = (styleId: string | null): string | null => {
@@ -74,6 +82,88 @@ export function StudioView({
     return stylePathMap[styleId] || null;
   };
 
+  // Helper function to update generation phase and progress
+  const setGenerationState = (phase: GenerationPhase | null) => {
+    setGenerationPhase(phase);
+    if (phase) {
+      setGenerationProgress(GENERATION_PHASES[phase].progress);
+    } else {
+      setGenerationProgress(0);
+    }
+  };
+
+  // Test mode - simulates generation without API calls
+  const runTestGeneration = async () => {
+    console.log('🧪 Running test generation mode - no credits will be used!');
+    
+    setGenerationState('initializing');
+    setError(null);
+    setAiGeneratedImageUrl(null);
+    
+    // Mock data for testing
+    const mockThumbnailUrl = getThumbnailStylePath(selectedThumbnailStyle) || '/thumbnail-styles/01-beast-style.png';
+    const styleName = selectedThumbnailStyle?.replace('-style', '').replace('-', ' ') || 'Test';
+    const mockTitle = `${styleName.charAt(0).toUpperCase() + styleName.slice(1)} Style: ${videoDescription.slice(0, 40)}${videoDescription.length > 40 ? '...' : ''}`;
+    const mockDescription = `This is a test description for "${videoDescription}". In this amazing video, we explore the fascinating world of content creation and thumbnail design. Perfect for testing our new loading states!`;
+    const mockTags = ['test', 'mockdata', 'youtube', 'thumbnail', 'content'];
+
+    // Set initial placeholder data
+    setGeneratedData({
+      thumbnail: mockThumbnailUrl,
+      title: `Generating content for: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
+      description: videoDescription,
+      tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean),
+    });
+    setIsDetailsPanelOpen(true);
+
+    try {
+      // Phase 1: Initializing (1 second)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Phase 2: Generating thumbnail (2 seconds)
+      setGenerationState('generating-thumbnail');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Update with thumbnail
+      setGeneratedData(prev => prev ? {
+        ...prev,
+        thumbnail: mockThumbnailUrl,
+        title: 'Generating optimized content...'
+      } : undefined);
+      
+      // Phase 3: Generating content (1.5 seconds)
+      setGenerationState('generating-content');
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Update with content
+      setGeneratedData(prev => prev ? {
+        ...prev,
+        title: mockTitle,
+        description: mockDescription,
+        tags: mockTags
+      } : undefined);
+      
+      // Phase 4: Finalizing (0.5 seconds)
+      setGenerationState('finalizing');
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Complete generation
+      setGenerationState(null);
+      
+      toast.success('🧪 Test generation completed!', {
+        description: 'This was a mock generation - no credits were used.'
+      });
+      
+    } catch (error) {
+      console.error('Test generation error:', error);
+      setGenerationState(null);
+      toast.error('Test generation failed');
+    }
+  };
+
+  // Check if we should use test mode (when in development or with a special flag)
+  const shouldUseTestMode = process.env.NODE_ENV === 'development' && videoDescription.toLowerCase().includes('test');
+
   // Notify parent component when details panel state changes
   React.useEffect(() => {
     if (onDetailsPanelStateChange) {
@@ -85,6 +175,12 @@ export function StudioView({
     if (e) e.preventDefault();
     if (videoDescription.trim() === '' || !selectedThumbnailStyle) return;
 
+    // Use test mode if conditions are met
+    if (shouldUseTestMode) {
+      await runTestGeneration();
+      return;
+    }
+
     // Check if user has sufficient credits
     const { hasCredits } = await checkUserCredits();
     if (!hasCredits) {
@@ -94,7 +190,8 @@ export function StudioView({
       return;
     }
 
-    setIsLoading(true);
+    // Start generation process
+    setGenerationState('initializing');
     setError(null);
     setAiGeneratedImageUrl(null);
     
@@ -113,6 +210,9 @@ export function StudioView({
     setIsDetailsPanelOpen(true);
 
     try {
+      // Phase 1: Generate thumbnail image
+      setGenerationState('generating-thumbnail');
+      
       // Generate a style-specific structured prompt for thumbnail, now with text overlay if provided
       const structuredPrompt = await generateThumbnailPrompt(
         videoDescription, 
@@ -140,7 +240,6 @@ export function StudioView({
             creditRefunded: errorData.creditRefunded || false
           });
           setIsContentPolicyModalOpen(true);
-          setIsLoading(false);
           setIsDetailsPanelOpen(false);
           
           // Refresh credits since they were refunded
@@ -186,6 +285,9 @@ export function StudioView({
       if (onCreditsUsed) {
         onCreditsUsed();
       }
+
+      // Phase 2: Generate content
+      setGenerationState('generating-content');
 
       // Then, generate optimized content (titles, descriptions, tags)
       const contentResponse = await fetch('/api/generate-content', {
@@ -260,32 +362,38 @@ export function StudioView({
         }
       }
 
-      // End the loading state now that content generation is complete
-      setIsLoading(false);
+      // Phase 3: Finalizing
+      setGenerationState('finalizing');
+
+      // Complete generation
+      setGenerationState(null);
 
       // Save the project in the background
       if (newImageUrl) {
-        // We don't await this call so it happens in the background
-        saveProject(newImageUrl, generatedTitle, generatedDescription, generatedTags.join(','))
-          .catch(error => {
-            console.error('Background project save failed:', error);
-            // Optional: Show a toast error if background save fails
-            toast.error(`Failed to save project in background: ${error.message}`);
-          });
+        saveProject(
+          newImageUrl,
+          generatedTitle,
+          generatedDescription,
+          generatedTags.join(',')
+        ).catch(error => {
+          console.error('Background project save failed:', error);
+          toast.error(`Failed to save project in background: ${error.message}`);
+        });
       }
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       console.error("Error during content generation:", errorMessage);
       setError(errorMessage);
+      
       setGeneratedData({
-        thumbnail: newImageUrl || getThumbnailStylePath(selectedThumbnailStyle) || '', // Use newImageUrl if available, then style path, then empty
+        thumbnail: getThumbnailStylePath(selectedThumbnailStyle) || '',
         title: `Error - ${selectedThumbnailStyle}: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
         description: videoDescription,
         tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
       });
-      // setAiGeneratedImageUrl(null); // Already set to null at the start, or to newImageUrl if successful before error
-      setIsLoading(false); // Make sure to end loading state in case of error too
+      setAiGeneratedImageUrl(null);
+      setGenerationState(null);
     }
   };
 
@@ -435,7 +543,7 @@ export function StudioView({
       return;
     }
 
-    setIsLoading(true);
+    setGenerationState(null);
     setError(null);
     let newImageUrl: string | null = null;
 
@@ -465,7 +573,6 @@ export function StudioView({
             creditRefunded: errorData.creditRefunded || false
           });
           setIsContentPolicyModalOpen(true);
-          setIsLoading(false);
           
           // Refresh credits since they were refunded
           if (onCreditsUsed && errorData.creditRefunded) {
@@ -517,7 +624,7 @@ export function StudioView({
         thumbnail: newImageUrl || generatedData.thumbnail
       };
       setGeneratedData(updatedData);
-      setIsLoading(false);
+      setGenerationState(null);
 
       // Save the project in the background if we have a new image
       if (newImageUrl) {
@@ -538,7 +645,7 @@ export function StudioView({
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred during image regeneration';
       console.error("Error during image regeneration:", errorMessage);
       setError(errorMessage);
-      setIsLoading(false); // Make sure to end loading state in case of error too
+      setGenerationState(null); // Make sure to end loading state in case of error too
     }
   };
 
@@ -556,13 +663,29 @@ export function StudioView({
 
   return (
     <div className="relative w-full">
+      {/* Test Mode Button - Only in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <Button
+            onClick={runTestGeneration}
+            disabled={isLoading || !selectedThumbnailStyle}
+            variant="outline"
+            size="sm"
+            className="bg-yellow-50 border-yellow-200 text-yellow-800 hover:bg-yellow-100 shadow-lg"
+          >
+            🧪 Test Loading States
+          </Button>
+        </div>
+      )}
+
       <AnimatePresence mode="wait">
         {isDetailsPanelOpen && generatedData ? (
           <GenerationResults
             isOpen={isDetailsPanelOpen}
             onClose={handleCloseDetailsPanel}
             data={generatedData}
-            isLoading={isLoading}
+            generationPhase={generationPhase}
+            generationProgress={generationProgress}
             onRegenerate={handleRegenerateContent}
             onRegenerateImage={handleRegenerateImage}
           />

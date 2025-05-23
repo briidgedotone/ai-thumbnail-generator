@@ -2,6 +2,7 @@ import React from 'react';
 import { YouTubePreviewGrid } from "@/components/dashboard/youtube-preview-grid";
 import { VideoDetailsPanel } from "@/components/dashboard/video-details-panel";
 import { motion } from 'framer-motion';
+import { GenerationPhase } from "@/types/generation";
 
 interface GenerationResultsProps {
   isOpen: boolean;
@@ -12,7 +13,8 @@ interface GenerationResultsProps {
     description: string;
     tags: string[];
   };
-  isLoading: boolean;
+  generationPhase?: GenerationPhase | null;
+  generationProgress?: number;
   onRegenerate?: (contentType: 'titles' | 'descriptions' | 'tags') => Promise<void>;
   onRegenerateImage?: () => void;
 }
@@ -21,7 +23,8 @@ export function GenerationResults({
   isOpen,
   onClose,
   data,
-  isLoading,
+  generationPhase = null,
+  generationProgress = 0,
   onRegenerate,
   onRegenerateImage
 }: GenerationResultsProps) {
@@ -41,7 +44,8 @@ export function GenerationResults({
             title={data.title}
             description={data.description}
             tags={data.tags}
-            isGeneratingAiImage={isLoading}
+            generationPhase={generationPhase}
+            generationProgress={generationProgress}
           />
         </motion.div>
       )}
@@ -51,7 +55,8 @@ export function GenerationResults({
         isOpen={isOpen} 
         onClose={onClose}
         data={data}
-        isLoading={isLoading}
+        generationPhase={generationPhase}
+        generationProgress={generationProgress}
         onRegenerate={onRegenerate}
         onRegenerateImage={onRegenerateImage}
       />
