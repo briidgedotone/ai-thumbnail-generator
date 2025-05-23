@@ -61,6 +61,27 @@ export function StudioView({
     }
   }, [isDetailsPanelOpen, onDetailsPanelStateChange]);
 
+  // Helper function to handle API error responses
+  const handleApiError = (errorData: any, defaultMessage: string): string => {
+    // Check for the standardized error format
+    if (errorData?.error) {
+      // If there's a specific user-friendly message based on error code, use it
+      if (errorData.code === 'MISSING_API_KEY') {
+        return 'The service is currently unavailable. Please try again later or contact support.';
+      } else if (errorData.code === 'OPENAI_API_ERROR' || errorData.code === 'GEMINI_API_ERROR') {
+        return 'The AI service is temporarily unavailable. Please try again in a few moments.';
+      } else if (errorData.code === 'INVALID_RESPONSE_STRUCTURE') {
+        return 'We received an unexpected response from our AI service. Please try again.';
+      }
+      
+      // Otherwise return the error message from the API
+      return errorData.error;
+    }
+    
+    // Fallback to default message if no structured error is available
+    return defaultMessage;
+  };
+
   const handleSubmit = async (e?: React.FormEvent, thumbnailText?: string, textStyle?: string) => {
     if (e) e.preventDefault();
     if (videoDescription.trim() === '' || !selectedThumbnailStyle) return;
@@ -108,7 +129,9 @@ export function StudioView({
 
       if (!thumbnailResponse.ok) {
         const errorData = await thumbnailResponse.json();
-        throw new Error(errorData.error || 'Failed to generate image');
+        const userMessage = handleApiError(errorData, 'Failed to generate image');
+        toast.error(userMessage);
+        throw new Error(errorData.error || userMessage);
       }
 
       const thumbnailResult = await thumbnailResponse.json();
@@ -129,7 +152,8 @@ export function StudioView({
 
       if (!contentResponse.ok) {
         const errorData = await contentResponse.json();
-        console.warn('Failed to generate optimized content:', errorData.error || contentResponse.statusText);
+        const userMessage = handleApiError(errorData, 'Could not generate optimized content');
+        toast.warning(userMessage);
         
         const styleName = selectedThumbnailStyle.replace('-style', '');
         const basicTitle = `${styleName} Video: ${videoDescription.slice(0, 40)}${videoDescription.length > 40 ? '...' : ''}`;
@@ -196,9 +220,11 @@ export function StudioView({
         // We don't await this call so it happens in the background
         saveProject(newImageUrl, generatedTitle, generatedDescription, generatedTags.join(','))
           .catch(error => {
+            // Keep error logging for critical errors, but ensure user is notified
             console.error('Background project save failed:', error);
-            // Optional: Show a toast error if background save fails
-            toast.error(`Failed to save project in background: ${error.message}`);
+            const errorData = error.response?.data || {};
+            const userMessage = handleApiError(errorData, 'Failed to save project in background');
+            toast.error(userMessage);
           });
       }
 
@@ -245,18 +271,19 @@ export function StudioView({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save project');
+        const userMessage = handleApiError(errorData, 'Failed to save project');
+        toast.error(userMessage);
+        throw new Error(errorData.error || userMessage);
       }
 
       const result = await response.json();
       setIsSaved(true);
       toast.success('Project saved successfully!');
-      console.log('Project saved:', result);
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       console.error('Error saving project:', errorMessage);
-      toast.error(`Failed to save project: ${errorMessage}`);
+      throw err; // Re-throw to be handled by the caller
     } finally {
       setIsSaving(false);
     }
@@ -282,7 +309,8 @@ export function StudioView({
 
       if (!contentResponse.ok) {
         const errorData = await contentResponse.json();
-        console.warn(`Failed to regenerate ${contentType}:`, errorData.error || contentResponse.statusText);
+        const userMessage = handleApiError(errorData, `Failed to regenerate ${contentType}`);
+        toast.warning(userMessage);
         return;
       }
 
@@ -300,6 +328,7 @@ export function StudioView({
             ...generatedData,
             title: contentResult.titles[bestTitleIndex]
           });
+          toast.success(`Successfully regenerated title!`);
         } else if (contentType === 'descriptions' && contentResult.descriptions && contentResult.descriptions.length > 0) {
           // Get best description or default to first one
           const bestDescriptionIndex = contentResult.bestDescription >= 0 && contentResult.bestDescription < contentResult.descriptions.length 
@@ -310,18 +339,22 @@ export function StudioView({
             ...generatedData,
             description: contentResult.descriptions[bestDescriptionIndex]
           });
+          toast.success(`Successfully regenerated description!`);
         } else if (contentType === 'tags' && contentResult.tags && contentResult.tags.length > 0) {
           setGeneratedData({
             ...generatedData,
             tags: contentResult.tags
           });
+          toast.success(`Successfully regenerated tags!`);
         }
       } else {
-        console.warn(`Regeneration of ${contentType} returned success: false`);
+        const userMessage = handleApiError(contentResult, `Could not regenerate ${contentType}`);
+        toast.warning(userMessage);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       console.error(`Error regenerating ${contentType}:`, errorMessage);
+      toast.error(`Error regenerating ${contentType}: ${errorMessage}`);
     }
   };
 
@@ -353,7 +386,7 @@ export function StudioView({
   // Handle regeneration of a new image using current settings
   const handleRegenerateImage = async () => {
     if (!videoDescription || !selectedThumbnailStyle || !generatedData) {
-      console.warn("Cannot regenerate image: missing video description, style, or existing generated data.");
+      toast.warning("Cannot regenerate image. Please ensure you have a video description and style selected.");
       return;
     }
 
@@ -362,10 +395,10 @@ export function StudioView({
 
     try {
       const structuredPrompt = await generateThumbnailPrompt(
-        videoDescription, // Current video description
-        selectedThumbnailStyle, // Current selected style
-        currentThumbnailText, // Stored thumbnail text from initial generation
-        currentTextStyle    // Stored text style from initial generation
+        videoDescription, 
+        selectedThumbnailStyle, 
+        currentThumbnailText, 
+        currentTextStyle  
       );
 
       const thumbnailResponse = await fetch('/api/generate-thumbnail', {
@@ -376,7 +409,9 @@ export function StudioView({
 
       if (!thumbnailResponse.ok) {
         const errorData = await thumbnailResponse.json();
-        throw new Error(errorData.error || 'Failed to regenerate image');
+        const userMessage = handleApiError(errorData, 'Failed to regenerate image');
+        toast.error(userMessage);
+        throw new Error(errorData.error || userMessage);
       }
 
       const thumbnailResult = await thumbnailResponse.json();
@@ -394,6 +429,7 @@ export function StudioView({
       
       // End loading state as soon as image is shown
       setIsLoading(false);
+      toast.success('Image regenerated successfully!');
       
       // Save the project in the background if we have a new image
       if (newImageUrl) {
@@ -404,9 +440,11 @@ export function StudioView({
           updatedData.description,
           updatedData.tags.join(',')
         ).catch(error => {
+          // Keep error logging for critical errors, but ensure user is notified
           console.error('Background project save failed:', error);
-          // Optional: Show a toast error if background save fails
-          toast.error(`Failed to save project in background: ${error.message}`);
+          const errorData = error.response?.data || {};
+          const userMessage = handleApiError(errorData, 'Failed to save project in background');
+          toast.error(userMessage);
         });
       }
 

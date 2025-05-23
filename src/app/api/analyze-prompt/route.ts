@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { apiKeys, features } from '@/lib/env';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 // const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent'; // Old URL
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'; // Updated URL with gemini-2.0-flash
 
@@ -14,17 +14,28 @@ export async function POST(request: NextRequest) {
 
     if (!description || !style) {
       return NextResponse.json(
-        { error: 'Missing required fields: description (visual brief) and style' },
+        { 
+          error: 'Missing required fields', 
+          code: 'MISSING_FIELDS',
+          details: 'Both description (visual brief) and style are required'
+        },
         { status: 400 }
       );
     }
 
-    // Check if Gemini API key is available
-    if (!GEMINI_API_KEY) {
-      console.warn('GEMINI_API_KEY is not configured, using fallback approach for safety.');
-      // Return a null prompt which will trigger frontend fallback
-      return NextResponse.json({ structuredPrompt: null });
+    // Check if Gemini API key is available using the features utility
+    if (!features.hasGemini()) {
+      console.error('GEMINI_API_KEY is not configured in environment variables.');
+      // Return a null prompt with standardized error structure
+      return NextResponse.json({ 
+        error: 'API key not configured',
+        code: 'MISSING_API_KEY',
+        structuredPrompt: null 
+      }, { status: 500 });
     }
+
+    // Get the API key using our utility
+    const GEMINI_API_KEY = apiKeys.gemini();
 
     let parsedThemes: any = {}; // Default to empty object
 
@@ -34,21 +45,28 @@ export async function POST(request: NextRequest) {
       } catch (e) {
         console.error("Failed to parse themes JSON:", e);
         return NextResponse.json(
-          { error: "Invalid 'themes' format. Expected a JSON string." },
+          { 
+            error: "Invalid themes format", 
+            code: 'INVALID_JSON',
+            details: "Expected a valid JSON string for 'themes' parameter"
+          },
           { status: 400 }
         );
       }
     } else if (themes != null) { // themes is not a string and not null/undefined
         console.warn("'themes' parameter was not a string, received:", typeof themes);
-        // Optionally, you could return an error here if themes is provided but not a string
-        // For now, we let it proceed with parsedThemes as {}
+        // Continue with empty object but log the warning
     }
 
     // Validate that parsedThemes is an object (it could be an array or primitive if JSON was valid but not an object)
     if (typeof parsedThemes !== 'object' || parsedThemes === null || Array.isArray(parsedThemes)) {
         console.error("Parsed 'themes' is not a valid object:", parsedThemes);
         return NextResponse.json(
-            { error: "Invalid 'themes' content. Expected a JSON object." },
+            { 
+              error: "Invalid themes content", 
+              code: 'INVALID_OBJECT',
+              details: "The 'themes' parameter must contain a JSON object"
+            },
             { status: 400 }
         );
     }
@@ -140,7 +158,13 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Gemini API error:', errorText);
-      throw new Error(`Gemini API error: ${response.status}`);
+      
+      return NextResponse.json({ 
+        error: 'Failed to generate prompt from Gemini API',
+        code: 'GEMINI_API_ERROR',
+        details: { status: response.status, message: errorText },
+        structuredPrompt: null
+      }, { status: 502 }); // 502 Bad Gateway
     }
 
     const geminiResponse = await response.json();
@@ -149,7 +173,11 @@ export async function POST(request: NextRequest) {
     const structuredPrompt = geminiResponse.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
     if (!structuredPrompt) {
-      throw new Error('No valid response from Gemini API');
+      return NextResponse.json({ 
+        error: 'No valid response content from Gemini API',
+        code: 'EMPTY_RESPONSE',
+        structuredPrompt: null
+      }, { status: 502 });
     }
 
     // Return the structured prompt
@@ -157,7 +185,12 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error analyzing prompt with Gemini:', error);
     return NextResponse.json(
-      { error: 'Failed to analyze prompt', structuredPrompt: null },
+      { 
+        error: 'Failed to analyze prompt', 
+        code: 'INTERNAL_SERVER_ERROR',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        structuredPrompt: null 
+      },
       { status: 500 }
     );
   }

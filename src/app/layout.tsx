@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Rethink_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { AppInitializer } from "@/components/config/AppInitializer";
 
 // const inter = Inter({ subsets: ["latin"] });
 const rethinkSans = Rethink_Sans({ subsets: ["latin"] });
@@ -21,7 +22,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       {/* <body className={inter.className}>{children}</body> */}
       <body className={rethinkSans.className}>
-        {children}
+        <AppInitializer>
+          {children}
+        </AppInitializer>
         <Toaster richColors position="top-right" closeButton />
       </body>
     </html>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { apiKeys, features } from '@/lib/env';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 export async function POST(request: NextRequest) {
@@ -11,25 +11,35 @@ export async function POST(request: NextRequest) {
 
     if (!videoDescription) {
       return NextResponse.json(
-        { error: 'Missing required field: videoDescription' },
+        { 
+          error: 'Missing required field: videoDescription',
+          code: 'MISSING_FIELD' 
+        },
         { status: 400 }
       );
     }
 
-    // Check if Gemini API key is available
-    if (!GEMINI_API_KEY) {
-      console.warn('GEMINI_API_KEY is not configured, using fallback approach for safety.');
-      // Return fallback content
+    // Check if Gemini API key is available using the features utility
+    if (!features.hasGemini()) {
+      // Keep critical error logging but improve error response
+      console.error('GEMINI_API_KEY is not configured in environment variables.');
+      
+      // Return fallback content with a standardized error structure
       return NextResponse.json({ 
         success: false,
-        message: 'API key not configured',
+        error: 'API key not configured',
+        code: 'MISSING_API_KEY',
+        // Still include fallback data for graceful degradation
         titles: [`${style || 'Video'}: ${videoDescription.slice(0, 30)}...`],
         descriptions: [videoDescription],
         tags: videoDescription.split(' ').slice(0, 5).map((tag: string) => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
         bestTitle: 0,
         bestDescription: 0
-      });
+      }, { status: 500 });
     }
+
+    // Get the API key using our utility
+    const GEMINI_API_KEY = apiKeys.gemini();
 
     // Create a prompt for Gemini based on contentType
     let geminiPrompt = '';
@@ -187,6 +197,7 @@ export async function POST(request: NextRequest) {
         // If we got a 503 error (service temporarily unavailable), retry
         if (response.status === 503) {
           attempts++;
+          // Keep logging for server diagnostics
           console.warn(`Gemini API returned 503, retrying (${attempts}/${maxAttempts})...`);
           
           // Wait before retrying (exponential backoff)
@@ -197,7 +208,13 @@ export async function POST(request: NextRequest) {
         // For other error codes, don't retry
         const errorText = await response.text();
         console.error('Gemini API error:', errorText);
-        throw new Error(`Gemini API error: ${response.status}`);
+        
+        return NextResponse.json({
+          error: 'Failed to generate content from Gemini API',
+          code: 'GEMINI_API_ERROR',
+          details: { status: response.status, message: errorText },
+          success: false
+        }, { status: 502 }); // 502 Bad Gateway - appropriate for upstream API failures
         
       } catch (fetchError) {
         attempts++;
@@ -207,6 +224,7 @@ export async function POST(request: NextRequest) {
           throw fetchError;
         }
         
+        // Keep logging for server diagnostics
         console.warn(`Fetch error, retrying (${attempts}/${maxAttempts})...`, fetchError);
         // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempts)));
@@ -214,7 +232,11 @@ export async function POST(request: NextRequest) {
     }
     
     if (!response || !response.ok) {
-      throw new Error('Failed to get a successful response from Gemini API after multiple attempts');
+      return NextResponse.json({
+        error: 'Failed to get a successful response from Gemini API after multiple attempts',
+        code: 'GEMINI_API_UNAVAILABLE',
+        success: false
+      }, { status: 503 }); // 503 Service Unavailable
     }
 
     const geminiResponse = await response.json();
@@ -223,7 +245,11 @@ export async function POST(request: NextRequest) {
     const generatedText = geminiResponse.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
     if (!generatedText) {
-      throw new Error('No valid response from Gemini API');
+      return NextResponse.json({
+        error: 'No valid response content from Gemini API',
+        code: 'EMPTY_RESPONSE',
+        success: false
+      }, { status: 502 });
     }
 
     // Parse the JSON response
@@ -242,21 +268,41 @@ export async function POST(request: NextRequest) {
       // Validate the response structure based on contentType
       if (contentType === 'titles') {
         if (!contentData.titles || !Array.isArray(contentData.titles)) {
-          throw new Error('Invalid response structure: missing titles array');
+          return NextResponse.json({
+            error: 'Invalid response structure from Gemini API',
+            code: 'INVALID_RESPONSE_STRUCTURE',
+            details: 'Missing titles array',
+            success: false
+          }, { status: 502 });
         }
       } else if (contentType === 'descriptions') {
         if (!contentData.descriptions || !Array.isArray(contentData.descriptions)) {
-          throw new Error('Invalid response structure: missing descriptions array');
+          return NextResponse.json({
+            error: 'Invalid response structure from Gemini API',
+            code: 'INVALID_RESPONSE_STRUCTURE',
+            details: 'Missing descriptions array',
+            success: false
+          }, { status: 502 });
         }
       } else if (contentType === 'tags') {
         if (!contentData.tags || !Array.isArray(contentData.tags)) {
-          throw new Error('Invalid response structure: missing tags array');
+          return NextResponse.json({
+            error: 'Invalid response structure from Gemini API',
+            code: 'INVALID_RESPONSE_STRUCTURE',
+            details: 'Missing tags array',
+            success: false
+          }, { status: 502 });
         }
       } else {
         // For full content generation, validate all fields
-      if (!contentData.titles || !contentData.descriptions || !contentData.tags || 
-          !Array.isArray(contentData.titles) || !Array.isArray(contentData.descriptions) || !Array.isArray(contentData.tags)) {
-        throw new Error('Invalid response structure from Gemini API');
+        if (!contentData.titles || !contentData.descriptions || !contentData.tags || 
+            !Array.isArray(contentData.titles) || !Array.isArray(contentData.descriptions) || !Array.isArray(contentData.tags)) {
+          return NextResponse.json({
+            error: 'Invalid response structure from Gemini API',
+            code: 'INVALID_RESPONSE_STRUCTURE',
+            details: 'Missing required fields in response',
+            success: false
+          }, { status: 502 });
         }
       }
 
@@ -267,20 +313,26 @@ export async function POST(request: NextRequest) {
       });
       
     } catch (parseError) {
+      // Keep critical error logging
       console.error('Error parsing Gemini response as JSON:', parseError);
-      console.error('Received text:', generatedText);
-      throw new Error('Failed to parse Gemini response');
+      
+      return NextResponse.json({
+        error: 'Failed to parse Gemini response',
+        code: 'PARSING_ERROR',
+        details: parseError instanceof Error ? parseError.message : 'Unknown parsing error',
+        success: false
+      }, { status: 500 });
     }
     
   } catch (error) {
+    // Keep critical error logging
     console.error('Error generating content with Gemini:', error);
-    return NextResponse.json(
-      { 
-        error: 'Failed to generate content',
-        success: false,
-        message: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    
+    return NextResponse.json({ 
+      error: 'Failed to generate content',
+      code: 'INTERNAL_SERVER_ERROR',
+      details: error instanceof Error ? error.message : 'Unknown error',
+      success: false
+    }, { status: 500 });
   }
 } 

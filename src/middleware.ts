@@ -1,8 +1,14 @@
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { featureFlagsMiddleware } from '@/middleware/feature-flags-middleware'
 
 export async function middleware(req: NextRequest) {
+  // Apply feature flags middleware for API routes
+  if (req.nextUrl.pathname.startsWith('/api')) {
+    return featureFlagsMiddleware(req);
+  }
+  
   const res = NextResponse.next()
   const supabase = createMiddlewareClient({ req, res })
 
@@ -25,9 +31,10 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    // Also match API routes for feature flags middleware
+    '/api/:path*',
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
@@ -35,6 +42,6 @@ export const config = {
      * - images/ (other images)
      * - auth/callback (OAuth callback route)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|ytza-logo.jpeg|images/|auth/callback).*)',
+    '/((?!_next/static|_next/image|favicon.ico|ytza-logo.jpeg|images/|auth/callback).*)',
   ],
 } 

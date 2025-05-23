@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiKeys, features } from '@/lib/env';
 
 export async function POST(request: Request) {
   const { prompt } = await request.json();
@@ -7,22 +8,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
-
-  if (!apiKey) {
-    console.error('OpenAI API key not found.');
-    return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
+  // Check if OpenAI is configured
+  if (!features.hasOpenAI()) {
+    console.error('OpenAI API key not configured in environment variables.');
+    return NextResponse.json({ 
+      error: 'OpenAI API key not configured', 
+      code: 'MISSING_API_KEY' 
+    }, { status: 500 });
   }
+
+  const apiKey = apiKeys.openai();
 
   // Check if the prompt includes text overlay instructions
   const hasTextOverlay = prompt.includes('TEXT OVERLAY INSTRUCTIONS');
   
-  console.log('[API Route] Generating image with prompt:', prompt);
-  console.log('[API Route] Model: gpt-image-1, Size: 1536x1024'); 
-  if (hasTextOverlay) {
-    console.log('[API Route] Text overlay detected in prompt');
-  }
-
   try {
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
@@ -43,7 +42,11 @@ export async function POST(request: Request) {
     if (!response.ok) {
       const errorData = await response.json();
       console.error('OpenAI API Error:', errorData);
-      return NextResponse.json({ error: 'Failed to generate image from OpenAI', details: errorData }, { status: response.status });
+      return NextResponse.json({ 
+        error: 'Failed to generate image from OpenAI', 
+        details: errorData,
+        code: 'OPENAI_API_ERROR'
+      }, { status: response.status });
     }
 
     const data = await response.json();
@@ -53,7 +56,10 @@ export async function POST(request: Request) {
 
     if (!imageBase64) {
       console.error('Image data not found in OpenAI response:', data);
-      return NextResponse.json({ error: 'Image data not found in response' }, { status: 500 });
+      return NextResponse.json({ 
+        error: 'Image data not found in response',
+        code: 'MISSING_IMAGE_DATA'
+      }, { status: 500 });
     }
 
     // Convert base64 to a data URL the frontend can use directly
@@ -65,6 +71,10 @@ export async function POST(request: Request) {
     console.error('Error calling OpenAI API:', error);
     // Check if error is an instance of Error to safely access message property
     const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-    return NextResponse.json({ error: 'Internal server error', details: errorMessage }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Internal server error', 
+      details: errorMessage,
+      code: 'INTERNAL_ERROR'
+    }, { status: 500 });
   }
 } 
