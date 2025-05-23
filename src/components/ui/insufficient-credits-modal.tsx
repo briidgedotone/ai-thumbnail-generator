@@ -49,7 +49,7 @@ export function InsufficientCreditsModal({
                 <div>
                   <h4 className="font-medium text-gray-900 dark:text-gray-100">Get More Credits</h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Upgrade to Pro for 20 credits per month
+                    Upgrade to Pro for 50 credits per month
                   </p>
                 </div>
               </div>

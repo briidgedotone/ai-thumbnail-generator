@@ -31,9 +31,6 @@ export function PricingSection({ tiers }: PricingSectionProps) {
       <div className="container px-4 md:px-6 max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center space-y-6 mb-16">
-          <div className="inline-flex items-center rounded-full border-2 border-[#18181B]/20 bg-background px-3 py-1 text-sm shadow-[2px_2px_0px_0px_#18181B]">
-            <span>Flexible Plans</span>
-          </div>
           <div className="relative">
             <h2 className="text-4xl md:text-5xl font-bold rotate-[-1deg] text-zinc-900">
               Choose Your Perfect Fit
@@ -165,16 +162,6 @@ export function PricingSection({ tiers }: PricingSectionProps) {
               </div>
             </motion.div>
           ))}
-        </div>
-
-        {/* Background Decorative Elements */}
-        <div className="absolute -z-10 inset-0 overflow-hidden">
-          {/* <div className="absolute top-40 left-20 text-4xl rotate-12">
-            ✎
-          </div>
-          <div className="absolute bottom-40 right-20 text-4xl -rotate-12">
-            ✏️
-          </div> */}
         </div>
       </div>
     </section>

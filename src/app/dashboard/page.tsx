@@ -278,7 +278,7 @@ export default function DashboardPage() {
 
         const { data: creditsData, error: creditsError } = await supabase
           .from('user_credits')
-          .select('balance')
+          .select('balance, subscription_tier')
           .eq('user_id', user.id)
           .single();
 
@@ -288,12 +288,21 @@ export default function DashboardPage() {
 
         if (creditsData) {
           setCurrentCredits(creditsData.balance);
-          setTotalCredits(20); // Assuming 20 is the max credits for display
+          
+          // Set totalCredits based on subscription tier
+          const tier = creditsData.subscription_tier?.toLowerCase();
+          if (tier === 'free') {
+            setTotalCredits(3);
+          } else if (tier === 'pro') {
+            setTotalCredits(50);
+          } else {
+            setTotalCredits(3); // Default to free tier
+          }
         }
       } catch (err) {
         console.error("Error fetching user credits:", err);
         setCurrentCredits(0); // Default to 0 on error
-        setTotalCredits(20);
+        setTotalCredits(3); // Default to free tier
       }
     };
 

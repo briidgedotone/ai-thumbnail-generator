@@ -20,22 +20,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Update user_credits table with selected plan
+    // Determine credits based on plan
+    let credits = 0;
+    if (planName.toLowerCase() === 'free') {
+      credits = 3;
+    }
+
+    // Update user_credits table with selected plan and credits
     const { error: updateError } = await supabase
       .from('user_credits')
-      .update({ 
+      .upsert({ 
+        user_id: user.id,
         subscription_tier: planName.toLowerCase(),
+        balance: credits,
         updated_at: new Date().toISOString()
-      })
-      .eq('user_id', user.id);
+      }, {
+        onConflict: 'user_id'
+      });
 
     if (updateError) {
       console.error('Error updating user subscription tier:', updateError);
       return NextResponse.json({ error: 'Failed to save plan selection' }, { status: 500 });
     }
 
-    console.log(`User ${user.email} selected plan: ${planName} - stored in user_credits.subscription_tier`);
-    return NextResponse.json({ success: true, planName });
+    console.log(`User ${user.email} selected plan: ${planName} with ${credits} credits - stored in user_credits`);
+    return NextResponse.json({ success: true, planName, credits });
 
   } catch (error) {
     console.error('Error in select-plan API:', error);

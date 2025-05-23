@@ -375,13 +375,13 @@ export function SettingsModal({
                 </div>
                 <div className="space-y-0.5">
                   <h4 className="font-bold text-xl text-gray-900">Pro Plan</h4>
-                  <p className="text-sm text-gray-600">Access to all premium features and 20 credits per month.</p>
+                  <p className="text-sm text-gray-600">Access to all premium features and 50 credits per month.</p>
                   
                   <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-x-3 gap-y-1 pt-0.5">
-                    <span className="px-3 py-1 rounded-full bg-gradient-to-r from-[#FF5C8D]/20 via-[#FF0000]/20 to-[#FFA600]/20 text-sm font-semibold text-[#FF0000]">15/20 credits remaining</span>
+                    <span className="px-3 py-1 rounded-full bg-gradient-to-r from-[#FF5C8D]/20 via-[#FF0000]/20 to-[#FFA600]/20 text-sm font-semibold text-[#FF0000]">Credits remaining</span>
                     <span className="text-sm text-gray-500 flex items-center">
                       <Calendar size={14} className="mr-1 text-gray-400" />
-                      Renews on July 15, 2024
+                      Renews monthly
                     </span>
                   </div>
                 </div>

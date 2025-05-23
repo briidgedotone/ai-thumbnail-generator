@@ -123,15 +123,8 @@ export default function SelectPlanPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center space-y-6 mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-zinc-900">
-            Choose Your Plan
-          </h1>
-          <p className="text-lg text-zinc-600 max-w-2xl mx-auto">
-            Select the perfect plan to start creating amazing thumbnails for your YouTube channel.
-          </p>
-        </div>
+      <div className="container mx-auto px-4">
+        
         
         <PricingSection tiers={selectPlanTiers} />
       </div>
