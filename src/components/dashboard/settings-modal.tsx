@@ -16,6 +16,15 @@ import Avatar from 'boring-avatars';
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { Toaster, toast } from "sonner";
 
+interface Purchase {
+  id: string;
+  amount: number;
+  credits_added: number;
+  purchase_type: string;
+  payment_method_last4: string | null;
+  created_at: string;
+}
+
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -45,15 +54,48 @@ export function SettingsModal({
   // New states for save operation
   const [isSaving, setIsSaving] = useState(false);
 
+  // Purchase history state
+  const [purchaseHistory, setPurchaseHistory] = useState<Purchase[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
   const supabase = createSupabaseClient();
+
+  // Fetch purchase history
+  const fetchPurchaseHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const response = await fetch('/api/purchase-history');
+      if (!response.ok) {
+        throw new Error('Failed to fetch purchase history');
+      }
+      const data = await response.json();
+      setPurchaseHistory(data.purchases || []);
+    } catch (error) {
+      console.error('Error fetching purchase history:', error);
+      setPurchaseHistory([]);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   React.useEffect(() => {
     if (isOpen) {
       setNameInput(initialUserName || "");
       setEmailInput(initialUserEmail || "");
+      // Fetch purchase history when modal opens and user is on plan tab
+      if (activeTab === 'plan') {
+        fetchPurchaseHistory();
+      }
     }
-  }, [initialUserName, initialUserEmail, isOpen]);
+  }, [initialUserName, initialUserEmail, isOpen, activeTab]);
   
+  // Fetch purchase history when switching to plan tab
+  React.useEffect(() => {
+    if (isOpen && activeTab === 'plan') {
+      fetchPurchaseHistory();
+    }
+  }, [activeTab, isOpen]);
+
   // Security tab states
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -450,6 +492,54 @@ export function SettingsModal({
                     <AlertCircle size={16} className="mr-2" />
                     You're out of credits! {isProUser ? 'Purchase more to continue creating.' : 'Upgrade to Pro to get 50 credits.'}
                   </p>
+                </div>
+              )}
+            </div>
+
+            {/* Purchase History Section */}
+            <div className="bg-white border-2 border-gray-200 rounded-xl p-5 mb-6">
+              <h5 className="font-semibold text-lg text-gray-900 mb-4">Purchase History</h5>
+              
+              {loadingHistory ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-gray-500 mr-2" />
+                  <span className="text-sm text-gray-500">Loading history...</span>
+                </div>
+              ) : purchaseHistory.length === 0 ? (
+                <div className="text-center py-6">
+                  <div className="text-gray-400 mb-2">
+                    <CreditCard size={24} className="mx-auto" />
+                  </div>
+                  <p className="text-sm text-gray-500">No purchases yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {purchaseHistory.map((purchase) => (
+                    <div key={purchase.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {new Date(purchase.created_at).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {purchase.purchase_type} • {purchase.credits_added} Credits
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-gray-900">${purchase.amount.toFixed(2)}</p>
+                          {purchase.payment_method_last4 && (
+                            <p className="text-xs text-gray-500">
+                              •••• {purchase.payment_method_last4}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

@@ -84,6 +84,37 @@ export async function POST(request: Request) {
 
     console.log(`Successfully ${actionMessage} for user ${user.email}. New balance: ${newBalance}`);
 
+    // Record purchase in history (don't fail payment if this fails)
+    try {
+      // Retrieve payment method info from session
+      const sessionWithPaymentMethod = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ['payment_intent.payment_method']
+      });
+      
+      let paymentMethodLast4 = null;
+      if (sessionWithPaymentMethod.payment_intent && 
+          typeof sessionWithPaymentMethod.payment_intent === 'object' &&
+          sessionWithPaymentMethod.payment_intent.payment_method &&
+          typeof sessionWithPaymentMethod.payment_intent.payment_method === 'object' &&
+          sessionWithPaymentMethod.payment_intent.payment_method.card) {
+        paymentMethodLast4 = sessionWithPaymentMethod.payment_intent.payment_method.card.last4;
+      }
+
+      await supabase.from('user_purchases').insert({
+        user_id: user.id,
+        stripe_session_id: sessionId,
+        amount_cents: 2900, // Always $29
+        credits_added: 50,  // Always 50 credits  
+        purchase_type: currentCreditsData?.subscription_tier === 'pro' ? 'credits' : 'upgrade',
+        payment_method_last4: paymentMethodLast4
+      });
+
+      console.log(`Purchase history recorded for user ${user.email}`);
+    } catch (purchaseError) {
+      console.error('Failed to record purchase history (payment still successful):', purchaseError);
+      // Don't fail the entire payment - credits were already updated successfully
+    }
+
     return NextResponse.json({ 
       success: true, 
       message: `Payment verified and ${actionMessage}`,
