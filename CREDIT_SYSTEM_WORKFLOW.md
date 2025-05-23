@@ -35,7 +35,7 @@ This document outlines the complete credit system workflow for YTZA, from user s
 // API: /api/verify-payment (after Stripe checkout)
 {
   user_id: "user-uuid", 
-  subscription_tier: "pro_lifetime",
+  subscription_tier: "pro",
   balance: 50,
   updated_at: "2024-01-15T10:30:00.000Z"
 }
@@ -48,7 +48,7 @@ This document outlines the complete credit system workflow for YTZA, from user s
 CREATE TABLE user_credits (
   id SERIAL PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  subscription_tier VARCHAR(20) DEFAULT 'free', -- 'free', 'pro_lifetime'
+  subscription_tier VARCHAR(20) DEFAULT 'free', -- 'free', 'pro'
   balance INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
@@ -109,7 +109,7 @@ const { data: creditsData } = await supabase
   .single();
 
 // Sets correct total based on plan
-const totalCredits = tier === 'free' ? 3 : tier === 'pro_lifetime' ? 50 : 3;
+const totalCredits = tier === 'free' ? 3 : tier === 'pro' ? 50 : 3;
 ```
 
 #### Real-time Updates
@@ -151,7 +151,7 @@ const totalCredits = tier === 'free' ? 3 : tier === 'pro_lifetime' ? 50 : 3;
 4. Manual verification updates:
    ```javascript
    {
-     subscription_tier: "pro_lifetime",
+     subscription_tier: "pro",
      balance: 50
    }
    ```
@@ -170,7 +170,7 @@ Result: Sets balance to 3, tier to "free"
 // Payment Verification (Pro Lifetime)
 POST /api/verify-payment
 Body: { sessionId: "stripe_session_id" }
-Result: Sets balance to 50, tier to "pro_lifetime"
+Result: Sets balance to 50, tier to "pro"
 
 // Credit Pack Purchase (Future Implementation)
 POST /api/purchase-credits
@@ -238,14 +238,14 @@ if (!hasCredits) {
 
 **Credit Allocation:**
 - Free: 3 credits (one-time)
-- Pro Lifetime: 50 credits (one-time) + lifetime Pro features
+- Pro: 50 credits (one-time) + lifetime Pro features
 
 **Credit Usage:**
 - 1 credit per thumbnail generation/regeneration
 - Real-time deduction and display updates
 
 **Replenishment Methods:**
-- Free: Upgrade to Pro Lifetime OR buy credit packs
+- Free: Upgrade to Pro OR buy credit packs
 - Pro: Purchase additional credit packs
 
 **Payment Model:**

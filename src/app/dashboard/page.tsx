@@ -104,6 +104,7 @@ export default function DashboardPage() {
   // Dummy credit state
   const [currentCredits, setCurrentCredits] = useState(15);
   const [totalCredits, setTotalCredits] = useState(20);
+  const [userTier, setUserTier] = useState<string>('free'); // Add user tier state
   const [activeView, setActiveView] = useState<'studio' | 'projects'>('studio'); // New state for active view
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false); // New state for profile dropdown
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false); // New state for settings modal
@@ -291,9 +292,10 @@ export default function DashboardPage() {
           
           // Set totalCredits based on subscription tier
           const tier = creditsData.subscription_tier?.toLowerCase();
+          setUserTier(tier || 'free'); // Set user tier state
           if (tier === 'free') {
             setTotalCredits(3);
-          } else if (tier === 'pro' || tier === 'pro_lifetime') {
+          } else if (tier === 'pro') {
             setTotalCredits(50);
           } else {
             setTotalCredits(3); // Default to free tier
@@ -584,6 +586,7 @@ export default function DashboardPage() {
         isOpen={isInsufficientCreditsModalOpen}
         onClose={() => setIsInsufficientCreditsModalOpen(false)}
         currentCredits={currentCredits}
+        userTier={userTier}
       />
     </div>
   );

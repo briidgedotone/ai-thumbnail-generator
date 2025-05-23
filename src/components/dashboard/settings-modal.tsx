@@ -374,7 +374,7 @@ export function SettingsModal({
                   <Gem size={22} className="text-white" />
                 </div>
                 <div className="space-y-0.5">
-                  <h4 className="font-bold text-xl text-gray-900">Pro Plan (Lifetime)</h4>
+                  <h4 className="font-bold text-xl text-gray-900">Pro Plan</h4>
                   <p className="text-sm text-gray-600">One-time purchase with lifetime access to all Pro features.</p>
                   
                   <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-x-3 gap-y-1 pt-0.5">

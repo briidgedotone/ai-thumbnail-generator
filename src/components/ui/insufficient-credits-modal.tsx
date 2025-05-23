@@ -27,7 +27,19 @@ export function InsufficientCreditsModal({
   currentCredits,
   userTier = 'free'
 }: InsufficientCreditsModalProps) {
-  const isProUser = userTier === 'pro' || userTier === 'pro_lifetime';
+  const isProUser = userTier === 'pro';
+  
+  const handleUpgradeOrBuy = () => {
+    if (isProUser) {
+      // TODO: Navigate to credit pack purchase page
+      // For now, redirect to select-plan page
+      window.location.href = '/select-plan';
+    } else {
+      // Redirect to select-plan page for upgrade
+      window.location.href = '/select-plan';
+    }
+    onClose();
+  };
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -41,7 +53,7 @@ export function InsufficientCreditsModal({
             </DialogTitle>
             <DialogDescription className="text-gray-600 text-left">
               {isProUser 
-                ? `You've used all ${currentCredits === 0 ? '50' : currentCredits} of your Pro credits. Purchase additional credits to continue creating.`
+                ? `You've used all your Pro credits. Purchase additional credits to continue creating.`
                 : `You have ${currentCredits} credits remaining. Upgrade to Pro or purchase additional credits to continue.`
               }
             </DialogDescription>
@@ -55,7 +67,7 @@ export function InsufficientCreditsModal({
                 </div>
                 <div>
                   <h4 className="font-medium text-gray-900 dark:text-gray-100">
-                    {isProUser ? "Get More Credits" : "Upgrade or Buy Credits"}
+                    {isProUser ? "Buy More Credits" : "Upgrade or Buy Credits"}
                   </h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {isProUser 
@@ -77,13 +89,10 @@ export function InsufficientCreditsModal({
               </Button>
               <Button
                 className="flex-1 bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white hover:opacity-90 transition-opacity border-0"
-                onClick={() => {
-                  // TODO: Navigate to credit purchase page
-                  onClose();
-                }}
+                onClick={handleUpgradeOrBuy}
               >
                 <CreditCard className="mr-2 h-4 w-4" />
-                {isProUser ? "Buy Credits" : "Upgrade/Buy"}
+                {isProUser ? "Buy More Credits" : "Upgrade/Buy"}
               </Button>
             </div>
           </div>

@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       .from('user_credits')
       .upsert({ 
         user_id: user.id,
-        subscription_tier: 'pro_lifetime', // Changed to indicate lifetime access
+        subscription_tier: 'pro', // Changed back to 'pro' instead of 'pro_lifetime'
         balance: 50,
         updated_at: new Date().toISOString()
       }, {
@@ -58,12 +58,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to update subscription' }, { status: 500 });
     }
 
-    console.log(`Successfully upgraded user ${user.email} to Pro Lifetime plan with 50 credits`);
+    console.log(`Successfully upgraded user ${user.email} to Pro plan with 50 credits`);
 
     return NextResponse.json({ 
       success: true, 
       message: 'Payment verified and Pro access granted',
-      plan: 'pro_lifetime',
+      plan: 'pro',
       balance: 50
     });
 
