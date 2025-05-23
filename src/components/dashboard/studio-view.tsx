@@ -6,6 +6,7 @@ import { StyleSelectionForm } from "@/components/dashboard/studio/StyleSelection
 import { GenerationResults } from "@/components/dashboard/studio/GenerationResults";
 import { generateThumbnailPrompt } from '@/utils/prompt-generators';
 import { toast } from "sonner";
+import { checkUserCredits } from '@/utils/credit-utils';
 
 interface StudioViewProps {
   selectedThumbnailStyle: string | null;
@@ -14,6 +15,8 @@ interface StudioViewProps {
   onVideoDescriptionChange: (value: string) => void;
   onDetailsPanelStateChange?: (isOpen: boolean) => void;
   onPrepareNewGeneration?: () => void;
+  onInsufficientCredits?: () => void;
+  onCreditsUsed?: () => void;
 }
 
 export function StudioView({
@@ -23,6 +26,8 @@ export function StudioView({
   onVideoDescriptionChange,
   onDetailsPanelStateChange,
   onPrepareNewGeneration,
+  onInsufficientCredits,
+  onCreditsUsed,
 }: StudioViewProps) {
   const [isDetailsPanelOpen, setIsDetailsPanelOpen] = useState(false);
   const [generatedData, setGeneratedData] = useState<{
@@ -64,6 +69,16 @@ export function StudioView({
   const handleSubmit = async (e?: React.FormEvent, thumbnailText?: string, textStyle?: string) => {
     if (e) e.preventDefault();
     if (videoDescription.trim() === '' || !selectedThumbnailStyle) return;
+
+    // Check user credits before proceeding
+    const { hasCredits, currentCredits } = await checkUserCredits();
+    if (!hasCredits) {
+      console.log(`User has insufficient credits: ${currentCredits}`);
+      if (onInsufficientCredits) {
+        onInsufficientCredits();
+      }
+      return;
+    }
 
     // Store text overlay params for potential regeneration
     setCurrentThumbnailText(thumbnailText);
@@ -114,6 +129,11 @@ export function StudioView({
       const thumbnailResult = await thumbnailResponse.json();
       newImageUrl = thumbnailResult.imageUrl; // Store the new image URL
       setAiGeneratedImageUrl(newImageUrl); // Update state as well
+
+      // Refresh credits after successful generation
+      if (onCreditsUsed) {
+        onCreditsUsed();
+      }
 
       // Then, generate optimized content (titles, descriptions, tags)
       const contentResponse = await fetch('/api/generate-content', {
@@ -357,6 +377,16 @@ export function StudioView({
       return;
     }
 
+    // Check user credits before proceeding with regeneration
+    const { hasCredits, currentCredits } = await checkUserCredits();
+    if (!hasCredits) {
+      console.log(`User has insufficient credits for regeneration: ${currentCredits}`);
+      if (onInsufficientCredits) {
+        onInsufficientCredits();
+      }
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -395,6 +425,11 @@ export function StudioView({
       // End loading state as soon as image is shown
       setIsLoading(false);
       
+      // Refresh credits after successful regeneration
+      if (onCreditsUsed) {
+        onCreditsUsed();
+      }
+
       // Save the project in the background if we have a new image
       if (newImageUrl) {
         // We don't await this call so it happens in the background

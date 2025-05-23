@@ -18,6 +18,8 @@ import { createSupabaseClient } from "@/lib/supabase/client"; // Import Supabase
 import { useRouter } from "next/navigation"; // Import useRouter for redirects
 import { ProjectInfoPanel } from "@/components/dashboard/ProjectInfoPanel"; // Import the new panel
 import { toast } from "sonner"; // Import toast for notifications
+import { InsufficientCreditsModal } from "@/components/ui/insufficient-credits-modal"; // Import the new modal
+import { checkUserCredits } from "@/utils/credit-utils"; // Import the credit check utility
 
 // New CircularProgress component
 interface CircularProgressProps {
@@ -115,6 +117,9 @@ export default function DashboardPage() {
   // State for the project info panel
   const [projectToView, setProjectToView] = useState<Project | null>(null);
   const [isProjectInfoPanelOpen, setIsProjectInfoPanelOpen] = useState(false);
+
+  // New state for insufficient credits modal
+  const [isInsufficientCreditsModalOpen, setIsInsufficientCreditsModalOpen] = useState(false);
 
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const supabase = createSupabaseClient();
@@ -295,6 +300,26 @@ export default function DashboardPage() {
     fetchUserCredits();
   }, [supabase]);
 
+  // Function to refresh credits after generation
+  const refreshUserCredits = useCallback(async () => {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) return;
+
+      const { data: creditsData, error: creditsError } = await supabase
+        .from('user_credits')
+        .select('balance')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!creditsError && creditsData) {
+        setCurrentCredits(creditsData.balance);
+      }
+    } catch (err) {
+      console.error("Error refreshing user credits:", err);
+    }
+  }, [supabase]);
+
   // Handler for details panel visibility state change from StudioView
   const handleDetailsPanelVisibilityChange = useCallback((isOpen: boolean) => {
     console.log("[DashboardPage] handleDetailsPanelVisibilityChange called. isOpen:", isOpen);
@@ -323,6 +348,12 @@ export default function DashboardPage() {
     setIsProjectInfoPanelOpen(false);
     // Delay clearing projectToView to allow for panel exit animation
     // The ProjectInfoPanel itself handles not rendering if project is null during animation
+  }, []);
+
+  // Handler for insufficient credits
+  const handleInsufficientCredits = useCallback(() => {
+    console.log("[DashboardPage] User has insufficient credits, showing modal.");
+    setIsInsufficientCreditsModalOpen(true);
   }, []);
 
   if (isLoadingUser) {
@@ -514,6 +545,8 @@ export default function DashboardPage() {
             onVideoDescriptionChange={setVideoDescription}
             onDetailsPanelStateChange={handleDetailsPanelVisibilityChange}
             onPrepareNewGeneration={handlePrepareNewGeneration}
+            onInsufficientCredits={handleInsufficientCredits}
+            onCreditsUsed={refreshUserCredits}
           />
         ) : (
           <ProjectsView 
@@ -536,6 +569,12 @@ export default function DashboardPage() {
         project={projectToView} 
         isOpen={isProjectInfoPanelOpen} 
         onClose={handleCloseProjectInfoPanel} 
+      />
+
+      <InsufficientCreditsModal 
+        isOpen={isInsufficientCreditsModalOpen}
+        onClose={() => setIsInsufficientCreditsModalOpen(false)}
+        currentCredits={currentCredits}
       />
     </div>
   );
