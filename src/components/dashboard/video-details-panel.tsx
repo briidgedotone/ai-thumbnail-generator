@@ -3,9 +3,12 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import Image from "next/image";
-import { X, Download, Copy, Tag, Loader2, Eye, RefreshCw, Check, ArrowLeft, Clock } from "lucide-react";
+import { X, Download, Copy, Tag, Eye, RefreshCw, Check, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { ThumbnailSkeleton, TitleSkeleton, DescriptionSkeleton, TagsSkeleton } from "@/components/ui/skeletons";
+import { GenerationPhase } from "@/types/generation";
 
 interface VideoDetailsPanelProps {
   isOpen: boolean;
@@ -16,7 +19,8 @@ interface VideoDetailsPanelProps {
     description: string;
     tags: string[];
   };
-  isLoading?: boolean;
+  generationPhase?: GenerationPhase | null;
+  generationProgress?: number;
   onRegenerate?: (contentType: 'titles' | 'descriptions' | 'tags') => Promise<void>;
   onRegenerateImage?: () => void;
 }
@@ -25,7 +29,8 @@ export function VideoDetailsPanel({
   isOpen, 
   onClose, 
   data, 
-  isLoading = false,
+  generationPhase = null,
+  generationProgress = 0,
   onRegenerate,
   onRegenerateImage
 }: VideoDetailsPanelProps) {
@@ -47,69 +52,61 @@ export function VideoDetailsPanel({
   const [isRegeneratingDescription, setIsRegeneratingDescription] = useState(false);
   const [isRegeneratingTags, setIsRegeneratingTags] = useState(false);
 
+  const isGenerating = generationPhase !== null;
+
   // Function to download the thumbnail
   const handleDownload = async () => {
     if (!data?.thumbnail) return;
 
     try {
-      const response = await fetch(data.thumbnail, {
-        mode: 'cors' // Explicitly set mode for cross-origin requests
-      });
-      if (!response.ok) {
-        // If direct fetch fails (e.g., CORS issue), try opening in new tab as fallback
-        console.warn('Direct fetch failed, attempting to open in new tab.');
-        const newTab = window.open(data.thumbnail, '_blank', 'noopener');
-        if (newTab) {
-          newTab.focus();
-        } else {
-          alert('Could not open image in a new tab. Please check your popup blocker settings or try right-clicking the image to save.');
-        }
+      let imageUrl = data.thumbnail;
+      
+      // If it's a data URL, we can use it directly
+      if (imageUrl.startsWith('data:image/')) {
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        link.download = 'thumbnail.png';
+        link.click();
+        toast.success("Thumbnail downloaded successfully!");
         return;
       }
+      
+      // For other URLs, fetch the image and convert to blob
+      const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error('Failed to fetch image');
 
       const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+      const blobUrl = URL.createObjectURL(blob);
     
-      // Create a link element
       const link = document.createElement('a');
-      link.href = url;
-      link.download = `thumbnail-${new Date().getTime()}.${blob.type.split('/')[1] || 'jpg'}`;
-      document.body.appendChild(link);
+      link.href = blobUrl;
+      link.download = 'thumbnail.png';
       link.click();
-      document.body.removeChild(link);
       
-      // Clean up the object URL
-      URL.revokeObjectURL(url);
-
+      // Clean up the blob URL
+      URL.revokeObjectURL(blobUrl);
+      toast.success("Thumbnail downloaded successfully!");
     } catch (error) {
-      console.error('Error downloading thumbnail:', error);
-      // Fallback for other errors
-      alert('Failed to download image. You can try right-clicking the preview to save it, or check the console for more details.');
-      // As a last resort, try opening in a new tab if not already attempted
-      if (!(error instanceof DOMException && error.name === 'NetworkError')) { // Avoid re-opening if it was a NetworkError from fetch
-        const newTab = window.open(data.thumbnail, '_blank', 'noopener');
-        if (newTab) newTab.focus();
-      }
+      console.error('Download failed:', error);
+      toast.error("Failed to download thumbnail");
     }
   };
-  
-  // Function to copy text with feedback
+
+  // Function to copy text to clipboard
   const copyToClipboard = async (text: string, setCopied: (copied: boolean) => void) => {
-    if (!text) return;
-    
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+      toast.success("Copied to clipboard!");
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy text: ', err);
+      toast.error("Failed to copy text");
     }
   };
 
-  // Handle regenerate functions
+  // Regeneration handlers
   const handleRegenerateTitle = async () => {
-    if (!onRegenerate || isRegeneratingTitle) return;
-    
+    if (!onRegenerate) return;
     setIsRegeneratingTitle(true);
     try {
       await onRegenerate('titles');
@@ -119,8 +116,7 @@ export function VideoDetailsPanel({
   };
 
   const handleRegenerateDescription = async () => {
-    if (!onRegenerate || isRegeneratingDescription) return;
-    
+    if (!onRegenerate) return;
     setIsRegeneratingDescription(true);
     try {
       await onRegenerate('descriptions');
@@ -130,8 +126,7 @@ export function VideoDetailsPanel({
   };
 
   const handleRegenerateTags = async () => {
-    if (!onRegenerate || isRegeneratingTags) return;
-    
+    if (!onRegenerate) return;
     setIsRegeneratingTags(true);
     try {
       await onRegenerate('tags');
@@ -140,102 +135,87 @@ export function VideoDetailsPanel({
     }
   };
 
-  // Animation variants
+  // Motion variants
   const panelVariants = {
-    hidden: { 
-      width: 0,
-      opacity: 0,
-      x: 50,
+    closed: {
+      x: "100%",
       transition: { 
         type: "spring", 
         stiffness: 300, 
         damping: 30,
-        staggerChildren: 0.05,
-        staggerDirection: -1
+        duration: 0.4,
       } 
     },
-    visible: { 
-      width: "450px", 
-      opacity: 1,
+    open: {
       x: 0,
       transition: { 
         type: "spring", 
         stiffness: 300, 
         damping: 30,
-        staggerChildren: 0.07,
-        delayChildren: 0.1
-      } 
-    },
-    exit: { 
-      width: 0, 
-      opacity: 0,
-      x: 50,
+        duration: 0.5,
+      }
+    }
+  };
+
+  const backdropVariants = {
+    closed: { opacity: 0 },
+    open: { opacity: 1 }
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
       transition: { 
-        type: "spring", 
-        stiffness: 300, 
-        damping: 30,
-        staggerChildren: 0.05,
-        staggerDirection: -1
+        staggerChildren: 0.1,
+        delayChildren: 0.2
       } 
     }
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -10 }
+    visible: { opacity: 1, y: 0 }
   };
 
   const buttonMotionVariants = {
-    hover: {
-      scale: 1.05,
-      transition: {
-        duration: 0.2,
-        type: "spring",
-        stiffness: 400,
-        damping: 10
-      }
-    },
-    tap: {
-      scale: 0.95
-    }
+    hover: { scale: 1.05 },
+    tap: { scale: 0.95 }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <MotionConfig transition={{ type: 'spring', bounce: 0.1, duration: 0.4 }}>
+    <MotionConfig transition={{ type: "spring", bounce: 0.1 }}>
       <AnimatePresence>
-        {isOpen && (
+        <div key="video-details-panel" className="fixed inset-0 z-50 flex">
+          {/* Panel */}
           <motion.div
-            className="fixed top-0 right-0 bottom-0 border-l border-zinc-200 shadow-lg z-40 overflow-hidden bg-white dark:bg-zinc-900 dark:border-zinc-800"
+            className="ml-auto w-full max-w-lg bg-white dark:bg-zinc-900 shadow-2xl flex flex-col relative border-l border-zinc-200 dark:border-zinc-800"
             variants={panelVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
+            initial="closed"
+            animate="open"
+            exit="closed"
           >
-            {/* Backdrop for mobile */}
-            <motion.div 
-              className="fixed inset-0 bg-black/25 backdrop-blur-sm z-30 lg:hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={onClose}
-            />
-            
             {/* Header */}
             <motion.div 
-              className="flex items-center px-6 py-4 border-b border-zinc-100 dark:border-zinc-800"
+              className="flex items-center justify-between p-6 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50"
               variants={itemVariants}
             >
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={onClose} 
-                className="mr-3 rounded-full w-8 h-8 text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors" 
-                title="Close Panel"
-              >
-                <ArrowLeft size={18} />
-              </Button>
-              <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Video Details</h2>
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Video Details</h2>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">Review and customize your content</p>
+              </div>
+              <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onClose}
+                  className="rounded-full w-9 h-9"
+                >
+                  <X size={18} />
+                </Button>
+              </motion.div>
             </motion.div>
 
             <div className="h-full flex flex-col overflow-y-auto pb-6">
@@ -245,7 +225,13 @@ export function VideoDetailsPanel({
                 variants={itemVariants}
               >
                 <div className="relative aspect-video w-full overflow-hidden rounded-xl mb-6 shadow-md group bg-zinc-100 dark:bg-zinc-800">
-                  {data?.thumbnail && data.thumbnail.trim() !== '' ? (
+                  {isGenerating ? (
+                    <ThumbnailSkeleton 
+                      generationPhase={generationPhase} 
+                      generationProgress={generationProgress}
+                      variant="detailed"
+                    />
+                  ) : data?.thumbnail && data.thumbnail.trim() !== '' ? (
                     <div className="relative w-full h-full overflow-hidden">
                       <Image 
                         key={data.thumbnail}
@@ -256,7 +242,7 @@ export function VideoDetailsPanel({
                           data.thumbnail?.includes('oaidalleapiprodscus.blob.core.windows.net') || 
                           data.thumbnail?.startsWith('data:image/')
                         }
-                        className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isLoading ? 'opacity-30' : ''}`}
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
@@ -281,7 +267,7 @@ export function VideoDetailsPanel({
                     className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                   />
                   
-                  {!isLoading && (
+                  {!isGenerating && (
                     <div className="absolute bottom-3 right-3 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2">
                       <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                         <Button
@@ -289,7 +275,7 @@ export function VideoDetailsPanel({
                           className="rounded-full shadow-md bg-white/90 hover:bg-white text-zinc-700 cursor-pointer w-9 h-9"
                           title="Regenerate Image"
                           onClick={onRegenerateImage}
-                          disabled={!data?.thumbnail || isLoading}
+                          disabled={!data?.thumbnail || isGenerating}
                         >
                           <RefreshCw size={16} />
                         </Button>
@@ -327,244 +313,206 @@ export function VideoDetailsPanel({
                 {/* Title */}
                 <motion.div className="mb-6" variants={itemVariants}>
                   <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center">
+                    <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                       Video Title
-                      {(isLoading || isRegeneratingTitle) && 
-                        <Loader2 className="h-3 w-3 ml-2 animate-spin text-zinc-500 dark:text-zinc-400" />
-                      }
                     </h3>
                   </div>
                   <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800">
-                    <p className="text-base font-medium text-zinc-900 dark:text-zinc-50">
-                      {data?.title || placeholderTitle}
-                    </p>
-                    <div className="flex justify-end mt-3 space-x-2">
-                      <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => copyToClipboard(data?.title || '', setTitleCopied)}
-                          disabled={!data?.title || titleCopied}
-                          className="rounded-full w-8 h-8"
-                          title={titleCopied ? "Copied!" : "Copy Title"}
-                        >
-                          {titleCopied ? 
-                            <Check size={16} className="text-green-500" /> : 
-                            <Copy size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
-                          }
-                        </Button>
-                      </motion.div>
-                      {onRegenerate && (
-                        <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={handleRegenerateTitle}
-                            disabled={isLoading || isRegeneratingTitle}
-                            className="rounded-full w-8 h-8"
-                            title={isRegeneratingTitle ? "Regenerating..." : "Regenerate Title"}
-                          >
-                            {isRegeneratingTitle ? (
-                              <Loader2 size={16} className="animate-spin text-zinc-400 dark:text-zinc-300" />
-                            ) : (
-                              <RefreshCw size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
-                            )}
-                          </Button>
-                        </motion.div>
-                      )}
-                    </div>
+                    {isGenerating || isRegeneratingTitle ? (
+                      <TitleSkeleton />
+                    ) : (
+                      <>
+                        <p className="text-base font-medium text-zinc-900 dark:text-zinc-50">
+                          {data?.title || placeholderTitle}
+                        </p>
+                        <div className="flex justify-end mt-3 space-x-2">
+                          <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => copyToClipboard(data?.title || '', setTitleCopied)}
+                              disabled={!data?.title || titleCopied}
+                              className="rounded-full w-8 h-8"
+                              title={titleCopied ? "Copied!" : "Copy Title"}
+                            >
+                              {titleCopied ? 
+                                <Check size={16} className="text-green-500" /> : 
+                                <Copy size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+                              }
+                            </Button>
+                          </motion.div>
+                          {onRegenerate && (
+                            <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={handleRegenerateTitle}
+                                disabled={isGenerating || isRegeneratingTitle}
+                                className="rounded-full w-8 h-8"
+                                title={isRegeneratingTitle ? "Regenerating..." : "Regenerate Title"}
+                              >
+                                <RefreshCw size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+                              </Button>
+                            </motion.div>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </motion.div>
 
                 {/* Description */}
                 <motion.div className="mb-6" variants={itemVariants}>
                   <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center">
+                    <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                       Video Description
-                      {(isLoading || isRegeneratingDescription) && 
-                        <Loader2 className="h-3 w-3 ml-2 animate-spin text-zinc-500 dark:text-zinc-400" />
-                      }
                     </h3>
                   </div>
                   <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800">
-                    <div className="text-sm leading-relaxed whitespace-pre-line text-zinc-700 dark:text-zinc-300">
-                      {data?.description || placeholderDescription}
-                    </div>
-                    <div className="flex justify-end mt-3 space-x-2">
-                      <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => copyToClipboard(data?.description || '', setDescriptionCopied)}
-                          disabled={!data?.description || descriptionCopied}
-                          className="rounded-full w-8 h-8"
-                          title={descriptionCopied ? "Copied!" : "Copy Description"}
-                        >
-                          {descriptionCopied ? 
-                            <Check size={16} className="text-green-500" /> : 
-                            <Copy size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
-                          }
-                        </Button>
-                      </motion.div>
-                      {onRegenerate && (
-                        <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={handleRegenerateDescription}
-                            disabled={isLoading || isRegeneratingDescription}
-                            className="rounded-full w-8 h-8"
-                            title={isRegeneratingDescription ? "Regenerating..." : "Regenerate Description"}
-                          >
-                            {isRegeneratingDescription ? (
-                              <Loader2 size={16} className="animate-spin text-zinc-400 dark:text-zinc-300" />
-                            ) : (
-                              <RefreshCw size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
-                            )}
-                          </Button>
-                        </motion.div>
-                      )}
-                    </div>
+                    {isGenerating || isRegeneratingDescription ? (
+                      <DescriptionSkeleton />
+                    ) : (
+                      <>
+                        <div className="text-sm leading-relaxed whitespace-pre-line text-zinc-700 dark:text-zinc-300">
+                          {data?.description || placeholderDescription}
+                        </div>
+                        <div className="flex justify-end mt-3 space-x-2">
+                          <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => copyToClipboard(data?.description || '', setDescriptionCopied)}
+                              disabled={!data?.description || descriptionCopied}
+                              className="rounded-full w-8 h-8"
+                              title={descriptionCopied ? "Copied!" : "Copy Description"}
+                            >
+                              {descriptionCopied ? 
+                                <Check size={16} className="text-green-500" /> : 
+                                <Copy size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+                              }
+                            </Button>
+                          </motion.div>
+                          {onRegenerate && (
+                            <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={handleRegenerateDescription}
+                                disabled={isGenerating || isRegeneratingDescription}
+                                className="rounded-full w-8 h-8"
+                                title={isRegeneratingDescription ? "Regenerating..." : "Regenerate Description"}
+                              >
+                                <RefreshCw size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+                              </Button>
+                            </motion.div>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </motion.div>
 
                 {/* Tags */}
                 <motion.div className="mb-6" variants={itemVariants}>
                   <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center">
+                    <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                       Video Tags
-                      {(isLoading || isRegeneratingTags) && 
-                        <Loader2 className="h-3 w-3 ml-2 animate-spin text-zinc-500 dark:text-zinc-400" />
-                      }
                     </h3>
                   </div>
                   <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800">
-                    <div className="flex flex-wrap gap-2">
-                      {(data?.tags || placeholderTags).map((tag, tagIndex) => (
-                        <motion.span
-                          key={tagIndex}
-                          className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-zinc-100 text-zinc-800 rounded-full border border-zinc-200 hover:bg-zinc-200 transition-colors dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700"
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ 
-                            opacity: 1, 
-                            scale: 1,
-                            transition: { delay: 0.1 + (tagIndex * 0.05) } 
-                          }}
-                        >
-                          <Tag size={12} className="mr-1.5" />{tag}
-                        </motion.span>
-                      ))}
-                    </div>
-                    <div className="flex justify-end mt-3 space-x-2">
-                      <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => data?.tags && copyToClipboard(data.tags.join(', '), setTagsCopied)}
-                          disabled={!data?.tags || data.tags.length === 0 || tagsCopied}
-                          className="rounded-full w-8 h-8"
-                          title={tagsCopied ? "Copied!" : "Copy All Tags"}
-                        >
-                          {tagsCopied ? 
-                            <Check size={16} className="text-green-500" /> : 
-                            <Copy size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
-                          }
-                        </Button>
-                      </motion.div>
-                      {onRegenerate && (
-                        <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={handleRegenerateTags}
-                            disabled={isLoading || isRegeneratingTags}
-                            className="rounded-full w-8 h-8"
-                            title={isRegeneratingTags ? "Regenerating..." : "Regenerate Tags"}
-                          >
-                            {isRegeneratingTags ? (
-                              <Loader2 size={16} className="animate-spin text-zinc-400 dark:text-zinc-300" />
-                            ) : (
-                              <RefreshCw size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
-                            )}
-                          </Button>
-                        </motion.div>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-                
-                {/* Creation date - placeholder since it's not in the data interface */}
-                <motion.div 
-                  className="pt-4 border-t border-zinc-100 dark:border-zinc-800 mt-auto"
-                  variants={itemVariants}
-                >
-                  <div className="flex items-center">
-                    <Clock size={16} className="text-zinc-400 mr-2" />
-                    <div>
-                      <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Last Updated</h3>
-                      <p className="text-sm text-zinc-700 dark:text-zinc-300">{new Date().toLocaleDateString('en-US', { 
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}</p>
-                    </div>
+                    {isGenerating || isRegeneratingTags ? (
+                      <TagsSkeleton />
+                    ) : (
+                      <>
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {(data?.tags || placeholderTags).map((tag, index) => (
+                            <motion.div
+                              key={`tag-${index}-${tag}`}
+                              className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <Tag size={12} className="mr-1" />
+                              {tag}
+                            </motion.div>
+                          ))}
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                          <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => copyToClipboard((data?.tags || placeholderTags).join(', '), setTagsCopied)}
+                              disabled={!data?.tags || tagsCopied}
+                              className="rounded-full w-8 h-8"
+                              title={tagsCopied ? "Copied!" : "Copy Tags"}
+                            >
+                              {tagsCopied ? 
+                                <Check size={16} className="text-green-500" /> : 
+                                <Copy size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+                              }
+                            </Button>
+                          </motion.div>
+                          {onRegenerate && (
+                            <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={handleRegenerateTags}
+                                disabled={isGenerating || isRegeneratingTags}
+                                className="rounded-full w-8 h-8"
+                                title={isRegeneratingTags ? "Regenerating..." : "Regenerate Tags"}
+                              >
+                                <RefreshCw size={16} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+                              </Button>
+                            </motion.div>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </motion.div>
               </div>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
 
-      {/* Thumbnail Preview Modal */}
-      <AnimatePresence>
+        {/* Thumbnail Preview Modal */}
         {isPreviewModalOpen && data?.thumbnail && (
           <motion.div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-black/60"
+            key="thumbnail-preview-modal"
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }}
             onClick={() => setIsPreviewModalOpen(false)}
           >
             <motion.div
-              className="relative max-w-4xl max-h-[90vh] bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-700"
+              className="relative max-w-4xl max-h-[90vh] bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-2xl"
               initial={{ scale: 0.9, opacity: 0 }} 
               animate={{ scale: 1, opacity: 1 }} 
               exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-4">
+              <div className="relative">
                 <Image
                   src={data.thumbnail}
-                  alt="Video thumbnail preview"
-                  width={1280} 
-                  height={720}
-                  className="block object-contain rounded-lg"
-                  unoptimized={data.thumbnail?.includes('oaidalleapiprodscus.blob.core.windows.net') || data.thumbnail?.startsWith('data:image/')}
+                  alt="Thumbnail preview"
+                  width={800}
+                  height={450}
+                  unoptimized={
+                    data.thumbnail?.includes('oaidalleapiprodscus.blob.core.windows.net') || 
+                    data.thumbnail?.startsWith('data:image/')
+                  }
+                  className="w-full h-auto max-h-[80vh] object-contain"
                 />
-              </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute top-4 right-4 rounded-full bg-black/20 hover:bg-black/40 text-white w-9 h-9 backdrop-blur-sm" 
-                onClick={() => setIsPreviewModalOpen(false)} 
-                aria-label="Close preview"
-              >
-                <X size={18} />
-              </Button>
-              
-              <div className="absolute bottom-4 right-4 flex gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="rounded-full px-4 shadow-lg backdrop-blur-sm bg-white/80 hover:bg-white"
-                  onClick={handleDownload}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white rounded-full"
+                  onClick={() => setIsPreviewModalOpen(false)} 
                 >
-                  <Download size={16} className="mr-2" />
-                  Download
+                  <X size={20} />
                 </Button>
               </div>
             </motion.div>

@@ -63,6 +63,7 @@ export interface CreativePricingTier {
   color: string;
   ctaText: string; // New field for button text
   ctaLink: string; // New field for button link
+  onClick?: () => void; // Optional onClick handler
 }
 
 export default function Home() {
@@ -91,6 +92,36 @@ export default function Home() {
       authListener?.subscription.unsubscribe();
     };
   }, [supabase, loading]); // Added loading to dependency array to ensure setLoading(false) is called correctly after initial check
+
+  const handleProPlanCheckout = async () => {
+    // If user is not logged in, redirect to auth with Pro plan intent
+    if (!session) {
+      window.location.href = '/auth?plan=pro';
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create checkout session');
+      }
+
+      const { url } = await response.json();
+      
+      // Redirect to Stripe checkout
+      window.location.href = url;
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      alert('Failed to start checkout. Please try again.');
+    }
+  };
 
   const howItWorksSteps = [
     {
@@ -150,7 +181,7 @@ export default function Home() {
       price: 0,
       description: "Perfect for individual creators.", // Corrected spelling
       features: [
-        "3 thumbnails per month.",
+        "3 credits per month.",
         "1 iteration per thumbnail",
         "YouTube-ready resolution (1280x720px).",
         "Standard email support."
@@ -163,19 +194,20 @@ export default function Home() {
     {
       name: "Pro",
       icon: <Zap className="h-6 w-6" />,
-      price: 19,
-      description: "Ideal for growing creators and teams.",
+      price: 29,
+      description: "One-time purchase for growing creators.",
       features: [
-        "20 thumbnails.",
+        "50 credits included",
         "5 iterations per thumbnail",
-        "upload images for inspiration",
-        "YouTube-ready resolution (1280x720px).",
-        "Email priority support."
+        "Upload images for inspiration",
+        "YouTube-ready resolution (1280x720px)",
+        "Priority email support",
+        "Lifetime Pro access"
       ],
       popular: true,
       color: "purple",
-      ctaText: "Choose Pro",
-      ctaLink: "/auth?plan=pro" // Example link for a specific plan
+      ctaText: "Buy Pro Once",
+      ctaLink: "/auth"
     },
     {
       name: "Studio",
@@ -187,7 +219,7 @@ export default function Home() {
         "Bulk thumbnail generation for multiple videos.",
         "White-label options for client branding.",
         "Multi-channel management dashboard.",
-        "Dedicated account manager and email priority support."
+        "Dedicated account manager and priority support."
       ],
       popular: false,
       color: "green",

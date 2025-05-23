@@ -3,7 +3,9 @@
 import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Clock, User, Loader2 } from "lucide-react";
+import { User } from "lucide-react";
+import { VideoCardSkeleton } from "@/components/ui/skeletons";
+import { GenerationPhase } from "@/types/generation";
 
 interface VideoPreviewProps {
   thumbnail: string;
@@ -11,7 +13,8 @@ interface VideoPreviewProps {
   viewCount?: string;
   timeAgo?: string;
   channelName?: string;
-  isGenerating?: boolean;
+  generationPhase?: GenerationPhase | null;
+  generationProgress?: number;
   profilePicture?: string;
 }
 
@@ -21,9 +24,22 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({
   viewCount = "0 views",
   timeAgo = "just now",
   channelName = "Your Channel",
-  isGenerating = false,
+  generationPhase = null,
+  generationProgress = 0,
   profilePicture,
 }) => {
+  const isGenerating = generationPhase !== null;
+
+  // Show skeleton during generation
+  if (isGenerating) {
+    return (
+      <VideoCardSkeleton 
+        generationPhase={generationPhase} 
+        generationProgress={generationProgress} 
+      />
+    );
+  }
+
   return (
     <div className="flex flex-col w-full cursor-pointer group">
       {/* Thumbnail */}
@@ -36,19 +52,11 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({
             thumbnail?.includes('oaidalleapiprodscus.blob.core.windows.net') || 
             thumbnail?.startsWith('data:image/')
           }
-          className={`object-cover group-hover:scale-105 transition-transform duration-300 ${isGenerating ? 'opacity-50' : ''} ${(thumbnail || '') === '' && !isGenerating ? 'bg-gray-300' : ''}`}
+          className="object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        {isGenerating && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white">
-            <Loader2 className="h-8 w-8 animate-spin mb-2" />
-            <p className="text-sm font-medium">Generating...</p>
-          </div>
-        )}
-        {!isGenerating && (
-          <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs font-medium py-0.5 px-1.5 rounded">
-            0:00
-          </div>
-        )}
+        <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs font-medium py-0.5 px-1.5 rounded">
+          0:00
+        </div>
       </div>
 
       {/* Video Info */}
@@ -91,7 +99,8 @@ interface YouTubePreviewGridProps {
   title: string;
   description: string;
   tags: string[];
-  isGeneratingAiImage?: boolean;
+  generationPhase?: GenerationPhase | null;
+  generationProgress?: number;
 }
 
 export function YouTubePreviewGrid({
@@ -99,7 +108,8 @@ export function YouTubePreviewGrid({
   title,
   description,
   tags,
-  isGeneratingAiImage = false,
+  generationPhase = null,
+  generationProgress = 0,
 }: YouTubePreviewGridProps) {
   // Animation variants
   const containerVariants = {
@@ -154,7 +164,8 @@ export function YouTubePreviewGrid({
             viewCount="0 views"
             timeAgo="just now"
             channelName="Your Channel"
-            isGenerating={isGeneratingAiImage}
+            generationPhase={generationPhase}
+            generationProgress={generationProgress}
           />
         </motion.div>
 

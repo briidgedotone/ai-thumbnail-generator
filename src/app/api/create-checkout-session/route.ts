@@ -1,0 +1,52 @@
+import { NextResponse } from 'next/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2025-04-30.basil',
+});
+
+export async function POST(request: Request) {
+  try {
+    // Create a Supabase client for server-side operations
+    const supabase = createRouteHandlerClient({ cookies });
+
+    // Verify user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Create Stripe checkout session for Pro plan one-time payment
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: 'price_1RRvCdEeRLuPHXL1ScLXucgY', // One-time payment price ID for YTZA Pro Plan
+          quantity: 1,
+        },
+      ],
+      mode: 'payment', // Changed from 'subscription' to 'payment'
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/select-plan`,
+      customer_email: user.email,
+      metadata: {
+        user_id: user.id,
+        plan_name: 'pro',
+        payment_type: 'one_time' // Added to distinguish from subscription
+      },
+    });
+
+    console.log(`Created one-time checkout session for user ${user.email}: ${session.id}`);
+
+    return NextResponse.json({ sessionId: session.id, url: session.url });
+  } catch (error) {
+    console.error('Error creating checkout session:', error);
+    return NextResponse.json(
+      { error: 'Failed to create checkout session' },
+      { status: 500 }
+    );
+  }
+} 
