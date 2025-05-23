@@ -21,64 +21,6 @@ import { toast } from "sonner"; // Import toast for notifications
 import { InsufficientCreditsModal } from "@/components/ui/insufficient-credits-modal"; // Import the new modal
 import { checkUserCredits } from "@/utils/credit-utils"; // Import the credit check utility
 
-// New CircularProgress component
-interface CircularProgressProps {
-  percentage: number;
-  size?: number;
-  strokeWidth?: number;
-  baseColor?: string;
-  // progressColor prop is no longer used directly for the gradient version, but kept for API consistency if needed elsewhere
-  progressColor?: string; 
-}
-
-const CircularProgress: React.FC<CircularProgressProps> = ({
-  percentage,
-  size = 36,
-  strokeWidth = 4,
-  baseColor = "text-gray-300",
-  // progressColor is destructured but not applied to the gradient circle
-}) => {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (percentage / 100) * circumference;
-
-  const gradientId = "creditGradient";
-
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90 transform">
-      <defs>
-        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" style={{stopColor: '#FF5C8D', stopOpacity: 1}} />
-          <stop offset="50%" style={{stopColor: '#FF0000', stopOpacity: 1}} />
-          <stop offset="100%" style={{stopColor: '#FFA600', stopOpacity: 1}} />
-        </linearGradient>
-      </defs>
-      <circle
-        className={baseColor} // Base circle still uses Tailwind color class
-        strokeWidth={strokeWidth}
-        stroke="currentColor" // Takes color from the baseColor Tailwind class
-        fill="transparent"
-        r={radius}
-        cx={size / 2}
-        cy={size / 2}
-      />
-      <circle
-        // className={progressColor} // Removed Tailwind class for progress color
-        strokeWidth={strokeWidth}
-        strokeDasharray={circumference}
-        strokeDashoffset={offset}
-        strokeLinecap="round"
-        stroke={`url(#${gradientId})`} // Apply SVG gradient by ID
-        fill="transparent"
-        r={radius}
-        cx={size / 2}
-        cy={size / 2}
-        style={{ transition: "stroke-dashoffset 0.35s ease-out" }}
-      />
-    </svg>
-  );
-};
-
 // Define Project type locally (as defined in ProjectInfoPanel and used for state)
 interface Project {
   id: string;
@@ -103,8 +45,7 @@ export default function DashboardPage() {
 
   // Dummy credit state
   const [currentCredits, setCurrentCredits] = useState(15);
-  const [totalCredits, setTotalCredits] = useState(20);
-  const [userTier, setUserTier] = useState<string>('free'); // Add user tier state
+  const [userTier, setUserTier] = useState<string>('free'); // Remove totalCredits state
   const [activeView, setActiveView] = useState<'studio' | 'projects'>('studio'); // New state for active view
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false); // New state for profile dropdown
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false); // New state for settings modal
@@ -192,8 +133,6 @@ export default function DashboardPage() {
     setActiveView('studio');
     console.log("Switching to Studio view to create new thumbnail");
   };
-
-  const creditPercentage = totalCredits > 0 ? (currentCredits / totalCredits) * 100 : 0;
 
   useEffect(() => {
     isMounted.current = true; // Set to true on mount
@@ -290,21 +229,13 @@ export default function DashboardPage() {
         if (creditsData) {
           setCurrentCredits(creditsData.balance);
           
-          // Set totalCredits based on subscription tier
+          // Set user tier state (removed totalCredits logic)
           const tier = creditsData.subscription_tier?.toLowerCase();
-          setUserTier(tier || 'free'); // Set user tier state
-          if (tier === 'free') {
-            setTotalCredits(3);
-          } else if (tier === 'pro') {
-            setTotalCredits(50);
-          } else {
-            setTotalCredits(3); // Default to free tier
-          }
+          setUserTier(tier || 'free');
         }
       } catch (err) {
         console.error("Error fetching user credits:", err);
         setCurrentCredits(0); // Default to 0 on error
-        setTotalCredits(3); // Default to free tier
       }
     };
 
@@ -477,14 +408,13 @@ export default function DashboardPage() {
               delay: (isDetailsPanelOpen || isProjectInfoPanelOpen) ? 0 : 0.1 // Small delay when reappearing
             }}
           >
-            {/* Credit Counter Element - Changed to pill shape with text, and set to 44px height */}
+            {/* Credit Counter Element - Simple credit display without progress */}
             <div 
               className="flex items-center gap-2 px-3 py-1.5 h-11 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-gray-300"
-              title={`${currentCredits}/${totalCredits} Credits Remaining`}
+              title={`${currentCredits} Credits Available`}
             >
-              <CircularProgress percentage={creditPercentage} size={20} strokeWidth={2.5} baseColor="text-gray-200" /> 
               <span className="text-xs font-medium text-gray-700">
-                {currentCredits}/{totalCredits} Credits
+                {currentCredits} Credits
               </span>
             </div>
             {/* Profile Element - Button removed, div styled to look like bordered avatar */}

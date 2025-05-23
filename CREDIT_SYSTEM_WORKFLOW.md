@@ -57,9 +57,11 @@ CREATE TABLE user_credits (
 ```
 
 #### Credit Limits by Plan
-- **Free Plan**: 3 credits (one-time allocation)
-- **Pro Plan**: 50 credits (one-time allocation, lifetime access)
+- **Free Plan**: 3 credits (initial allocation)
+- **Pro Plan**: 50 credits (initial allocation) + can purchase more in increments of 50
 - **Studio Plan**: Custom (handled separately)
+
+*Note: Pro users can accumulate unlimited credits by purchasing additional credit packs*
 
 ### 3. Credit Usage & Deduction
 
@@ -233,12 +235,13 @@ if (!hasCredits) {
 ## 📊 Summary
 
 **Credit Allocation:**
-- Free: 3 credits (one-time)
-- Pro: 50 credits (one-time) + lifetime Pro features
+- Free: 3 credits (initial allocation)
+- Pro: 50 credits (initial allocation) + unlimited accumulation through purchases
 
 **Credit Usage:**
 - 1 credit per thumbnail generation/regeneration
 - Real-time deduction and display updates
+- No maximum limit for Pro users
 
 **Replenishment Methods:**
 - Free: Purchase Pro upgrade ($29) → Get Pro tier + 50 credits

@@ -366,7 +366,6 @@ export function SettingsModal({
         );
       case "plan":
         const isProUser = userTier === 'pro';
-        const totalCredits = isProUser ? 50 : 3;
         
         const handleBuyCredits = async () => {
           try {
@@ -438,28 +437,11 @@ export function SettingsModal({
             {/* Credits Section */}
             <div className="bg-white border-2 border-gray-200 rounded-xl p-5 mb-6">
               <div className="flex items-center justify-between mb-4">
-                <h5 className="font-semibold text-lg text-gray-900">Credit Balance</h5>
+                <h5 className="font-semibold text-lg text-gray-900">Available Credits</h5>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-gray-900">{currentCredits}</div>
-                  <div className="text-sm text-gray-500">credits remaining</div>
+                  <div className="text-3xl font-bold text-gray-900">{currentCredits}</div>
+                  <div className="text-sm text-gray-500">credits available</div>
                 </div>
-              </div>
-              
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-                <div 
-                  className={cn(
-                    "h-2 rounded-full transition-all duration-300",
-                    isProUser 
-                      ? "bg-gradient-to-r from-[#FF5C8D] via-[#FF0000] to-[#FFA600]"
-                      : "bg-blue-500"
-                  )}
-                  style={{ width: `${Math.min((currentCredits / totalCredits) * 100, 100)}%` }}
-                ></div>
-              </div>
-              
-              <div className="flex justify-between text-sm text-gray-600">
-                <span>0 credits</span>
-                <span>{totalCredits}+ credits</span>
               </div>
               
               {currentCredits === 0 && (
