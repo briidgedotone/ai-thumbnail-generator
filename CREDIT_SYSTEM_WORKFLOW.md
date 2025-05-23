@@ -136,23 +136,29 @@ const totalCredits = tier === 'free' ? 3 : tier === 'pro' ? 50 : 3;
 
 #### Free Plan Users
 - **Cannot refill credits manually**
-- Must upgrade to Pro for lifetime access + 50 credits
-- OR purchase credit packs (new option)
+- Must purchase Pro upgrade for $29 (gets Pro tier + 50 credits)
 
 #### Pro Plan Users (Lifetime)
 - **No monthly reset** - credits are purchased as needed
-- **Purchase Credit Packs**: Additional credits via Stripe
+- **Purchase 50 More Credits**: $29 for 50 additional credits
 - **Lifetime Pro Features**: Always have access to Pro features
 
-#### Upgrade Process (Free → Pro Lifetime)
-1. User clicks "Upgrade" from insufficient credits modal
-2. Redirected to Stripe checkout session (one-time payment)
+#### Credit Purchase Process (Same for Both Tiers)
+1. User clicks "Buy Credits" or "Upgrade" from insufficient credits modal
+2. Redirected to Stripe checkout session ($29 one-time payment)
 3. Payment processed by Stripe
-4. Manual verification updates:
+4. Payment verification determines action based on current tier:
    ```javascript
+   // Free User Payment
    {
      subscription_tier: "pro",
-     balance: 50
+     balance: 50  // New Pro user gets 50 credits
+   }
+   
+   // Pro User Payment  
+   {
+     subscription_tier: "pro", 
+     balance: existingBalance + 50  // Add 50 to current balance
    }
    ```
 5. User redirected to `/payment-success`
@@ -167,15 +173,12 @@ POST /api/select-plan
 Body: { planName: "Free" }
 Result: Sets balance to 3, tier to "free"
 
-// Payment Verification (Pro Lifetime)
+// Payment Verification (Handles Both Upgrade and Credit Purchase)
 POST /api/verify-payment
 Body: { sessionId: "stripe_session_id" }
-Result: Sets balance to 50, tier to "pro"
-
-// Credit Pack Purchase (Future Implementation)
-POST /api/purchase-credits
-Body: { creditAmount: 25, sessionId: "stripe_session_id" }
-Result: Adds credits to existing balance
+Result: 
+- Free users: Sets balance to 50, tier to "pro"
+- Pro users: Adds 50 to existing balance, tier stays "pro"
 
 // Thumbnail Generation (Deducts 1 credit)
 POST /api/generate-thumbnail
@@ -212,25 +215,18 @@ if (!hasCredits) {
 - Credits above limit preserved until used
 - No automatic credit removal
 
-### 9. Future Enhancements
+### 9. Benefits of Simplified System
 
-#### Credit Pack System (Recommended Next Steps)
-1. **Create Credit Pack Products in Stripe**:
-   - 25 credits for $15
-   - 100 credits for $50
-   - 250 credits for $100
+#### Single Product Strategy
+- **One Stripe Product**: Reduces complexity in payment processing
+- **Consistent Pricing**: $29 always gets 50 credits, regardless of user tier
+- **Simplified UI**: Same modal flow for all users
+- **Clear Value Proposition**: Easy to understand for users
 
-2. **Implement Credit Pack Purchase API**:
-   ```javascript
-   POST /api/purchase-credit-pack
-   // Creates Stripe checkout for credit packs
-   ```
-
-3. **Credit Pack Verification**:
-   ```javascript
-   POST /api/verify-credit-purchase
-   // Adds purchased credits to user's balance
-   ```
+#### User Experience Benefits
+- **Free Users**: Clear upgrade path with immediate value (Pro features + credits)
+- **Pro Users**: Simple credit replenishment without tier confusion
+- **No Decision Fatigue**: Only one purchase option to consider
 
 ---
 
@@ -245,12 +241,13 @@ if (!hasCredits) {
 - Real-time deduction and display updates
 
 **Replenishment Methods:**
-- Free: Upgrade to Pro OR buy credit packs
-- Pro: Purchase additional credit packs
+- Free: Purchase Pro upgrade ($29) → Get Pro tier + 50 credits
+- Pro: Purchase 50 more credits ($29) → Add 50 to existing balance
 
 **Payment Model:**
 - **One-time payments only** (no recurring subscriptions)
+- **Single price point**: $29 for 50 credits (regardless of user tier)
 - Pro plan gives lifetime access to Pro features
-- Additional credits purchased as needed
+- Same checkout flow for both free and pro users
 
 This system provides better value for users (lifetime access) and simpler billing management while maintaining clear upgrade paths and credit monetization. 

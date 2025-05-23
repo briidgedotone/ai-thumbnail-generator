@@ -40,14 +40,38 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Payment not completed' }, { status: 400 });
     }
 
-    // For one-time payments, we'll give permanent Pro access
+    // Check user's current tier to determine action
+    const { data: currentCreditsData, error: creditsCheckError } = await supabase
+      .from('user_credits')
+      .select('subscription_tier, balance')
+      .eq('user_id', user.id)
+      .single();
+
+    let newBalance = 50;
+    let newTier = 'pro';
+    let actionMessage = 'upgraded to Pro plan';
+
+    if (!creditsCheckError && currentCreditsData) {
+      if (currentCreditsData.subscription_tier === 'pro') {
+        // User is already Pro, add 50 credits to existing balance
+        newBalance = (currentCreditsData.balance || 0) + 50;
+        newTier = 'pro';
+        actionMessage = 'added 50 credits to Pro account';
+      } else {
+        // User is Free, upgrade to Pro with 50 credits
+        newBalance = 50;
+        newTier = 'pro';
+        actionMessage = 'upgraded to Pro plan with 50 credits';
+      }
+    }
+
     // Update user subscription and assign credits
     const { error: updateError } = await supabase
       .from('user_credits')
       .upsert({ 
         user_id: user.id,
-        subscription_tier: 'pro', // Changed back to 'pro' instead of 'pro_lifetime'
-        balance: 50,
+        subscription_tier: newTier,
+        balance: newBalance,
         updated_at: new Date().toISOString()
       }, {
         onConflict: 'user_id'
@@ -58,13 +82,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to update subscription' }, { status: 500 });
     }
 
-    console.log(`Successfully upgraded user ${user.email} to Pro plan with 50 credits`);
+    console.log(`Successfully ${actionMessage} for user ${user.email}. New balance: ${newBalance}`);
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Payment verified and Pro access granted',
-      plan: 'pro',
-      balance: 50
+      message: `Payment verified and ${actionMessage}`,
+      plan: newTier,
+      balance: newBalance
     });
 
   } catch (error) {

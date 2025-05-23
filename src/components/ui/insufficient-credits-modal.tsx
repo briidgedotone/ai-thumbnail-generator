@@ -29,14 +29,28 @@ export function InsufficientCreditsModal({
 }: InsufficientCreditsModalProps) {
   const isProUser = userTier === 'pro';
   
-  const handleUpgradeOrBuy = () => {
-    if (isProUser) {
-      // TODO: Navigate to credit pack purchase page
-      // For now, redirect to select-plan page
-      window.location.href = '/select-plan';
-    } else {
-      // Redirect to select-plan page for upgrade
-      window.location.href = '/select-plan';
+  const handleUpgradeOrBuy = async () => {
+    try {
+      // Both free and pro users go through the same checkout process
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create checkout session');
+      }
+
+      const { url } = await response.json();
+      
+      // Redirect to Stripe checkout
+      window.location.href = url;
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      alert('Failed to start checkout. Please try again.');
     }
     onClose();
   };
@@ -53,8 +67,8 @@ export function InsufficientCreditsModal({
             </DialogTitle>
             <DialogDescription className="text-gray-600 text-left">
               {isProUser 
-                ? `You've used all your Pro credits. Purchase additional credits to continue creating.`
-                : `You have ${currentCredits} credits remaining. Upgrade to Pro or purchase additional credits to continue.`
+                ? `You've used all your Pro credits. Get 50 more credits for $29 to continue creating.`
+                : `You have ${currentCredits} credits remaining. Upgrade to Pro and get 50 credits for $29.`
               }
             </DialogDescription>
           </DialogHeader>
@@ -67,12 +81,12 @@ export function InsufficientCreditsModal({
                 </div>
                 <div>
                   <h4 className="font-medium text-gray-900 dark:text-gray-100">
-                    {isProUser ? "Buy More Credits" : "Upgrade or Buy Credits"}
+                    {isProUser ? "50 More Credits - $29" : "Upgrade to Pro - $29"}
                   </h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {isProUser 
-                      ? "Purchase additional credit packs to keep creating"
-                      : "Upgrade to Pro for 50 credits or buy credit packs"
+                      ? "Add 50 credits to your account"
+                      : "Get Pro features + 50 credits"
                     }
                   </p>
                 </div>
@@ -92,7 +106,7 @@ export function InsufficientCreditsModal({
                 onClick={handleUpgradeOrBuy}
               >
                 <CreditCard className="mr-2 h-4 w-4" />
-                {isProUser ? "Buy More Credits" : "Upgrade/Buy"}
+                {isProUser ? "Buy 50 Credits" : "Upgrade to Pro"}
               </Button>
             </div>
           </div>
