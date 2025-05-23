@@ -1,12 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { StyleSelectionForm } from "@/components/dashboard/studio/StyleSelectionForm";
 import { GenerationResults } from "@/components/dashboard/studio/GenerationResults";
 import { generateThumbnailPrompt } from '@/utils/prompt-generators';
 import { toast } from "sonner";
 import { checkUserCredits } from '@/utils/credit-utils';
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Sparkles as GenerateIcon, UploadCloud as UploadIcon, Palette, LayoutGrid } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useTextareaResize } from "@/hooks/use-textarea-resize";
+import { createSupabaseClient } from "@/lib/supabase/client";
+import { motion } from "framer-motion";
+import { ContentPolicyModal } from "@/components/ui/content-policy-modal";
 
 interface StudioViewProps {
   selectedThumbnailStyle: string | null;
@@ -45,6 +53,13 @@ export function StudioView({
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
+  // New state for content policy modal
+  const [isContentPolicyModalOpen, setIsContentPolicyModalOpen] = useState(false);
+  const [contentPolicyError, setContentPolicyError] = useState<{
+    suggestions: string[];
+    creditRefunded: boolean;
+  } | null>(null);
+
   // Get thumbnail style image path based on the selected style
   const getThumbnailStylePath = (styleId: string | null): string | null => {
     if (!styleId) return null;
@@ -70,38 +85,32 @@ export function StudioView({
     if (e) e.preventDefault();
     if (videoDescription.trim() === '' || !selectedThumbnailStyle) return;
 
-    // Check user credits before proceeding
-    const { hasCredits, currentCredits } = await checkUserCredits();
+    // Check if user has sufficient credits
+    const { hasCredits } = await checkUserCredits();
     if (!hasCredits) {
-      console.log(`User has insufficient credits: ${currentCredits}`);
       if (onInsufficientCredits) {
         onInsufficientCredits();
       }
       return;
     }
 
-    // Store text overlay params for potential regeneration
-    setCurrentThumbnailText(thumbnailText);
-    setCurrentTextStyle(textStyle);
-
     setIsLoading(true);
     setError(null);
-    setAiGeneratedImageUrl(null); // Reset previous image
-    setIsSaved(false); // Reset saved state for new generation
+    setAiGeneratedImageUrl(null);
+    
+    // Variables to store the result data for saving
+    let newImageUrl: string | null = null;
+    let generatedTitle = '';
+    let generatedDescription = videoDescription;
+    let generatedTags: string[] = [];
 
-    // Set initial generatedData for the panel to render with loading indicators
     setGeneratedData({
-      thumbnail: getThumbnailStylePath(selectedThumbnailStyle) || '', // Use empty string if no image path yet, Image component will handle onError or show alt
-      title: `Generating prompt for: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
+      thumbnail: getThumbnailStylePath(selectedThumbnailStyle) || '', 
+      title: `Generating thumbnail for: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
       description: videoDescription,
       tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
     });
-    setIsDetailsPanelOpen(true); // Open panel so it can show its loading state
-
-    let newImageUrl: string | null = null; // Variable to hold the newly generated image URL
-    let generatedTitle = '';
-    let generatedDescription = '';
-    let generatedTags: string[] = [];
+    setIsDetailsPanelOpen(true);
 
     try {
       // Generate a style-specific structured prompt for thumbnail, now with text overlay if provided
@@ -123,7 +132,50 @@ export function StudioView({
 
       if (!thumbnailResponse.ok) {
         const errorData = await thumbnailResponse.json();
-        throw new Error(errorData.error || 'Failed to generate image');
+        
+        // Handle specific error types
+        if (errorData.error === 'CONTENT_POLICY_VIOLATION') {
+          setContentPolicyError({
+            suggestions: errorData.details?.suggestions || [],
+            creditRefunded: errorData.creditRefunded || false
+          });
+          setIsContentPolicyModalOpen(true);
+          setIsLoading(false);
+          setIsDetailsPanelOpen(false);
+          
+          // Refresh credits since they were refunded
+          if (onCreditsUsed && errorData.creditRefunded) {
+            onCreditsUsed();
+          }
+          
+          return;
+        }
+        
+        // Handle other API errors with user-friendly messages
+        let userFriendlyMessage = '';
+        if (errorData.error === 'OPENAI_API_ERROR') {
+          userFriendlyMessage = errorData.message || 'Failed to generate thumbnail due to an API error. Your credit has been refunded.';
+        } else if (errorData.error === 'IMAGE_GENERATION_FAILED') {
+          userFriendlyMessage = errorData.message || 'Image generation completed but no image data was returned. Your credit has been refunded.';
+        } else if (errorData.error === 'INTERNAL_SERVER_ERROR') {
+          userFriendlyMessage = errorData.message || 'An unexpected error occurred while generating your thumbnail. Your credit has been refunded.';
+        } else {
+          userFriendlyMessage = errorData.message || errorData.error || 'Failed to generate image';
+        }
+        
+        // Show toast notification for refunded credits
+        if (errorData.creditRefunded) {
+          toast.success("Credit refunded", {
+            description: "Your credit has been automatically refunded due to the error."
+          });
+          
+          // Refresh credits display
+          if (onCreditsUsed) {
+            onCreditsUsed();
+          }
+        }
+        
+        throw new Error(userFriendlyMessage);
       }
 
       const thumbnailResult = await thumbnailResponse.json();
@@ -372,15 +424,11 @@ export function StudioView({
 
   // Handle regeneration of a new image using current settings
   const handleRegenerateImage = async () => {
-    if (!videoDescription || !selectedThumbnailStyle || !generatedData) {
-      console.warn("Cannot regenerate image: missing video description, style, or existing generated data.");
-      return;
-    }
+    if (!generatedData || !selectedThumbnailStyle) return;
 
-    // Check user credits before proceeding with regeneration
-    const { hasCredits, currentCredits } = await checkUserCredits();
+    // Check if user has sufficient credits
+    const { hasCredits } = await checkUserCredits();
     if (!hasCredits) {
-      console.log(`User has insufficient credits for regeneration: ${currentCredits}`);
       if (onInsufficientCredits) {
         onInsufficientCredits();
       }
@@ -389,46 +437,87 @@ export function StudioView({
 
     setIsLoading(true);
     setError(null);
+    let newImageUrl: string | null = null;
 
     try {
+      // Generate a new prompt for image regeneration
       const structuredPrompt = await generateThumbnailPrompt(
-        videoDescription, // Current video description
-        selectedThumbnailStyle, // Current selected style
-        currentThumbnailText, // Stored thumbnail text from initial generation
-        currentTextStyle    // Stored text style from initial generation
+        videoDescription, 
+        selectedThumbnailStyle
       );
 
+      // Call the generate-thumbnail API
       const thumbnailResponse = await fetch('/api/generate-thumbnail', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ prompt: structuredPrompt }),
       });
 
       if (!thumbnailResponse.ok) {
         const errorData = await thumbnailResponse.json();
-        throw new Error(errorData.error || 'Failed to regenerate image');
+        
+        // Handle specific error types
+        if (errorData.error === 'CONTENT_POLICY_VIOLATION') {
+          setContentPolicyError({
+            suggestions: errorData.details?.suggestions || [],
+            creditRefunded: errorData.creditRefunded || false
+          });
+          setIsContentPolicyModalOpen(true);
+          setIsLoading(false);
+          
+          // Refresh credits since they were refunded
+          if (onCreditsUsed && errorData.creditRefunded) {
+            onCreditsUsed();
+          }
+          
+          return;
+        }
+        
+        // Handle other API errors
+        let userFriendlyMessage = '';
+        if (errorData.error === 'OPENAI_API_ERROR') {
+          userFriendlyMessage = errorData.message || 'Failed to regenerate thumbnail due to an API error. Your credit has been refunded.';
+        } else if (errorData.error === 'IMAGE_GENERATION_FAILED') {
+          userFriendlyMessage = errorData.message || 'Image regeneration completed but no image data was returned. Your credit has been refunded.';
+        } else if (errorData.error === 'INTERNAL_SERVER_ERROR') {
+          userFriendlyMessage = errorData.message || 'An unexpected error occurred while regenerating your thumbnail. Your credit has been refunded.';
+        } else {
+          userFriendlyMessage = errorData.message || errorData.error || 'Failed to regenerate image';
+        }
+        
+        // Show toast notification for refunded credits
+        if (errorData.creditRefunded) {
+          toast.success("Credit refunded", {
+            description: "Your credit has been automatically refunded due to the error."
+          });
+          
+          // Refresh credits display
+          if (onCreditsUsed) {
+            onCreditsUsed();
+          }
+        }
+        
+        throw new Error(userFriendlyMessage);
       }
 
       const thumbnailResult = await thumbnailResponse.json();
-      const newImageUrl = thumbnailResult.imageUrl;
-
+      newImageUrl = thumbnailResult.imageUrl;
       setAiGeneratedImageUrl(newImageUrl);
-      
-      // Update the UI with the new image immediately
-      const updatedData = {
-        ...generatedData,
-        thumbnail: newImageUrl || '',
-      };
-      
-      setGeneratedData(updatedData);
-      
-      // End loading state as soon as image is shown
-      setIsLoading(false);
-      
-      // Refresh credits after successful regeneration
+
+      // Refresh credits after successful generation
       if (onCreditsUsed) {
         onCreditsUsed();
       }
+
+      // Update the generated data with the new image
+      const updatedData = {
+        ...generatedData,
+        thumbnail: newImageUrl || generatedData.thumbnail
+      };
+      setGeneratedData(updatedData);
+      setIsLoading(false);
 
       // Save the project in the background if we have a new image
       if (newImageUrl) {
@@ -451,6 +540,18 @@ export function StudioView({
       setError(errorMessage);
       setIsLoading(false); // Make sure to end loading state in case of error too
     }
+  };
+
+  const handleContentPolicyRetry = async () => {
+    setIsContentPolicyModalOpen(false);
+    setContentPolicyError(null);
+    // Trigger a new generation attempt
+    await handleSubmit();
+  };
+
+  const handleContentPolicyClose = () => {
+    setIsContentPolicyModalOpen(false);
+    setContentPolicyError(null);
   };
 
   return (
@@ -477,6 +578,15 @@ export function StudioView({
           />
         )}
       </AnimatePresence>
+      
+      {/* Content Policy Modal */}
+      <ContentPolicyModal
+        isOpen={isContentPolicyModalOpen}
+        onClose={handleContentPolicyClose}
+        onRetry={handleContentPolicyRetry}
+        suggestions={contentPolicyError?.suggestions}
+        creditRefunded={contentPolicyError?.creditRefunded}
+      />
     </div>
   );
 } 
