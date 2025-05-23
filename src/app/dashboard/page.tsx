@@ -573,6 +573,8 @@ export default function DashboardPage() {
         userName={userName}
         userEmail={userEmail}
         avatarName={avatarName}
+        userTier={userTier}
+        currentCredits={currentCredits}
       />
 
       {/* Render ProjectInfoPanel */}

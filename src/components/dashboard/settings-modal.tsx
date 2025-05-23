@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { User, Shield, Gem, CreditCard, CheckCircle, Calendar, ChevronRight, Lock, KeyRound, Mail, CircleAlert, Loader2, Eye, EyeOff } from "lucide-react";
+import { User, Shield, Gem, CreditCard, CheckCircle, Calendar, ChevronRight, Lock, KeyRound, Mail, CircleAlert, Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Avatar from 'boring-avatars';
 import { createSupabaseClient } from "@/lib/supabase/client";
@@ -22,16 +22,20 @@ interface SettingsModalProps {
   userName: string | null;
   userEmail: string | null;
   avatarName: string;
+  userTier?: string;
+  currentCredits?: number;
 }
 
-type SettingsTab = "general" | "security" | "subscription";
+type SettingsTab = "general" | "security" | "plan";
 
 export function SettingsModal({ 
   isOpen, 
   onClose, 
   userName: initialUserName,
   userEmail: initialUserEmail,
-  avatarName 
+  avatarName,
+  userTier = 'free',
+  currentCredits = 0
 }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>("general");
   
@@ -360,71 +364,177 @@ export function SettingsModal({
             </form>
           </div>
         );
-      case "subscription":
+      case "plan":
+        const isProUser = userTier === 'pro';
+        const totalCredits = isProUser ? 50 : 3;
+        
+        const handleBuyCredits = async () => {
+          try {
+            const response = await fetch('/api/create-checkout-session', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.error || 'Failed to create checkout session');
+            }
+
+            const { url } = await response.json();
+            window.location.href = url;
+          } catch (error) {
+            console.error('Error creating checkout session:', error);
+            alert('Failed to start checkout. Please try again.');
+          }
+        };
+        
         return (
           <div className="py-6">
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">Subscription Details</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mb-1">Plan & Credits</h3>
             <p className="text-sm text-gray-500 mb-6">
-              View your current plan and manage your subscription.
+              Manage your plan and view your credit balance.
             </p>
             
-            <div className="p-5 bg-gradient-to-r from-[#FF5C8D]/10 via-[#FF0000]/10 to-[#FFA600]/10 rounded-xl border-2 border-[#FF5C8D]/30 mb-8 shadow-lg">
-              <div className="flex items-center">
-                <div className="bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] p-3 rounded-xl mr-5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-2 border-black">
-                  <Gem size={22} className="text-white" />
-                </div>
-                <div className="space-y-0.5">
-                  <h4 className="font-bold text-xl text-gray-900">Pro Plan</h4>
-                  <p className="text-sm text-gray-600">One-time purchase with lifetime access to all Pro features.</p>
-                  
-                  <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-x-3 gap-y-1 pt-0.5">
-                    <span className="px-3 py-1 rounded-full bg-gradient-to-r from-[#FF5C8D]/20 via-[#FF0000]/20 to-[#FFA600]/20 text-sm font-semibold text-[#FF0000]">50 credits included</span>
-                    <span className="text-sm text-gray-500 flex items-center">
-                      <CheckCircle size={14} className="mr-1 text-green-500" />
-                      Lifetime access
-                    </span>
+            {/* Current Plan Card */}
+            <div className={cn(
+              "p-5 rounded-xl border-2 mb-6 shadow-lg",
+              isProUser 
+                ? "bg-gradient-to-r from-[#FF5C8D]/10 via-[#FF0000]/10 to-[#FFA600]/10 border-[#FF5C8D]/30"
+                : "bg-blue-50 border-blue-200"
+            )}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className={cn(
+                    "p-3 rounded-xl mr-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-2 border-black",
+                    isProUser 
+                      ? "bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600]"
+                      : "bg-gradient-to-br from-blue-400 to-blue-600"
+                  )}>
+                    {isProUser ? <Gem size={22} className="text-white" /> : <User size={22} className="text-white" />}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xl text-gray-900">
+                      {isProUser ? 'Pro Plan' : 'Free Plan'}
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      {isProUser 
+                        ? 'Lifetime access to all Pro features'
+                        : 'Basic features with limited credits'
+                      }
+                    </p>
                   </div>
                 </div>
+                
+                {isProUser && (
+                  <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-semibold border border-green-300">
+                    Active
+                  </span>
+                )}
               </div>
             </div>
-            
-            <div className="space-y-4">
-              <div className="p-4 bg-white border-2 border-gray-300 rounded-xl flex items-center group cursor-pointer hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md">
-                <div className="p-2.5 bg-gradient-to-br from-green-400 to-green-600 rounded-lg mr-4 text-white shadow-md">
-                  <CreditCard size={18} />
+
+            {/* Credits Section */}
+            <div className="bg-white border-2 border-gray-200 rounded-xl p-5 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h5 className="font-semibold text-lg text-gray-900">Credit Balance</h5>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-gray-900">{currentCredits}</div>
+                  <div className="text-sm text-gray-500">credits remaining</div>
                 </div>
-                <div className="flex-1">
-                  <h5 className="font-semibold text-gray-800 text-md">Payment Method</h5>
-                  <p className="text-sm text-gray-500">Visa ending in 4242</p>
-                </div>
-                <button className="ml-3 px-3.5 py-1.5 text-sm font-medium text-pink-600 hover:text-pink-700 rounded-lg hover:bg-pink-50 transition-colors">
-                  Update
-                </button>
               </div>
               
-              <div className="p-4 bg-white border-2 border-gray-300 rounded-xl flex items-center group cursor-pointer hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md">
-                <div className="p-2.5 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg mr-4 text-white shadow-md">
-                  <KeyRound size={18} />
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
+                <div 
+                  className={cn(
+                    "h-2 rounded-full transition-all duration-300",
+                    isProUser 
+                      ? "bg-gradient-to-r from-[#FF5C8D] via-[#FF0000] to-[#FFA600]"
+                      : "bg-blue-500"
+                  )}
+                  style={{ width: `${Math.min((currentCredits / totalCredits) * 100, 100)}%` }}
+                ></div>
+              </div>
+              
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>0 credits</span>
+                <span>{totalCredits}+ credits</span>
+              </div>
+              
+              {currentCredits === 0 && (
+                <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <p className="text-sm text-orange-700 flex items-center">
+                    <AlertCircle size={16} className="mr-2" />
+                    You're out of credits! {isProUser ? 'Purchase more to continue creating.' : 'Upgrade to Pro to get 50 credits.'}
+                  </p>
                 </div>
-                <div className="flex-1">
-                  <h5 className="font-semibold text-gray-800 text-md">Billing History</h5>
-                  <p className="text-sm text-gray-500">View all previous invoices</p>
-                </div>
-                <button className="ml-3 px-3.5 py-1.5 text-sm font-medium text-pink-600 hover:text-pink-700 rounded-lg hover:bg-pink-50 transition-colors">
-                  View
-                </button>
+              )}
+            </div>
+
+            {/* Plan Features */}
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 mb-6">
+              <h5 className="font-semibold text-gray-900 mb-3">
+                {isProUser ? 'Pro Features' : 'Your Plan Includes'}
+              </h5>
+              <div className="space-y-2">
+                {isProUser ? (
+                  <>
+                    <div className="flex items-center text-sm text-gray-700">
+                      <CheckCircle size={16} className="text-green-500 mr-2" />
+                      5 iterations per thumbnail
+                    </div>
+                    <div className="flex items-center text-sm text-gray-700">
+                      <CheckCircle size={16} className="text-green-500 mr-2" />
+                      Upload images for inspiration
+                    </div>
+                    <div className="flex items-center text-sm text-gray-700">
+                      <CheckCircle size={16} className="text-green-500 mr-2" />
+                      Priority email support
+                    </div>
+                    <div className="flex items-center text-sm text-gray-700">
+                      <CheckCircle size={16} className="text-green-500 mr-2" />
+                      Lifetime access to Pro features
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center text-sm text-gray-700">
+                      <CheckCircle size={16} className="text-green-500 mr-2" />
+                      1 iteration per thumbnail
+                    </div>
+                    <div className="flex items-center text-sm text-gray-700">
+                      <CheckCircle size={16} className="text-green-500 mr-2" />
+                      YouTube-ready resolution
+                    </div>
+                    <div className="flex items-center text-sm text-gray-700">
+                      <CheckCircle size={16} className="text-green-500 mr-2" />
+                      Standard email support
+                    </div>
+                  </>
+                )}
               </div>
             </div>
-            
-            <div className="mt-8 space-y-3">
-              <Button className="w-full justify-between rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-6 py-3 font-medium h-12 shadow-[2px_2px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[4px_4px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px]">
-                <span>Upgrade Plan</span>
-                <ChevronRight size={18} />
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <Button 
+                onClick={handleBuyCredits}
+                className="w-full justify-between rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white px-6 py-3 font-medium h-12 shadow-[2px_2px_0px_0px_#18181B] transition-all duration-300 hover:shadow-[4px_4px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+              >
+                <span>
+                  {isProUser ? 'Buy 50 More Credits - $29' : 'Upgrade to Pro - $29'}
+                </span>
+                <CreditCard size={18} />
               </Button>
               
-              <Button variant="outline" className="w-full rounded-lg border-2 border-red-400 text-red-600 px-6 py-3 font-medium h-12 hover:bg-red-50/70 hover:border-red-500 transition-colors shadow-sm hover:shadow-md">
-                Cancel Subscription
-              </Button>
+              {isProUser && (
+                <div className="text-center">
+                  <p className="text-sm text-gray-500">
+                    Each purchase adds 50 credits to your account
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -461,10 +571,10 @@ export function SettingsModal({
             <Shield size={15} /> Security
           </button>
           <button
-            onClick={() => setActiveTab("subscription")}
-            className={cn(buttonClasses, activeTab === "subscription" ? activeButtonClasses : inactiveButtonClasses)}
+            onClick={() => setActiveTab("plan")}
+            className={cn(buttonClasses, activeTab === "plan" ? activeButtonClasses : inactiveButtonClasses)}
           >
-            <Gem size={15} /> Subscription
+            <Gem size={15} /> Plan & Credits
           </button>
         </div>
 
