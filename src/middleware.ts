@@ -78,7 +78,8 @@ export const config = {
      * - ytza-logo.jpeg (logo file)
      * - images/ (other images)
      * - auth/callback (OAuth callback route)
+     * - payment-success (Stripe payment success page)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|ytza-logo.jpeg|images/|auth/callback).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|ytza-logo.jpeg|images/|auth/callback|payment-success).*)',
   ],
 } 
