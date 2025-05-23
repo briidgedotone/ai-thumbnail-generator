@@ -92,6 +92,8 @@ export async function POST(request: Request) {
       });
       
       let paymentMethodLast4 = null;
+      let receiptUrl = null;
+      
       if (sessionWithPaymentMethod.payment_intent && 
           typeof sessionWithPaymentMethod.payment_intent === 'object' &&
           sessionWithPaymentMethod.payment_intent.payment_method &&
@@ -100,13 +102,24 @@ export async function POST(request: Request) {
         paymentMethodLast4 = sessionWithPaymentMethod.payment_intent.payment_method.card.last4;
       }
 
+      // Get receipt URL from the charge object
+      if (sessionWithPaymentMethod.payment_intent && 
+          typeof sessionWithPaymentMethod.payment_intent === 'object' &&
+          sessionWithPaymentMethod.payment_intent.latest_charge) {
+        
+        const charge = await stripe.charges.retrieve(sessionWithPaymentMethod.payment_intent.latest_charge as string);
+        receiptUrl = charge.receipt_url;
+        console.log('Retrieved receipt URL:', receiptUrl);
+      }
+
       await supabase.from('user_purchases').insert({
         user_id: user.id,
         stripe_session_id: sessionId,
         amount_cents: 2900, // Always $29
         credits_added: 50,  // Always 50 credits  
         purchase_type: currentCreditsData?.subscription_tier === 'pro' ? 'credits' : 'upgrade',
-        payment_method_last4: paymentMethodLast4
+        payment_method_last4: paymentMethodLast4,
+        receipt_url: receiptUrl
       });
 
       console.log(`Purchase history recorded for user ${user.email}`);

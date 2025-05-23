@@ -33,7 +33,8 @@ export async function GET() {
       credits_added: purchase.credits_added,
       purchase_type: purchase.purchase_type === 'upgrade' ? 'Pro Upgrade' : 'Credit Purchase',
       payment_method_last4: purchase.payment_method_last4,
-      created_at: purchase.created_at
+      created_at: purchase.created_at,
+      receipt_url: purchase.receipt_url
     }));
 
     return NextResponse.json({ 

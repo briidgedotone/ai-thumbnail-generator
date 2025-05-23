@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { User, Shield, Gem, CreditCard, CheckCircle, Calendar, ChevronRight, Lock, KeyRound, Mail, CircleAlert, Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { User, Shield, Gem, CreditCard, CheckCircle, Calendar, ChevronRight, Lock, KeyRound, Mail, CircleAlert, Loader2, Eye, EyeOff, AlertCircle, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Avatar from 'boring-avatars';
 import { createSupabaseClient } from "@/lib/supabase/client";
@@ -23,6 +23,7 @@ interface Purchase {
   purchase_type: string;
   payment_method_last4: string | null;
   created_at: string;
+  receipt_url: string | null;
 }
 
 interface SettingsModalProps {
@@ -538,6 +539,19 @@ export function SettingsModal({
                           )}
                         </div>
                       </div>
+                      {purchase.receipt_url && (
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(purchase.receipt_url!, '_blank')}
+                            className="text-xs h-8 px-3 border-gray-300 hover:border-gray-400"
+                          >
+                            <Download size={12} className="mr-1" />
+                            Download Receipt
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
