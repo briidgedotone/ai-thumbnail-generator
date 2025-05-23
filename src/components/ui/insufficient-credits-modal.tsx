@@ -18,25 +18,32 @@ interface InsufficientCreditsModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentCredits: number;
+  userTier?: string; // Added to handle different messaging for Pro vs Free users
 }
 
 export function InsufficientCreditsModal({ 
   isOpen, 
   onClose,
-  currentCredits
+  currentCredits,
+  userTier = 'free'
 }: InsufficientCreditsModalProps) {
+  const isProUser = userTier === 'pro' || userTier === 'pro_lifetime';
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogPortal>
-        <DialogOverlay className="bg-black/60 backdrop-blur-sm" />
-        <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border shadow-2xl">
-          <DialogHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/20">
-              <AlertCircle className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-            </div>
-            <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100">Insufficient Credits</DialogTitle>
-            <DialogDescription className="text-sm text-gray-600 dark:text-gray-400">
-              You need at least 1 credit to generate a thumbnail. You currently have {currentCredits} credits remaining.
+        <DialogOverlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
+        <DialogContent className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 bg-white p-6 shadow-lg duration-200 rounded-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold text-gray-900">
+              <AlertCircle className="h-5 w-5 text-orange-500" />
+              {isProUser ? "Credits Used Up" : "Insufficient Credits"}
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 text-left">
+              {isProUser 
+                ? `You've used all ${currentCredits === 0 ? '50' : currentCredits} of your Pro credits. Purchase additional credits to continue creating.`
+                : `You have ${currentCredits} credits remaining. Upgrade to Pro or purchase additional credits to continue.`
+              }
             </DialogDescription>
           </DialogHeader>
 
@@ -47,9 +54,14 @@ export function InsufficientCreditsModal({
                   <Zap className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-gray-100">Get More Credits</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                    {isProUser ? "Get More Credits" : "Upgrade or Buy Credits"}
+                  </h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Upgrade to Pro for 50 credits per month
+                    {isProUser 
+                      ? "Purchase additional credit packs to keep creating"
+                      : "Upgrade to Pro for 50 credits or buy credit packs"
+                    }
                   </p>
                 </div>
               </div>
@@ -66,12 +78,12 @@ export function InsufficientCreditsModal({
               <Button
                 className="flex-1 bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white hover:opacity-90 transition-opacity border-0"
                 onClick={() => {
-                  // TODO: Navigate to pricing/upgrade page
+                  // TODO: Navigate to credit purchase page
                   onClose();
                 }}
               >
                 <CreditCard className="mr-2 h-4 w-4" />
-                Upgrade
+                {isProUser ? "Buy Credits" : "Upgrade/Buy"}
               </Button>
             </div>
           </div>

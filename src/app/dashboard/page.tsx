@@ -293,7 +293,7 @@ export default function DashboardPage() {
           const tier = creditsData.subscription_tier?.toLowerCase();
           if (tier === 'free') {
             setTotalCredits(3);
-          } else if (tier === 'pro') {
+          } else if (tier === 'pro' || tier === 'pro_lifetime') {
             setTotalCredits(50);
           } else {
             setTotalCredits(3); // Default to free tier

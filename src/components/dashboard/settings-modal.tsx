@@ -374,14 +374,14 @@ export function SettingsModal({
                   <Gem size={22} className="text-white" />
                 </div>
                 <div className="space-y-0.5">
-                  <h4 className="font-bold text-xl text-gray-900">Pro Plan</h4>
-                  <p className="text-sm text-gray-600">Access to all premium features and 50 credits per month.</p>
+                  <h4 className="font-bold text-xl text-gray-900">Pro Plan (Lifetime)</h4>
+                  <p className="text-sm text-gray-600">One-time purchase with lifetime access to all Pro features.</p>
                   
                   <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-x-3 gap-y-1 pt-0.5">
-                    <span className="px-3 py-1 rounded-full bg-gradient-to-r from-[#FF5C8D]/20 via-[#FF0000]/20 to-[#FFA600]/20 text-sm font-semibold text-[#FF0000]">Credits remaining</span>
+                    <span className="px-3 py-1 rounded-full bg-gradient-to-r from-[#FF5C8D]/20 via-[#FF0000]/20 to-[#FFA600]/20 text-sm font-semibold text-[#FF0000]">50 credits included</span>
                     <span className="text-sm text-gray-500 flex items-center">
-                      <Calendar size={14} className="mr-1 text-gray-400" />
-                      Renews monthly
+                      <CheckCircle size={14} className="mr-1 text-green-500" />
+                      Lifetime access
                     </span>
                   </div>
                 </div>

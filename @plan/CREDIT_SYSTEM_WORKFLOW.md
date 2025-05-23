@@ -1,7 +1,7 @@
-# YTZA Credit System - Complete Workflow (One-Time Payment Model)
+# YTZA Credit System - Complete Workflow
 
 ## 📋 Overview
-This document outlines the complete credit system workflow for YTZA, from user signup to credit management and purchasing additional credits. **Updated for one-time payment model.**
+This document outlines the complete credit system workflow for YTZA, from user signup to credit management and refilling.
 
 ## 🚀 User Journey & Credit Workflow
 
@@ -15,7 +15,7 @@ This document outlines the complete credit system workflow for YTZA, from user s
 #### Step 2: Plan Selection
 - User chooses between **Free**, **Pro**, or **Studio** plans
 - **Free Plan**: 3 credits allocated immediately
-- **Pro Plan**: Redirects to Stripe checkout for **one-time payment**
+- **Pro Plan**: Redirects to Stripe checkout for payment
 - **Studio Plan**: Contact sales (custom pricing)
 
 #### Step 3: Credit Allocation
@@ -30,12 +30,12 @@ This document outlines the complete credit system workflow for YTZA, from user s
 }
 ```
 
-**Pro Plan Payment (One-time):**
+**Pro Plan Payment:**
 ```javascript
 // API: /api/verify-payment (after Stripe checkout)
 {
   user_id: "user-uuid", 
-  subscription_tier: "pro_lifetime",
+  subscription_tier: "pro",
   balance: 50,
   updated_at: "2024-01-15T10:30:00.000Z"
 }
@@ -48,7 +48,7 @@ This document outlines the complete credit system workflow for YTZA, from user s
 CREATE TABLE user_credits (
   id SERIAL PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  subscription_tier VARCHAR(20) DEFAULT 'free', -- 'free', 'pro_lifetime'
+  subscription_tier VARCHAR(20) DEFAULT 'free',
   balance INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
@@ -57,8 +57,8 @@ CREATE TABLE user_credits (
 ```
 
 #### Credit Limits by Plan
-- **Free Plan**: 3 credits (one-time allocation)
-- **Pro Plan**: 50 credits (one-time allocation, lifetime access)
+- **Free Plan**: 3 credits maximum
+- **Pro Plan**: 50 credits maximum
 - **Studio Plan**: Custom (handled separately)
 
 ### 3. Credit Usage & Deduction
@@ -109,7 +109,7 @@ const { data: creditsData } = await supabase
   .single();
 
 // Sets correct total based on plan
-const totalCredits = tier === 'free' ? 3 : tier === 'pro_lifetime' ? 50 : 3;
+const totalCredits = tier === 'free' ? 3 : tier === 'pro' ? 50 : 3;
 ```
 
 #### Real-time Updates
@@ -122,36 +122,36 @@ const totalCredits = tier === 'free' ? 3 : tier === 'pro_lifetime' ? 50 : 3;
 #### When Credits Reach 0
 1. **Generation Attempt**: User tries to generate thumbnail
 2. **Credit Check**: System checks `balance < 1`
-3. **Modal Display**: Shows appropriate modal based on user tier
+3. **Modal Display**: Shows "Insufficient Credits" modal
 4. **Options Presented**:
-   - **Free Users**: Upgrade to Pro OR buy credit packs
-   - **Pro Users**: Buy additional credit packs
+   - Cancel (close modal)
+   - Upgrade to Pro (redirect to pricing)
 
 #### Insufficient Credits Modal
 - Shows current credit count (0)
 - Explains Pro plan benefits (50 credits/month)
 - Provides upgrade path via Stripe
 
-### 6. Credit Replenishment & Management
+### 6. Credit Refill & Subscription Management
 
 #### Free Plan Users
 - **Cannot refill credits manually**
-- Must upgrade to Pro for lifetime access + 50 credits
-- OR purchase credit packs (new option)
+- Must upgrade to Pro for more credits
+- Credits reset to 3 upon plan selection
 
-#### Pro Plan Users (Lifetime)
-- **No monthly reset** - credits are purchased as needed
-- **Purchase Credit Packs**: Additional credits via Stripe
-- **Lifetime Pro Features**: Always have access to Pro features
+#### Pro Plan Users
+- **Monthly Reset**: Credits reset to 50 every billing cycle
+- **Subscription Management**: Via Stripe Customer Portal
+- **Payment Failure**: Subscription downgrades to Free (3 credits)
 
-#### Upgrade Process (Free → Pro Lifetime)
+#### Upgrade Process (Free → Pro)
 1. User clicks "Upgrade" from insufficient credits modal
-2. Redirected to Stripe checkout session (one-time payment)
+2. Redirected to Stripe checkout session
 3. Payment processed by Stripe
-4. Manual verification updates:
+4. Webhook or manual verification updates:
    ```javascript
    {
-     subscription_tier: "pro_lifetime",
+     subscription_tier: "pro",
      balance: 50
    }
    ```
@@ -167,15 +167,10 @@ POST /api/select-plan
 Body: { planName: "Free" }
 Result: Sets balance to 3, tier to "free"
 
-// Payment Verification (Pro Lifetime)
+// Payment Verification (Pro)
 POST /api/verify-payment
 Body: { sessionId: "stripe_session_id" }
-Result: Sets balance to 50, tier to "pro_lifetime"
-
-// Credit Pack Purchase (Future Implementation)
-POST /api/purchase-credits
-Body: { creditAmount: 25, sessionId: "stripe_session_id" }
-Result: Adds credits to existing balance
+Result: Sets balance to 50, tier to "pro"
 
 // Thumbnail Generation (Deducts 1 credit)
 POST /api/generate-thumbnail
@@ -214,43 +209,39 @@ if (!hasCredits) {
 
 ### 9. Future Enhancements
 
-#### Credit Pack System (Recommended Next Steps)
-1. **Create Credit Pack Products in Stripe**:
-   - 25 credits for $15
-   - 100 credits for $50
-   - 250 credits for $100
+#### Potential Credit System Improvements
+1. **Credit Packages**: One-time credit purchases
+2. **Rollover Credits**: Unused credits carry to next month
+3. **Usage Analytics**: Detailed credit usage tracking
+4. **Bulk Discounts**: Reduced cost per credit for high usage
+5. **Referral Credits**: Bonus credits for referrals
 
-2. **Implement Credit Pack Purchase API**:
-   ```javascript
-   POST /api/purchase-credit-pack
-   // Creates Stripe checkout for credit packs
-   ```
-
-3. **Credit Pack Verification**:
-   ```javascript
-   POST /api/verify-credit-purchase
-   // Adds purchased credits to user's balance
-   ```
+#### Monitoring & Analytics
+- Track credit usage patterns
+- Monitor conversion rates (Free → Pro)
+- Analyze optimal credit limits
+- A/B test pricing strategies
 
 ---
 
 ## 📊 Summary
 
 **Credit Allocation:**
-- Free: 3 credits (one-time)
-- Pro Lifetime: 50 credits (one-time) + lifetime Pro features
+- Free: 3 credits maximum
+- Pro: 50 credits maximum
 
 **Credit Usage:**
-- 1 credit per thumbnail generation/regeneration
+- 1 credit per thumbnail generation
+- 1 credit per regeneration
 - Real-time deduction and display updates
 
-**Replenishment Methods:**
-- Free: Upgrade to Pro Lifetime OR buy credit packs
-- Pro: Purchase additional credit packs
+**Refill Methods:**
+- Free: Only via plan upgrade
+- Pro: Monthly automatic reset
 
-**Payment Model:**
-- **One-time payments only** (no recurring subscriptions)
-- Pro plan gives lifetime access to Pro features
-- Additional credits purchased as needed
+**Zero Credits:**
+- Blocks generation attempts
+- Shows upgrade modal
+- Provides clear upgrade path
 
-This system provides better value for users (lifetime access) and simpler billing management while maintaining clear upgrade paths and credit monetization. 
+This system ensures fair usage, encourages upgrades, and provides a smooth user experience while maintaining clear credit boundaries and progression paths. 

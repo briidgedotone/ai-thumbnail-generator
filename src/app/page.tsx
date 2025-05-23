@@ -195,19 +195,19 @@ export default function Home() {
       name: "Pro",
       icon: <Zap className="h-6 w-6" />,
       price: 29,
-      description: "Ideal for growing creators and teams.",
+      description: "One-time purchase for growing creators.",
       features: [
-        "50 credits per month.",
+        "50 credits included",
         "5 iterations per thumbnail",
         "Upload images for inspiration",
-        "YouTube-ready resolution (1280x720px).",
-        "Priority email support."
+        "YouTube-ready resolution (1280x720px)",
+        "Priority email support",
+        "Lifetime Pro access"
       ],
       popular: true,
       color: "purple",
-      ctaText: "Choose Pro",
-      ctaLink: "/auth?plan=pro", // Will be handled by onClick
-      onClick: handleProPlanCheckout
+      ctaText: "Buy Pro Once",
+      ctaLink: "/auth"
     },
     {
       name: "Studio",

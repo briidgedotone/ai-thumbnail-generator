@@ -19,26 +19,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Create Stripe checkout session for Pro plan subscription
+    // Create Stripe checkout session for Pro plan one-time payment
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
         {
-          price: 'price_1RRtT4EeRLuPHXL1zdGN9Aas', // Monthly Pro plan price
+          price: 'price_1RRvCdEeRLuPHXL1ScLXucgY', // One-time payment price ID for YTZA Pro Plan
           quantity: 1,
         },
       ],
-      mode: 'subscription',
+      mode: 'payment', // Changed from 'subscription' to 'payment'
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/select-plan`,
       customer_email: user.email,
       metadata: {
         user_id: user.id,
-        plan_name: 'pro'
+        plan_name: 'pro',
+        payment_type: 'one_time' // Added to distinguish from subscription
       },
     });
 
-    console.log(`Created checkout session for user ${user.email}: ${session.id}`);
+    console.log(`Created one-time checkout session for user ${user.email}: ${session.id}`);
 
     return NextResponse.json({ sessionId: session.id, url: session.url });
   } catch (error) {

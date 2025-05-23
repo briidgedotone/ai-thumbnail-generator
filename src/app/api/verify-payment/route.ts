@@ -34,18 +34,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Session does not belong to user' }, { status: 403 });
     }
 
-    // Check if payment was successful
+    // Check if payment was successful (for one-time payments, check payment_status)
     if (session.payment_status !== 'paid') {
       console.error(`Payment not completed: ${session.payment_status}`);
       return NextResponse.json({ error: 'Payment not completed' }, { status: 400 });
     }
 
+    // For one-time payments, we'll give permanent Pro access
     // Update user subscription and assign credits
     const { error: updateError } = await supabase
       .from('user_credits')
       .upsert({ 
         user_id: user.id,
-        subscription_tier: 'pro',
+        subscription_tier: 'pro_lifetime', // Changed to indicate lifetime access
         balance: 50,
         updated_at: new Date().toISOString()
       }, {
@@ -57,12 +58,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to update subscription' }, { status: 500 });
     }
 
-    console.log(`Successfully upgraded user ${user.email} to Pro plan with 50 credits`);
+    console.log(`Successfully upgraded user ${user.email} to Pro Lifetime plan with 50 credits`);
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Payment verified and subscription updated',
-      plan: 'pro',
+      message: 'Payment verified and Pro access granted',
+      plan: 'pro_lifetime',
       balance: 50
     });
 
