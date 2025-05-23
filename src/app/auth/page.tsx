@@ -74,7 +74,7 @@ function AuthContent() {
       if (signUpError) {
         setError(signUpError.message);
       } else {
-        router.push("/dashboard");
+        router.push("/select-plan");
       }
     }
     setLoading(false);

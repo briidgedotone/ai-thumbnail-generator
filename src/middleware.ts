@@ -10,8 +10,8 @@ export async function middleware(req: NextRequest) {
 
   const { pathname } = req.nextUrl
 
-  // If user is not authenticated and trying to access dashboard or its sub-routes
-  if (!session && pathname.startsWith('/dashboard')) {
+  // If user is not authenticated and trying to access dashboard, select-plan or their sub-routes
+  if (!session && (pathname.startsWith('/dashboard') || pathname.startsWith('/select-plan'))) {
     return NextResponse.redirect(new URL('/auth', req.url))
   }
 
