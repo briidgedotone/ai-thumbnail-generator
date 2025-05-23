@@ -18,6 +18,7 @@ export interface CreativePricingTier {
   color: string;
   ctaText: string;
   ctaLink: string;
+  onClick?: () => void; // Optional onClick handler
 }
 
 interface PricingSectionProps {
@@ -146,7 +147,6 @@ export function PricingSection({ tiers }: PricingSectionProps) {
                 </div>
 
                 <Button
-                  asChild
                   className={cn(
                     "w-full h-12 text-lg relative mt-auto",
                     "border-2 border-black",
@@ -157,8 +157,10 @@ export function PricingSection({ tiers }: PricingSectionProps) {
                     "bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white",
                     "hover:bg-gradient-to-br hover:from-[#FF5C8D] hover:via-[#FF0000] hover:to-[#FFA600]"
                   )}
+                  onClick={tier.onClick}
+                  {...(tier.onClick ? {} : { asChild: true })}
                 >
-                  <Link href={tier.ctaLink}>{tier.ctaText}</Link>
+                  {tier.onClick ? tier.ctaText : <Link href={tier.ctaLink}>{tier.ctaText}</Link>}
                 </Button>
               </div>
             </motion.div>
