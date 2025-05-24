@@ -1,12 +1,9 @@
-import { ExtractedThemes } from '../theme-extractor';
-
 /**
  * Generates a detailed prompt for Clickbait Style thumbnails using Gemini API
  */
 export const generateClickbaitStylePrompt = async (
   description: string, 
-  themes: ExtractedThemes, 
-  aiChatInput: string
+  aiChatInput: string = ''
 ): Promise<string> => {
   try {
     // Call Gemini API to analyze the description and AI chat input for clickbait style
@@ -18,17 +15,15 @@ export const generateClickbaitStylePrompt = async (
       body: JSON.stringify({
         description,
         aiChatInput, // Include AI chat input
-        style: 'clickbait-style',
-        themes: themes // Pass themes for context if Gemini needs it
+        style: 'clickbait-style'
+        // No themes needed - Gemini will extract everything
       }),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
       console.error('Gemini API call failed for clickbait style:', errorData?.error || response.statusText);
-      // If Gemini fails, return a simple, generic prompt as a last resort.
-      // This ensures the application doesn't break if the Gemini endpoint has issues.
-      return `Clickbait style thumbnail for: "${description}". Focus on key elements like ${themes.mainSubject} with a ${themes.mood} mood.`;
+      return `Clickbait style thumbnail for: "${description}". ${aiChatInput ? `Additional context: ${aiChatInput}` : ''}`;
     }
 
     const result = await response.json();
@@ -70,12 +65,11 @@ TECHNICAL SPECIFICATIONS:
 - Ensure perfect focus on the key emotional or narrative elements
 - Create a polished final image with enhanced details that feels professionally produced
 
-The thumbnail should be instantly intriguing and communicate the curiosity of: "${description}"`;
+The thumbnail should be instantly intriguing and communicate the curiosity of: "${description}"${aiChatInput ? `. Additional context: ${aiChatInput}` : ''}`;
     }
 
   } catch (error: any) {
     console.error('Error calling Gemini for clickbait prompt generation:', error.message);
-    // Fallback to a very basic prompt if the API call itself fails (e.g., network issue)
-    return `Error during clickbait prompt generation. Video content: "${description}". Key subject: ${themes.mainSubject}.`;
+    return `Error during clickbait prompt generation. Video content: "${description}". ${aiChatInput ? `Additional context: ${aiChatInput}` : ''}`;
   }
 }; 

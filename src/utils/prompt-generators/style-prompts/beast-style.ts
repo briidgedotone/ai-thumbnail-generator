@@ -4,7 +4,10 @@ import { PromptSection, createPromptFromTemplate } from '../base-prompt';
 /**
  * Generates a detailed prompt for Beast Style thumbnails following high-impact visual guidelines
  */
-export const generateBeastStylePrompt = (description: string, themes: ExtractedThemes): string => {
+export const generateBeastStylePrompt = (description: string, themes: ExtractedThemes, aiChatInput: string = ''): string => {
+  // If aiChatInput is provided, use it as additional context
+  const effectiveDescription = aiChatInput ? `${description}. Additional context: ${aiChatInput}` : description;
+  
   const beastStylePrompt: PromptSection = {
     composition: [
       "Use dynamic scale differences - make subjects prominent in frame, filling 60-80% of the composition",
@@ -46,7 +49,7 @@ export const generateBeastStylePrompt = (description: string, themes: ExtractedT
   };
 
   const promptTemplate = createPromptFromTemplate(
-    description, 
+    effectiveDescription, 
     themes, 
     "High-Impact YouTube",
     beastStylePrompt
