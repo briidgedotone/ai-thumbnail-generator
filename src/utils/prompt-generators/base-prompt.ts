@@ -25,9 +25,10 @@ export const createPromptFromTemplate = (
   return `Create a ${styleTitle} YouTube thumbnail for a video about: "${description}"
 
 FACIAL EXPRESSION GUIDANCE:
-- Important: Avoid defaulting to shocked/surprised expressions with wide eyes and open mouths
-- Choose facial expressions that genuinely match the content's emotional tone and purpose
-- Consider a diverse range of authentic emotions appropriate to the subject matter
+- Use engaging facial expressions that perfectly match the content's energy and intensity
+- For high-energy content, embrace expressive emotional reactions - surprised, amazed, excited expressions are highly effective
+- Match expression intensity to content importance - bigger reveals and challenges deserve stronger reactions
+- Ensure expressions feel genuine to the content while maximizing visual appeal
 
 COMPOSITION:
 ${promptSection.composition.map(item => `- ${item}`).join('\n')}
@@ -52,5 +53,11 @@ KEY ELEMENTS FROM VIDEO:
 - Key descriptors: ${themes.adjectives.slice(0, 3).join(', ')}
 - Topics: ${themes.topics.slice(0, 3).join(', ')}
 
-The thumbnail should be ${promptSection.styleAdjective} and instantly communicate the ${promptSection.styleNoun} of: "${description}"`;
+The thumbnail should be ${promptSection.styleAdjective} and instantly communicate the ${promptSection.styleNoun} of: "${description}"
+
+VISUAL ENHANCEMENT GUIDELINES:
+- Text elements should be prominently sized and highly readable
+- Colors should be vibrant and attention-grabbing for maximum visibility
+- Every element should be designed to stand out in a crowded video feed
+- When creating impact, prioritize clarity and professional presentation`;
 }; 

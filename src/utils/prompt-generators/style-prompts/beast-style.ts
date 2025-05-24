@@ -2,60 +2,67 @@ import { ExtractedThemes } from '../theme-extractor';
 import { PromptSection, createPromptFromTemplate } from '../base-prompt';
 
 /**
- * Generates a detailed prompt for Beast Style thumbnails following specific format guidelines
+ * Generates a detailed prompt for Beast Style thumbnails following high-impact visual guidelines
  */
 export const generateBeastStylePrompt = (description: string, themes: ExtractedThemes): string => {
   const beastStylePrompt: PromptSection = {
     composition: [
-      "Consider using a split-screen or before/after comparison layout that shows contrast (expensive vs cheap, day 1 vs day 30, etc.)",
-      "Use rule of thirds with the main subject positioned for maximum impact, adapting as needed for the specific content",
-      "Create clean, professional compositions with clear subject focus and minimal distracting elements",
-      "Consider YouTube's display format, keeping essential elements within the central viewing area for both mobile and desktop"
+      "Prioritize split-screen or comparison layouts for maximum visual impact - divide the thumbnail clearly when showing contrasts",
+      "Use dynamic scale differences - make subjects prominent in frame, filling 60-80% of the composition",
+      "Position elements for strong visual tension - avoid centered, balanced layouts in favor of engaging positioning",
+      "Create clear visual hierarchy where the most important element (face, money, product) dominates the frame",
+      "Design for mobile-first viewing where thumbnails are seen at small sizes - everything must be bold and clear"
     ],
     subjects: [
-      "Feature subjects with emotions that match the video's content - avoid defaulting to shocked expressions unless specifically appropriate",
-      "For human subjects, use a diverse range of authentic emotions like joy, concentration, determination, curiosity, or thoughtfulness",
-      "If showing a person, frame them from mid-chest up to maximize emotional connection and recognition",
-      "Position subjects to directly engage the viewer, looking toward the camera when appropriate"
+      "Use engaging, expressive facial expressions - surprised, amazed, excited expressions with wide eyes are highly effective",
+      "Show authentic emotional reactions that match the content's intensity and energy level",
+      "Frame human subjects in close-ups showing mainly face and upper chest for maximum emotional connection",
+      "Multiple people should show contrasting emotions (surprised vs confident, concerned vs excited) to create visual narrative",
+      "Direct eye contact with camera is essential - subjects should feel like they're speaking directly to the viewer"
     ],
     visualTreatment: [
-      "Use vibrant, contrasting colors - particularly bold yellows, reds, blues - that grab attention while remaining appropriate to the subject",
-      "Implement dramatic lighting with bold highlights and deep shadows to create visual hierarchy",
-      "Consider stark color contrast between different sides if using a split-screen layout",
-      "Use lighting techniques to direct attention to the most important elements in the composition"
+      "Use high color saturation - emphasize yellows, reds, and blues for eye-catching contrast",
+      "Implement dramatic lighting with strong highlights and deep shadows for visual impact",
+      "Create strong visual contrast between split-screen sides - one side should be noticeably different than the other",
+      "Use color psychology: bright/warm colors for success/wealth, cooler/muted colors for challenges/poverty",
+      "Apply dynamic color grading to make the image feel cinematic and larger-than-life"
     ],
     storytelling: [
-      "Include bold numerical values or price points when relevant ($1 vs $1M, Day 1 vs Day 30, etc.)",
-      "Create a clear visual story that instantly communicates what the video is about",
-      "Design to stand out when displayed alongside competing videos in search results and recommendations",
-      "Balance drama and authenticity - make it eye-catching without feeling misleading"
+      "Make numerical values and dollar amounts prominent text elements in the composition - they should be highly visible",
+      "Create immediate visual curiosity - the thumbnail should make viewers want to know what happens",
+      "Show a compelling moment or reveal from the video without giving everything away",
+      "Use visual metaphors that are clear and immediately understandable (luxury vs basic, before vs after)",
+      "Design to create interest - make viewers feel they'll discover something valuable by clicking"
     ],
     technical: [
-      "Render with excellent clarity and detail that remains legible even at smaller display sizes",
-      "Use clean, professional editing with sharp edges and defined borders between elements",
-      "Ensure strong visual contrast between elements to maintain impact at any scale",
-      "Create a polished, professional image that feels intentional and high-quality"
+      "Render in high quality with vibrant colors that remain effective on small screens",
+      "Use thick black outlines on all text elements (8-10px outline minimum) for optimal readability",
+      "Ensure the most important elements remain visible even when thumbnail is compressed to very small sizes",
+      "Apply proper sharpening and contrast to make every element crystal clear",
+      "Use drop shadows and glow effects on text and key elements to create depth and visual separation"
     ],
-    styleAdjective: "eye-catching, professional",
-    styleNoun: "content"
+    styleAdjective: "high-impact, attention-grabbing, professional",
+    styleNoun: "visual storytelling"
   };
 
   const promptTemplate = createPromptFromTemplate(
     description, 
     themes, 
-    "high-impact, attention-grabbing",
+    "high-impact professional YouTube",
     beastStylePrompt
   );
   
-  // Add special MrBeast comparison guidance if price comparison is detected
+  // Add special comparison guidance if price comparison is detected
   if (themes.hasPriceComparison) {
-    return promptTemplate + `\n\nVALUE COMPARISON GUIDANCE:
-- This appears to be a thumbnail comparing values, prices, or timeframes
-- Consider using a split-screen layout with clear division between the two sides
-- Make the numerical values prominent (like $1 vs $1000, Day 1 vs Day 30)
-- Use stark visual contrast between the sides (dull/bright, poor/luxurious, etc.)
-- Match facial expressions to each side - serious/concerned on the low value side, excited/happy on the high value side
-- Add visual cues that enhance the comparison (worn objects vs new shiny objects, etc.)`;
+    return promptTemplate + `\n\nCOMPARISON LAYOUT GUIDANCE:
+- Use a split-screen layout with a clear diagonal or vertical line dividing the thumbnail
+- Make the comparison values prominent text elements in the thumbnail (e.g., "$1" vs "$500,000")
+- Left side: Show the lower value with more muted colors, concerned facial expressions, basic items
+- Right side: Show the higher value with bright colors, excited facial expressions, luxury items
+- Use strong visual contrast - one side should look distinctly different from the other
+- Include visual props that clearly communicate the difference (basic items vs luxury items, old vs new)
+- Facial expressions should match each side - concerned/serious on lower side, happy/amazed on higher side
+- Make the dividing line prominent with contrasting colors or clear graphics`;
   }
   
   return promptTemplate;

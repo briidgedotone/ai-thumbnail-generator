@@ -155,10 +155,11 @@ const AIChatInput = ({ onSubmit }: AIChatInputProps) => {
           {/* Input Row */}
           <div className="flex items-center gap-2 p-3 rounded-full bg-white max-w-3xl w-full">
             <button
-              className="p-3 rounded-full hover:bg-gray-100 transition"
-              title="Attach file"
+              className="p-3 rounded-full bg-gray-50 text-gray-400 cursor-not-allowed transition"
+              title="Coming Soon"
               type="button"
               tabIndex={-1}
+              disabled
             >
               <Paperclip size={20} />
             </button>
