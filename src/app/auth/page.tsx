@@ -105,7 +105,7 @@ const handleGoogleSignIn = async () => {
         {/* Header Nav */}
         <header className="flex items-center justify-between">
           <Link href="/" className="flex items-center">
-            <Image src="/ytza-logo.png" alt="YTZA Logo" width={140} height={44} className="object-contain" />
+            <Image src="/ytza-logo.png" alt="YTZA Logo" width={140} height={44} className="object-contain" style={{ width: "auto", height: "auto" }} priority />
           </Link>
           <div className="flex items-center space-x-3">
             <span className="text-sm text-neutral-700">

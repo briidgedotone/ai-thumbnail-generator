@@ -257,6 +257,7 @@ export function VideoDetailsPanel({
                         src={data.thumbnail}
                         alt="Generated thumbnail"
                         fill
+                        sizes="(max-width: 768px) 100vw, 450px"
                         unoptimized={
                           data.thumbnail?.includes('oaidalleapiprodscus.blob.core.windows.net') || 
                           data.thumbnail?.startsWith('data:image/')

@@ -77,10 +77,11 @@ const StyleItem: React.FC<StyleItemProps> = React.memo(({
         <Image
           src={styleInfo.imagePath}
           alt={styleInfo.name}
-          layout="fill"
-          objectFit="cover"
+          fill
+          sizes="(max-width: 640px) 50vw, 25vw"
+          priority={styleInfo.id === 'beast-style' || styleInfo.id === 'minimalist-style'}
           className={cn(
-            "transition-transform duration-300",
+            "object-cover transition-transform duration-300",
             isSelected ? "scale-[1.08]" : "group-hover:scale-[1.04]"
           )}
         />

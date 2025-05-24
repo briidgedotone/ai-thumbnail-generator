@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { StyleSelectionForm } from "@/components/dashboard/studio/StyleSelectionForm";
 import { GenerationResults } from "@/components/dashboard/studio/GenerationResults";
@@ -98,9 +98,9 @@ export function StudioView({
   };
 
   // Handle real-time text overlay data changes
-  const handleTextOverlayDataChange = (data: { thumbnailText?: string; textStyle?: string }) => {
+  const handleTextOverlayDataChange = useCallback((data: { thumbnailText?: string; textStyle?: string }) => {
     setRealTimeTextOverlayData(data);
-  };
+  }, []);
 
   const handleSubmit = async (e?: React.FormEvent, thumbnailText?: string, textStyle?: string) => {
     if (e) e.preventDefault();
@@ -593,23 +593,22 @@ export function StudioView({
     }
   };
 
-  const handleChatSubmit = (prompt: string, thumbnailText?: string, textStyle?: string) => {
-    // Update the video description
+  const handleChatSubmit = useCallback((prompt: string, thumbnailText?: string, textStyle?: string) => {
+    // Update the video description first
     onVideoDescriptionChange(prompt);
     
-    // Store text overlay params for potential regeneration when chat initiates submission
+    // Store current text overlay data for potential use
     setCurrentThumbnailText(thumbnailText);
     setCurrentTextStyle(textStyle);
-
+    
     // Only proceed with submission if a style is selected
     if (selectedThumbnailStyle) {
-      // Use the updated description in a new event loop to ensure state is updated
-      Promise.resolve().then(() => {
-        // Pass the text and style parameters to handleSubmit
+      // Use a timeout to ensure the video description state is updated
+      setTimeout(() => {
         handleSubmit(undefined, thumbnailText, textStyle);
-      });
+      }, 0);
     }
-  };
+  }, [selectedThumbnailStyle, onVideoDescriptionChange]);
 
   const handleContentPolicyRetry = async () => {
     setIsContentPolicyModalOpen(false);

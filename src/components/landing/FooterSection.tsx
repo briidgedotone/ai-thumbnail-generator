@@ -37,7 +37,7 @@ export function FooterSection() {
               href="/"
               className="inline-block mb-3"
             >
-              <Image src="/ytza-logo.png" alt="YTZA Logo" width={120} height={38} className="object-contain" />
+              <Image src="/ytza-logo.png" alt="YTZA Logo" width={120} height={38} className="object-contain" style={{ width: "auto", height: "auto" }} />
             </Link>
             <p className="text-neutral-200 text-sm">
               Join our newsletter to get updates about features and releases.

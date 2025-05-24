@@ -171,6 +171,7 @@ export function ProjectInfoPanel({ project, isOpen, onClose }: ProjectInfoPanelP
                         src={project.thumbnailUrl} 
                         alt={`Thumbnail for ${project.title}`} 
                         fill 
+                        sizes="(max-width: 768px) 100vw, 450px"
                         className="object-cover transition-transform duration-300 group-hover:scale-105" 
                         unoptimized={project.thumbnailUrl?.includes('oaidalleapiprodscus.blob.core.windows.net') || project.thumbnailUrl?.startsWith('data:image/')} 
                       />
