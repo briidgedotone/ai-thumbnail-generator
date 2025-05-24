@@ -55,6 +55,11 @@ export function StudioView({
   // State for storing text overlay parameters for regeneration
   const [currentThumbnailText, setCurrentThumbnailText] = useState<string | undefined>(undefined);
   const [currentTextStyle, setCurrentTextStyle] = useState<string | undefined>(undefined);
+  // Add real-time text overlay data state
+  const [realTimeTextOverlayData, setRealTimeTextOverlayData] = useState<{
+    thumbnailText?: string;
+    textStyle?: string;
+  }>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
@@ -90,6 +95,11 @@ export function StudioView({
     } else {
       setGenerationProgress(0);
     }
+  };
+
+  // Handle real-time text overlay data changes
+  const handleTextOverlayDataChange = (data: { thumbnailText?: string; textStyle?: string }) => {
+    setRealTimeTextOverlayData(data);
   };
 
   const handleSubmit = async (e?: React.FormEvent, thumbnailText?: string, textStyle?: string) => {
@@ -376,12 +386,12 @@ export function StudioView({
     let newImageUrl: string | null = null;
 
     try {
-      // Generate a new prompt for image regeneration
+      // Generate a new prompt for image regeneration using real-time text overlay data
       const structuredPrompt = await generateThumbnailPrompt(
         videoDescription, 
         selectedThumbnailStyle,
-        currentThumbnailText,
-        currentTextStyle
+        realTimeTextOverlayData.thumbnailText,  // Use real-time data
+        realTimeTextOverlayData.textStyle       // Use real-time data
       );
 
       // Call the generate-thumbnail API
@@ -492,8 +502,8 @@ export function StudioView({
   const handleRegenerateContent = async (contentType: 'titles' | 'descriptions' | 'tags') => {
     if (!selectedThumbnailStyle || !generatedData) return;
     
-    // Set generating state for content regeneration
-    setGenerationState('generating-content');
+    // Don't set global generation state for content regeneration
+    // Let individual components handle their own loading states
     
     try {
       // Call the API with the specific content type to regenerate
@@ -572,9 +582,8 @@ export function StudioView({
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       console.error(`Error regenerating ${contentType}:`, errorMessage);
-    } finally {
-      setGenerationState(null);
     }
+    // No need to reset global generation state since we're not setting it
   };
 
   const handleCloseDetailsPanel = () => {
@@ -643,6 +652,7 @@ export function StudioView({
             onSubmit={handleSubmit}
             onChatSubmit={handleChatSubmit}
             isLoading={isLoading}
+            onTextOverlayDataChange={handleTextOverlayDataChange}
           />
         )}
       </AnimatePresence>

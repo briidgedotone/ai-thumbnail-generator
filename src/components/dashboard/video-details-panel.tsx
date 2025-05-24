@@ -52,6 +52,11 @@ export function VideoDetailsPanel({
   const [isRegeneratingDescription, setIsRegeneratingDescription] = useState(false);
   const [isRegeneratingTags, setIsRegeneratingTags] = useState(false);
 
+  // Only show content loading during content-related generation phases
+  const isGeneratingContent = generationPhase === 'generating-content' || generationPhase === 'initializing' || generationPhase === 'finalizing';
+  // Show thumbnail loading during thumbnail-related generation phases
+  const isGeneratingThumbnail = generationPhase !== null;
+
   const isGenerating = generationPhase !== null;
 
   // Function to download the thumbnail
@@ -225,7 +230,7 @@ export function VideoDetailsPanel({
                 variants={itemVariants}
               >
                 <div className="relative aspect-video w-full overflow-hidden rounded-xl mb-6 shadow-md group bg-zinc-100 dark:bg-zinc-800">
-                  {isGenerating ? (
+                  {isGeneratingThumbnail ? (
                     <ThumbnailSkeleton 
                       generationPhase={generationPhase} 
                       generationProgress={generationProgress}
@@ -267,7 +272,7 @@ export function VideoDetailsPanel({
                     className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                   />
                   
-                  {!isGenerating && (
+                  {!isGeneratingThumbnail && (
                     <div className="absolute bottom-3 right-3 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2">
                       <motion.div variants={buttonMotionVariants} whileHover="hover" whileTap="tap">
                         <Button
@@ -275,7 +280,7 @@ export function VideoDetailsPanel({
                           className="rounded-full shadow-md bg-white/90 hover:bg-white text-zinc-700 cursor-pointer w-9 h-9"
                           title="Regenerate Image"
                           onClick={onRegenerateImage}
-                          disabled={!data?.thumbnail || isGenerating}
+                          disabled={!data?.thumbnail || isGeneratingThumbnail}
                         >
                           <RefreshCw size={16} />
                         </Button>
@@ -318,7 +323,7 @@ export function VideoDetailsPanel({
                     </h3>
                   </div>
                   <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800">
-                    {isGenerating || isRegeneratingTitle ? (
+                    {isGeneratingContent || isRegeneratingTitle ? (
                       <TitleSkeleton />
                     ) : (
                       <>
@@ -347,7 +352,7 @@ export function VideoDetailsPanel({
                                 variant="ghost"
                                 size="icon"
                                 onClick={handleRegenerateTitle}
-                                disabled={isGenerating || isRegeneratingTitle}
+                                disabled={isGeneratingContent || isRegeneratingTitle}
                                 className="rounded-full w-8 h-8"
                                 title={isRegeneratingTitle ? "Regenerating..." : "Regenerate Title"}
                               >
@@ -369,7 +374,7 @@ export function VideoDetailsPanel({
                     </h3>
                   </div>
                   <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800">
-                    {isGenerating || isRegeneratingDescription ? (
+                    {isGeneratingContent || isRegeneratingDescription ? (
                       <DescriptionSkeleton />
                     ) : (
                       <>
@@ -398,7 +403,7 @@ export function VideoDetailsPanel({
                                 variant="ghost"
                                 size="icon"
                                 onClick={handleRegenerateDescription}
-                                disabled={isGenerating || isRegeneratingDescription}
+                                disabled={isGeneratingContent || isRegeneratingDescription}
                                 className="rounded-full w-8 h-8"
                                 title={isRegeneratingDescription ? "Regenerating..." : "Regenerate Description"}
                               >
@@ -420,7 +425,7 @@ export function VideoDetailsPanel({
                     </h3>
                   </div>
                   <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800">
-                    {isGenerating || isRegeneratingTags ? (
+                    {isGeneratingContent || isRegeneratingTags ? (
                       <TagsSkeleton />
                     ) : (
                       <>
@@ -459,7 +464,7 @@ export function VideoDetailsPanel({
                                 variant="ghost"
                                 size="icon"
                                 onClick={handleRegenerateTags}
-                                disabled={isGenerating || isRegeneratingTags}
+                                disabled={isGeneratingContent || isRegeneratingTags}
                                 className="rounded-full w-8 h-8"
                                 title={isRegeneratingTags ? "Regenerating..." : "Regenerate Tags"}
                               >

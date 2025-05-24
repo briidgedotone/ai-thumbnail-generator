@@ -12,6 +12,7 @@ interface StyleSelectionFormProps {
   onSubmit: (e?: React.FormEvent, thumbnailText?: string, textStyle?: string) => Promise<void>;
   onChatSubmit: (prompt: string, thumbnailText?: string, textStyle?: string) => void;
   isLoading: boolean;
+  onTextOverlayDataChange?: (data: { thumbnailText?: string; textStyle?: string }) => void;
 }
 
 export function StyleSelectionForm({
@@ -21,7 +22,8 @@ export function StyleSelectionForm({
   onVideoDescriptionChange,
   onSubmit,
   onChatSubmit,
-  isLoading
+  isLoading,
+  onTextOverlayDataChange
 }: StyleSelectionFormProps) {
   // State to track text overlay data from AIChatInput
   const [currentThumbnailText, setCurrentThumbnailText] = useState<string>("");
@@ -34,6 +36,16 @@ export function StyleSelectionForm({
     setCurrentTextStyle(textStyle);
     setIncludeTextOnThumbnail(includeText);
   };
+
+  // Notify parent of current text overlay data whenever it changes
+  React.useEffect(() => {
+    if (onTextOverlayDataChange) {
+      onTextOverlayDataChange({
+        thumbnailText: includeTextOnThumbnail ? currentThumbnailText : undefined,
+        textStyle: includeTextOnThumbnail ? currentTextStyle : undefined
+      });
+    }
+  }, [currentThumbnailText, currentTextStyle, includeTextOnThumbnail, onTextOverlayDataChange]);
 
   // Handle form submission from button click
   const handleFormSubmit = (e?: React.FormEvent) => {
