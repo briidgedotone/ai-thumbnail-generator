@@ -54,15 +54,14 @@ export function useContentGeneration({
   const getThumbnailStylePath = (styleId: string | null): string | null => {
     if (!styleId) return null;
     
-    const stylePathMap: Record<string, string> = {
+    const styleImageMap: Record<string, string> = {
       'beast-style': '/thumbnail-styles/01-beast-style.png',
       'minimalist-style': '/thumbnail-styles/02-minimalist-style.png',
       'cinematic-style': '/thumbnail-styles/03-cinematic-style.png',
       'clickbait-style': '/thumbnail-styles/04-clickbait-style.jpg',
-      'aesthetic-style': '/thumbnail-styles/05-aesthetic-style.png',
     };
     
-    return stylePathMap[styleId] || null;
+    return styleImageMap[styleId] || null;
   };
 
   const handleSubmit = async (

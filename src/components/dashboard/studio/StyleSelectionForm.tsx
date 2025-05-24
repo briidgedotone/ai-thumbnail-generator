@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { ThumbnailStyleSelector } from "@/components/dashboard/thumbnail-style-selector";
 import { AIChatInput } from "@/components/dashboard/ai-chat-input";
 import { VideoDescriptionInput } from "@/components/dashboard/video-description-input";
@@ -12,6 +12,7 @@ interface StyleSelectionFormProps {
   onSubmit: (e?: React.FormEvent, thumbnailText?: string, textStyle?: string) => Promise<void>;
   onChatSubmit: (prompt: string, thumbnailText?: string, textStyle?: string) => void;
   isLoading: boolean;
+  onTextOverlayDataChange?: (data: { thumbnailText?: string; textStyle?: string }) => void;
 }
 
 export function StyleSelectionForm({
@@ -21,8 +22,52 @@ export function StyleSelectionForm({
   onVideoDescriptionChange,
   onSubmit,
   onChatSubmit,
-  isLoading
+  isLoading,
+  onTextOverlayDataChange
 }: StyleSelectionFormProps) {
+  // State to track text overlay data from AIChatInput
+  const [currentThumbnailText, setCurrentThumbnailText] = useState<string>("");
+  const [currentTextStyle, setCurrentTextStyle] = useState<string>("Bold White");
+  const [includeTextOnThumbnail, setIncludeTextOnThumbnail] = useState<boolean>(false);
+
+  // Handle text overlay changes from AIChatInput
+  const handleTextOverlayChange = (thumbnailText: string, textStyle: string, includeText: boolean) => {
+    setCurrentThumbnailText(thumbnailText);
+    setCurrentTextStyle(textStyle);
+    setIncludeTextOnThumbnail(includeText);
+  };
+
+  // Notify parent of current text overlay data whenever it changes
+  React.useEffect(() => {
+    if (onTextOverlayDataChange) {
+      onTextOverlayDataChange({
+        thumbnailText: includeTextOnThumbnail ? currentThumbnailText : undefined,
+        textStyle: includeTextOnThumbnail ? currentTextStyle : undefined
+      });
+    }
+  }, [currentThumbnailText, currentTextStyle, includeTextOnThumbnail, onTextOverlayDataChange]);
+
+  // Handle form submission from button click
+  const handleFormSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    // Use the text overlay data only if the user has enabled it
+    const finalThumbnailText = includeTextOnThumbnail ? currentThumbnailText : undefined;
+    const finalTextStyle = includeTextOnThumbnail ? currentTextStyle : undefined;
+    
+    // Pass the current text overlay data to the submit handler
+    onSubmit(e, finalThumbnailText, finalTextStyle);
+  };
+
+  // Handle submission from AI Chat Input
+  const handleChatSubmit = (prompt: string, thumbnailText?: string, textStyle?: string) => {
+    // Update our local state to keep track of text overlay data
+    setCurrentThumbnailText(thumbnailText || "");
+    setCurrentTextStyle(textStyle || "Bold White");
+    
+    // Call the original chat submit handler
+    onChatSubmit(prompt, thumbnailText, textStyle);
+  };
+
   return (
     <motion.div 
       key="mainContent"
@@ -37,13 +82,16 @@ export function StyleSelectionForm({
       }}
       className="w-full flex flex-col items-stretch gap-6"
     >
-      <form onSubmit={onSubmit}>
+      <form onSubmit={handleFormSubmit}>
         <ThumbnailStyleSelector
           selectedStyle={selectedThumbnailStyle}
           onSelectStyle={onSelectStyle}
         />
         <div className="w-full flex flex-col items-start mt-6">
-          <AIChatInput onSubmit={onChatSubmit} /> 
+          <AIChatInput 
+            onSubmit={handleChatSubmit} 
+            onTextOverlayChange={handleTextOverlayChange}
+          /> 
         </div>
         <div className="w-full flex flex-col items-start mt-6">
           <VideoDescriptionInput 

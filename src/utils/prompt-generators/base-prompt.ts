@@ -25,32 +25,30 @@ export const createPromptFromTemplate = (
   return `Create a ${styleTitle} YouTube thumbnail for a video about: "${description}"
 
 FACIAL EXPRESSION GUIDANCE:
-- Important: Avoid defaulting to shocked/surprised expressions with wide eyes and open mouths
-- Choose facial expressions that genuinely match the content's emotional tone and purpose
-- Consider a diverse range of authentic emotions appropriate to the subject matter
+- Use engaging facial expressions that match the content's emotional tone
+- Avoid the default "shocked face with wide eyes and open mouth" expression unless the content specifically requires it  
+- Consider a range of authentic emotions: focused, determined, thoughtful, amused, confident, or curious
+- Make expressions feel genuine and appropriate to the video's actual content
 
-COMPOSITION:
-${promptSection.composition.map(item => `- ${item}`).join('\n')}
+SAFE ZONE GUIDANCE:
+- Keep main focus elements and text away from the top 25px and bottom 25px areas
+- This accounts for aspect ratio conversion from generated 1536x1024 to YouTube's 1280x720 format
+- Position critical visual elements in the center safe area for optimal visibility
 
-SUBJECTS & EXPRESSIONS:
-${promptSection.subjects.map(item => `- ${item}`).join('\n')}
+COMPOSITION: ${promptSection.composition.join('; ')}
 
-VISUAL TREATMENT:
-${promptSection.visualTreatment.map(item => `- ${item}`).join('\n')}
+SUBJECTS: ${promptSection.subjects.join('; ')}
 
-STORYTELLING ELEMENTS:
-${promptSection.storytelling.map(item => `- ${item}`).join('\n')}
+VISUAL TREATMENT: ${promptSection.visualTreatment.join('; ')}
 
-TECHNICAL SPECIFICATIONS:
-${promptSection.technical.map(item => `- ${item}`).join('\n')}
+STORYTELLING: ${promptSection.storytelling.join('; ')}
 
-KEY ELEMENTS FROM VIDEO:
-- Main subject: ${themes.mainSubject}
-- Action: ${themes.action}
-- Setting: ${themes.setting}
-- Mood: ${themes.mood}
-- Key descriptors: ${themes.adjectives.slice(0, 3).join(', ')}
-- Topics: ${themes.topics.slice(0, 3).join(', ')}
+TECHNICAL: ${promptSection.technical.join('; ')}
 
-The thumbnail should be ${promptSection.styleAdjective} and instantly communicate the ${promptSection.styleNoun} of: "${description}"`;
+STYLE: Create a ${promptSection.styleAdjective} ${promptSection.styleNoun} that captures the essence of "${description}".
+
+${themes.mainSubject ? `FOCUS SUBJECT: ${themes.mainSubject}` : ''}
+${themes.action ? `KEY ACTION: ${themes.action}` : ''}
+${themes.mood !== 'neutral' ? `EMOTIONAL TONE: ${themes.mood}` : ''}
+${themes.topics.length > 0 ? `TOPICS: ${themes.topics.slice(0, 3).join(', ')}` : ''}`;
 }; 

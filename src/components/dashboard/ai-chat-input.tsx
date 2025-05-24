@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 interface AIChatInputProps {
   onSubmit?: (value: string, thumbnailText?: string, textStyle?: string) => void;
+  onTextOverlayChange?: (thumbnailText: string, textStyle: string, includeText: boolean) => void;
 }
  
 const PLACEHOLDERS = [
@@ -20,7 +21,7 @@ const PLACEHOLDERS = [
   "Minimalist and clean thumbnail for a coding tutorial..."
 ];
  
-const AIChatInput = ({ onSubmit }: AIChatInputProps) => {
+const AIChatInput = ({ onSubmit, onTextOverlayChange }: AIChatInputProps) => {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
   const [isActive, setIsActive] = useState(false);
@@ -140,6 +141,13 @@ const AIChatInput = ({ onSubmit }: AIChatInputProps) => {
     },
   };
  
+  // Call onTextOverlayChange whenever text overlay settings change
+  React.useEffect(() => {
+    if (onTextOverlayChange) {
+      onTextOverlayChange(thumbnailText, selectedTextStyle, includeTextOnThumbnail);
+    }
+  }, [thumbnailText, selectedTextStyle, includeTextOnThumbnail, onTextOverlayChange]);
+ 
   return (
     <div className="w-full">
       <motion.div
@@ -155,10 +163,11 @@ const AIChatInput = ({ onSubmit }: AIChatInputProps) => {
           {/* Input Row */}
           <div className="flex items-center gap-2 p-3 rounded-full bg-white max-w-3xl w-full">
             <button
-              className="p-3 rounded-full hover:bg-gray-100 transition"
-              title="Attach file"
+              className="p-3 rounded-full bg-gray-50 text-gray-400 cursor-not-allowed transition"
+              title="Coming Soon"
               type="button"
               tabIndex={-1}
+              disabled
             >
               <Paperclip size={20} />
             </button>

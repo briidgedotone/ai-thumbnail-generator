@@ -55,6 +55,11 @@ export function StudioView({
   // State for storing text overlay parameters for regeneration
   const [currentThumbnailText, setCurrentThumbnailText] = useState<string | undefined>(undefined);
   const [currentTextStyle, setCurrentTextStyle] = useState<string | undefined>(undefined);
+  // Add real-time text overlay data state
+  const [realTimeTextOverlayData, setRealTimeTextOverlayData] = useState<{
+    thumbnailText?: string;
+    textStyle?: string;
+  }>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
@@ -90,6 +95,11 @@ export function StudioView({
     } else {
       setGenerationProgress(0);
     }
+  };
+
+  // Handle real-time text overlay data changes
+  const handleTextOverlayDataChange = (data: { thumbnailText?: string; textStyle?: string }) => {
+    setRealTimeTextOverlayData(data);
   };
 
   const handleSubmit = async (e?: React.FormEvent, thumbnailText?: string, textStyle?: string) => {
@@ -357,94 +367,6 @@ export function StudioView({
     }
   };
 
-  // Handle regeneration of specific content types
-  const handleRegenerateContent = async (contentType: 'titles' | 'descriptions' | 'tags') => {
-    if (!selectedThumbnailStyle || !generatedData) return;
-    
-    try {
-      // Call the API with the specific content type to regenerate
-      const contentResponse = await fetch('/api/generate-content', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          videoDescription, 
-          style: selectedThumbnailStyle,
-          contentType: contentType // Specify which content type to regenerate
-        }),
-      });
-
-      if (!contentResponse.ok) {
-        const errorData = await contentResponse.json();
-        console.warn(`Failed to regenerate ${contentType}:`, errorData.error || contentResponse.statusText);
-        return;
-      }
-
-      const contentResult = await contentResponse.json();
-      
-      if (contentResult.success) {
-        // Update only the specific content type that was regenerated
-        if (contentType === 'titles' && contentResult.titles && contentResult.titles.length > 0) {
-          // Get best title or default to first one
-          const bestTitleIndex = contentResult.bestTitle >= 0 && contentResult.bestTitle < contentResult.titles.length 
-            ? contentResult.bestTitle 
-            : 0;
-            
-          setGeneratedData({
-            ...generatedData,
-            title: contentResult.titles[bestTitleIndex]
-          });
-        } else if (contentType === 'descriptions' && contentResult.descriptions && contentResult.descriptions.length > 0) {
-          // Get best description or default to first one
-          const bestDescriptionIndex = contentResult.bestDescription >= 0 && contentResult.bestDescription < contentResult.descriptions.length 
-            ? contentResult.bestDescription 
-            : 0;
-            
-          setGeneratedData({
-            ...generatedData,
-            description: contentResult.descriptions[bestDescriptionIndex]
-          });
-        } else if (contentType === 'tags' && contentResult.tags && contentResult.tags.length > 0) {
-          setGeneratedData({
-            ...generatedData,
-            tags: contentResult.tags
-          });
-        }
-      } else {
-        console.warn(`Regeneration of ${contentType} returned success: false`);
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      console.error(`Error regenerating ${contentType}:`, errorMessage);
-    }
-  };
-
-  const handleCloseDetailsPanel = () => {
-    setIsDetailsPanelOpen(false);
-    if (onPrepareNewGeneration) {
-      onPrepareNewGeneration();
-    }
-  };
-
-  const handleChatSubmit = (prompt: string, thumbnailText?: string, textStyle?: string) => {
-    // Update the video description
-    onVideoDescriptionChange(prompt);
-    
-    // Store text overlay params for potential regeneration when chat initiates submission
-    setCurrentThumbnailText(thumbnailText);
-    setCurrentTextStyle(textStyle);
-
-    // Only proceed with submission if a style is selected
-    if (selectedThumbnailStyle) {
-      // Use the updated description in a new event loop to ensure state is updated
-      Promise.resolve().then(() => {
-        // Pass the text and style parameters to handleSubmit
-        handleSubmit(undefined, thumbnailText, textStyle);
-      });
-    }
-  };
-
   // Handle regeneration of a new image using current settings
   const handleRegenerateImage = async () => {
     if (!generatedData || !selectedThumbnailStyle) return;
@@ -458,15 +380,18 @@ export function StudioView({
       return;
     }
 
-    setGenerationState(null);
+    // Start the generation state for image regeneration
+    setGenerationState('generating-thumbnail');
     setError(null);
     let newImageUrl: string | null = null;
 
     try {
-      // Generate a new prompt for image regeneration
+      // Generate a new prompt for image regeneration using real-time text overlay data
       const structuredPrompt = await generateThumbnailPrompt(
         videoDescription, 
-        selectedThumbnailStyle
+        selectedThumbnailStyle,
+        realTimeTextOverlayData.thumbnailText,  // Use real-time data
+        realTimeTextOverlayData.textStyle       // Use real-time data
       );
 
       // Call the generate-thumbnail API
@@ -533,7 +458,7 @@ export function StudioView({
         onCreditsUsed();
       }
 
-      // Update the generated data with the new image
+      // Update ONLY the thumbnail in the generated data, keep everything else the same
       const updatedData = {
         ...generatedData,
         thumbnail: newImageUrl || generatedData.thumbnail
@@ -541,19 +466,28 @@ export function StudioView({
       setGeneratedData(updatedData);
       setGenerationState(null);
 
-      // Save the project in the background if we have a new image
+      // Update only the thumbnail in the database, don't re-save other content
       if (newImageUrl) {
-        // We don't await this call so it happens in the background
-        saveProject(
-          newImageUrl,
-          updatedData.title,
-          updatedData.description,
-          updatedData.tags.join(',')
-        ).catch(error => {
-          console.error('Background project save failed:', error);
-          // Optional: Show a toast error if background save fails
-          toast.error(`Failed to save project in background: ${error.message}`);
-        });
+        try {
+          const response = await fetch('/api/update-project-thumbnail', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              imageUrl: newImageUrl,
+              selectedStyleId: selectedThumbnailStyle
+            }),
+          });
+
+          if (!response.ok) {
+            console.warn('Failed to update thumbnail in database');
+          } else {
+            toast.success('Thumbnail updated successfully!');
+          }
+        } catch (error) {
+          console.error('Failed to update thumbnail in database:', error);
+        }
       }
 
     } catch (err) {
@@ -561,6 +495,119 @@ export function StudioView({
       console.error("Error during image regeneration:", errorMessage);
       setError(errorMessage);
       setGenerationState(null); // Make sure to end loading state in case of error too
+    }
+  };
+
+  // Handle regeneration of specific content types
+  const handleRegenerateContent = async (contentType: 'titles' | 'descriptions' | 'tags') => {
+    if (!selectedThumbnailStyle || !generatedData) return;
+    
+    // Don't set global generation state for content regeneration
+    // Let individual components handle their own loading states
+    
+    try {
+      // Call the API with the specific content type to regenerate
+      const contentResponse = await fetch('/api/generate-content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          videoDescription, 
+          style: selectedThumbnailStyle,
+          contentType: contentType // Specify which content type to regenerate
+        }),
+      });
+
+      if (!contentResponse.ok) {
+        const errorData = await contentResponse.json();
+        console.warn(`Failed to regenerate ${contentType}:`, errorData.error || contentResponse.statusText);
+        return;
+      }
+
+      const contentResult = await contentResponse.json();
+      
+      if (contentResult.success) {
+        let updatedData = { ...generatedData };
+        let updatePayload: any = { selectedStyleId: selectedThumbnailStyle };
+
+        // Update only the specific content type that was regenerated
+        if (contentType === 'titles' && contentResult.titles && contentResult.titles.length > 0) {
+          // Get best title or default to first one
+          const bestTitleIndex = contentResult.bestTitle >= 0 && contentResult.bestTitle < contentResult.titles.length 
+            ? contentResult.bestTitle 
+            : 0;
+            
+          updatedData.title = contentResult.titles[bestTitleIndex];
+          updatePayload.generatedTitle = updatedData.title;
+          
+        } else if (contentType === 'descriptions' && contentResult.descriptions && contentResult.descriptions.length > 0) {
+          // Get best description or default to first one
+          const bestDescriptionIndex = contentResult.bestDescription >= 0 && contentResult.bestDescription < contentResult.descriptions.length 
+            ? contentResult.bestDescription 
+            : 0;
+            
+          updatedData.description = contentResult.descriptions[bestDescriptionIndex];
+          updatePayload.generatedDescription = updatedData.description;
+          
+        } else if (contentType === 'tags' && contentResult.tags && contentResult.tags.length > 0) {
+          updatedData.tags = contentResult.tags;
+          updatePayload.generatedTags = updatedData.tags.join(',');
+        }
+
+        // Update the state with the new data
+        setGeneratedData(updatedData);
+
+        // Update only the specific content in the database
+        try {
+          const response = await fetch('/api/update-project-content', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updatePayload),
+          });
+
+          if (!response.ok) {
+            console.warn(`Failed to update ${contentType} in database`);
+          } else {
+            toast.success(`${contentType.charAt(0).toUpperCase() + contentType.slice(1)} updated successfully!`);
+          }
+        } catch (error) {
+          console.error(`Failed to update ${contentType} in database:`, error);
+        }
+      } else {
+        console.warn(`Regeneration of ${contentType} returned success: false`);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      console.error(`Error regenerating ${contentType}:`, errorMessage);
+    }
+    // No need to reset global generation state since we're not setting it
+  };
+
+  const handleCloseDetailsPanel = () => {
+    setIsDetailsPanelOpen(false);
+    if (onPrepareNewGeneration) {
+      onPrepareNewGeneration();
+    }
+  };
+
+  const handleChatSubmit = (prompt: string, thumbnailText?: string, textStyle?: string) => {
+    // Update the video description
+    onVideoDescriptionChange(prompt);
+    
+    // Store text overlay params for potential regeneration when chat initiates submission
+    setCurrentThumbnailText(thumbnailText);
+    setCurrentTextStyle(textStyle);
+
+    // Only proceed with submission if a style is selected
+    if (selectedThumbnailStyle) {
+      // Use the updated description in a new event loop to ensure state is updated
+      Promise.resolve().then(() => {
+        // Pass the text and style parameters to handleSubmit
+        handleSubmit(undefined, thumbnailText, textStyle);
+      });
     }
   };
 
@@ -605,6 +652,7 @@ export function StudioView({
             onSubmit={handleSubmit}
             onChatSubmit={handleChatSubmit}
             isLoading={isLoading}
+            onTextOverlayDataChange={handleTextOverlayDataChange}
           />
         )}
       </AnimatePresence>
