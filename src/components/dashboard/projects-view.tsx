@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
-import { Download, Trash2, Plus, Video, Search, ArrowUpRight } from "lucide-react";
+import { Plus, Video, Search, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -254,31 +254,6 @@ export function ProjectsView({ onCreateNew, onProjectClick }: ProjectsViewProps)
                   
                   {/* Subtle gradient overlay for better visibility */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
-                  {/* Hover-triggered action buttons with refined styling */}
-                  <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100">
-                    <button 
-                      className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center text-gray-700 hover:text-blue-600 hover:bg-white transition-all border border-gray-100 transform hover:-translate-y-0.5"
-                      title="Download Thumbnail"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log(`Download thumbnail for ${project.title}`);
-                      }}
-                    >
-                      <Download size={14} />
-                    </button>
-                    
-                    <button
-                      className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center text-gray-700 hover:text-red-600 hover:bg-white transition-all border border-gray-100 transform hover:-translate-y-0.5"
-                      title="Delete Thumbnail"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log(`Delete thumbnail for ${project.title}`);
-                      }}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
                 </div>
                 
                 {/* Content area with refined typography and spacing */}

@@ -144,19 +144,19 @@ export function ProjectInfoPanel({ project, isOpen, onClose }: ProjectInfoPanelP
               
               {/* Header */}
               <motion.div 
-                className="flex items-center px-6 py-4 border-b border-zinc-100 dark:border-zinc-800"
+                className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800"
                 variants={itemVariants}
               >
+                <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Project Details</h2>
                 <Button 
                   variant="ghost" 
                   size="icon" 
                   onClick={onClose} 
-                  className="mr-3 rounded-full w-8 h-8 text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors" 
+                  className="rounded-full w-8 h-8 text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer" 
                   title="Close Panel"
                 >
-                  <ArrowLeft size={18} />
+                  <X size={18} />
                 </Button>
-                <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Project Details</h2>
               </motion.div>
 
               <div className="h-full flex flex-col overflow-y-auto pb-6">
@@ -214,7 +214,7 @@ export function ProjectInfoPanel({ project, isOpen, onClose }: ProjectInfoPanelP
                           size="icon" 
                           onClick={() => copyToClipboard(project.title, setTitleCopied)} 
                           title={titleCopied ? "Copied!" : "Copy Title"} 
-                          className="w-8 h-8 rounded-full"
+                          className="w-8 h-8 rounded-full cursor-pointer"
                         >
                           {titleCopied ? 
                             <Check size={16} className="text-green-500" /> : 
@@ -237,7 +237,7 @@ export function ProjectInfoPanel({ project, isOpen, onClose }: ProjectInfoPanelP
                             size="icon" 
                             onClick={() => copyToClipboard(project.description!, setDescriptionCopied)} 
                             title={descriptionCopied ? "Copied!" : "Copy Description"} 
-                            className="w-8 h-8 rounded-full"
+                            className="w-8 h-8 rounded-full cursor-pointer"
                           >
                             {descriptionCopied ? 
                               <Check size={16} className="text-green-500" /> : 
@@ -263,7 +263,7 @@ export function ProjectInfoPanel({ project, isOpen, onClose }: ProjectInfoPanelP
                             size="icon" 
                             onClick={() => copyToClipboard(project.tags!.join(', '), setTagsCopied)} 
                             title={tagsCopied ? "Copied!" : "Copy Tags"} 
-                            className="w-8 h-8 rounded-full"
+                            className="w-8 h-8 rounded-full cursor-pointer"
                           >
                             {tagsCopied ? 
                               <Check size={16} className="text-green-500" /> : 
@@ -315,49 +315,39 @@ export function ProjectInfoPanel({ project, isOpen, onClose }: ProjectInfoPanelP
       <AnimatePresence>
         {isPreviewModalOpen && project && (
           <motion.div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-black/60"
+            key="thumbnail-preview-modal"
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }}
             onClick={() => setIsPreviewModalOpen(false)}
           >
             <motion.div
-              className="relative max-w-4xl max-h-[90vh] bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-700"
+              className="relative max-w-4xl max-h-[90vh] bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-2xl"
               initial={{ scale: 0.9, opacity: 0 }} 
               animate={{ scale: 1, opacity: 1 }} 
               exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-4">
+              <div className="relative">
                 <Image
                   src={project.thumbnailUrl}
-                  alt={`Preview: ${project.title}`}
-                  width={1280} 
-                  height={720}
-                  className="block object-contain rounded-lg"
-                  unoptimized={project.thumbnailUrl?.includes('oaidalleapiprodscus.blob.core.windows.net') || project.thumbnailUrl?.startsWith('data:image/')}
+                  alt="Thumbnail preview"
+                  width={800}
+                  height={450}
+                  unoptimized={
+                    project.thumbnailUrl?.includes('oaidalleapiprodscus.blob.core.windows.net') || 
+                    project.thumbnailUrl?.startsWith('data:image/')
+                  }
+                  className="w-full h-auto max-h-[80vh] object-contain"
                 />
-              </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute top-4 right-4 rounded-full bg-black/20 hover:bg-black/40 text-white w-9 h-9 backdrop-blur-sm" 
-                onClick={() => setIsPreviewModalOpen(false)} 
-                aria-label="Close preview"
-              >
-                <X size={18} />
-              </Button>
-              
-              <div className="absolute bottom-4 right-4 flex gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="rounded-full px-4 shadow-lg backdrop-blur-sm bg-white/80 hover:bg-white"
-                  onClick={handleDownload}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white rounded-full"
+                  onClick={() => setIsPreviewModalOpen(false)} 
                 >
-                  <Download size={16} className="mr-2" />
-                  Download
+                  <X size={20} />
                 </Button>
               </div>
             </motion.div>
