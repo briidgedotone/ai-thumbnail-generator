@@ -42,24 +42,12 @@ export function StyleSelectionForm({
     const finalThumbnailText = includeTextOnThumbnail ? currentThumbnailText : undefined;
     const finalTextStyle = includeTextOnThumbnail ? currentTextStyle : undefined;
     
-    console.log('DEBUG: Form submission triggered with:', {
-      finalThumbnailText,
-      finalTextStyle,
-      includeTextOnThumbnail,
-      videoDescription
-    });
-    
     // Pass the current text overlay data to the submit handler
     onSubmit(e, finalThumbnailText, finalTextStyle);
   };
 
   // Handle submission from AI Chat Input
   const handleChatSubmit = (prompt: string, thumbnailText?: string, textStyle?: string) => {
-    console.log('DEBUG: Chat submission triggered with:', {
-      prompt,
-      thumbnailText,
-      textStyle
-    });
     // Update our local state to keep track of text overlay data
     setCurrentThumbnailText(thumbnailText || "");
     setCurrentTextStyle(textStyle || "Bold White");

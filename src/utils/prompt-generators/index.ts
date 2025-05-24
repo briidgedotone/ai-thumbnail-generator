@@ -36,14 +36,6 @@ export const generateThumbnailPrompt = async (
   textStyle?: string,
   aiChatInput: string = ''
 ): Promise<string> => {
-  console.log('DEBUG: generateThumbnailPrompt called with:', {
-    description,
-    style,
-    thumbnailText,
-    textStyle,
-    aiChatInput
-  });
-
   // Extract key subjects and themes from the description
   const keyThemes = extractKeyThemes(description);
   
@@ -79,19 +71,15 @@ export const generateThumbnailPrompt = async (
   
   // Handle text overlay - either add specific text or explicitly prevent it
   if (thumbnailText && textStyle) {
-    console.log('DEBUG: Adding text overlay to prompt:', { thumbnailText, textStyle });
     const textOverlayPrompt = generateTextOverlayPrompt(thumbnailText, textStyle);
     prompt += '\n\n' + textOverlayPrompt;
   } else {
-    console.log('DEBUG: No text overlay requested, adding prevention instruction');
     // Explicitly prevent text when not requested
     prompt += `\n\nIMPORTANT TEXT INSTRUCTION:
 - Do NOT add any text, words, numbers, or written content to this thumbnail
 - Keep the image purely visual without any text overlays
 - Focus on visual storytelling through imagery, expressions, and composition only`;
   }
-  
-  console.log('DEBUG: Final prompt generated:', prompt);
   
   return prompt;
 }; 
