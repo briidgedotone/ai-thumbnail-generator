@@ -114,7 +114,7 @@ export default function SelectPlanPage() {
       popular: false,
       color: "green",
       ctaText: "Contact Sales",
-      onClick: () => window.open("/contact", "_blank")
+      onClick: () => {} // Do nothing
     },
   ];
 
@@ -265,7 +265,7 @@ export default function SelectPlanPage() {
                   onClick={tier.onClick}
                   disabled={isLoading}
                   className={cn(
-                    "w-full h-12 text-lg relative mt-auto cursor-pointer",
+                    "w-full h-12 text-lg relative mt-auto cursor-pointer group",
                     "border-2 border-black",
                     "transition-all duration-300",
                     "shadow-[4px_4px_0px_0px_#18181B]",
@@ -273,10 +273,19 @@ export default function SelectPlanPage() {
                     "hover:translate-x-[-2px] hover:translate-y-[-2px]",
                     tier.popular 
                       ? "bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white hover:bg-gradient-to-br hover:from-[#FF5C8D] hover:via-[#FF0000] hover:to-[#FFA600]"
-                      : "bg-white text-black hover:bg-gray-50"
+                      : tier.name === "Studio"
+                        ? "bg-white text-black hover:bg-gray-300 hover:text-gray-600"
+                        : "bg-white text-black hover:bg-gray-50"
                   )}
                 >
-                  {tier.ctaText}
+                  {tier.name === "Studio" ? (
+                    <>
+                      <span className="group-hover:hidden">{tier.ctaText}</span>
+                      <span className="hidden group-hover:inline">Coming soon!</span>
+                    </>
+                  ) : (
+                    tier.ctaText
+                  )}
                 </Button>
               </div>
             </div>
