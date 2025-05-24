@@ -10,12 +10,11 @@ interface ThumbnailStyleSelectorProps {
   onSelectStyle: (style: string) => void;
 }
 
-const stylesData = [
-  { id: 'aesthetic-style', name: 'Aesthetic Style', emoji: '🌸', imagePath: '/thumbnail-styles/05-aesthetic-style.png' },
-  { id: 'beast-style', name: 'Beast Style', emoji: '🔥', imagePath: '/thumbnail-styles/01-beast-style.png' },
+const thumbnailStyles = [
+  { id: 'beast-style', name: 'Beast Style', emoji: '😈', imagePath: '/thumbnail-styles/01-beast-style.png' },
   { id: 'minimalist-style', name: 'Minimalist Style', emoji: '✨', imagePath: '/thumbnail-styles/02-minimalist-style.png' },
   { id: 'cinematic-style', name: 'Cinematic Style', emoji: '🎬', imagePath: '/thumbnail-styles/03-cinematic-style.png' },
-  { id: 'clickbait-style', name: 'Clickbait Style', emoji: '😮', imagePath: '/thumbnail-styles/04-clickbait-style.jpg' },
+  { id: 'clickbait-style', name: 'Clickbait Style', emoji: '🔥', imagePath: '/thumbnail-styles/04-clickbait-style.jpg' },
 ];
 
 interface StyleItemProps {
@@ -135,7 +134,7 @@ export function ThumbnailStyleSelector({ selectedStyle, onSelectStyle }: Thumbna
 
   // Refs for each StyleItem
   const itemRefs = React.useMemo(() => 
-    stylesData.reduce<Record<string, React.RefObject<HTMLDivElement | null>>>((acc, style) => {
+    thumbnailStyles.reduce<Record<string, React.RefObject<HTMLDivElement | null>>>((acc, style) => {
       acc[style.id] = React.createRef<HTMLDivElement>();
       return acc;
     }, {}), []);
@@ -153,7 +152,7 @@ export function ThumbnailStyleSelector({ selectedStyle, onSelectStyle }: Thumbna
 
   const handleMouseEnterItem = useCallback((styleId: string, itemRect: DOMRect) => {
     setHoveredItemId(styleId);
-    const style = stylesData.find(s => s.id === styleId);
+    const style = thumbnailStyles.find(s => s.id === styleId);
     if (style) {
       setHoveredItemName(style.name);
       setHoveredItemEmoji(style.emoji);
@@ -182,63 +181,30 @@ export function ThumbnailStyleSelector({ selectedStyle, onSelectStyle }: Thumbna
         <h2 className="text-2xl font-bold text-gray-900 mb-1">Choose a Thumbnail Style</h2>
         <p className="text-gray-500 text-sm">Select a style that best fits your video's content and audience.</p>
       </div>
-      <div className="w-full space-y-3">
-        {/* First row - 3 items */}
-        <div className="grid grid-cols-3 gap-3 max-w-4xl mx-auto">
-          {stylesData.slice(0, 3).map((styleItem) => (
-            <motion.div
-              key={styleItem.id}
-              animate={
-                selectedItemAnimating === styleItem.id 
-                ? { 
-                    scale: [1, 1.08, 1.03],
-                    transition: { duration: 0.4, times: [0, 0.6, 1] }
-                  }
-                : {}
-              }
-            >
-              <StyleItem
-                itemRef={itemRefs[styleItem.id]}
-                styleInfo={styleItem}
-                isSelected={selectedStyle === styleItem.id}
-                onSelect={handleStyleSelect}
-                onMouseEnterItem={handleMouseEnterItem}
-                onMouseLeaveItem={handleMouseLeaveItem}
-                onMouseMoveItem={handleMouseMoveItem}
-              />
-            </motion.div>
-          ))}
-        </div>
-        
-        {/* Second row - 2 items centered */}
-        <div className="flex justify-center gap-3">
-          <div className="grid grid-cols-2 gap-3 max-w-2xl">
-            {stylesData.slice(3, 5).map((styleItem) => (
-              <motion.div
-                key={styleItem.id}
-                animate={
-                  selectedItemAnimating === styleItem.id 
-                  ? { 
-                      scale: [1, 1.08, 1.03],
-                      transition: { duration: 0.4, times: [0, 0.6, 1] }
-                    }
-                  : {}
+      <div className="grid grid-cols-4 gap-3">
+        {thumbnailStyles.map((styleItem) => (
+          <motion.div
+            key={styleItem.id}
+            animate={
+              selectedItemAnimating === styleItem.id 
+              ? { 
+                  scale: [1, 1.08, 1.03],
+                  transition: { duration: 0.4, times: [0, 0.6, 1] }
                 }
-                className="w-64" // Fixed width to match the first row items
-              >
-                <StyleItem
-                  itemRef={itemRefs[styleItem.id]}
-                  styleInfo={styleItem}
-                  isSelected={selectedStyle === styleItem.id}
-                  onSelect={handleStyleSelect}
-                  onMouseEnterItem={handleMouseEnterItem}
-                  onMouseLeaveItem={handleMouseLeaveItem}
-                  onMouseMoveItem={handleMouseMoveItem}
-                />
-              </motion.div>
-            ))}
-          </div>
-        </div>
+              : {}
+            }
+          >
+            <StyleItem
+              itemRef={itemRefs[styleItem.id]} // Pass the ref to the StyleItem
+              styleInfo={styleItem}
+              isSelected={selectedStyle === styleItem.id}
+              onSelect={handleStyleSelect}
+              onMouseEnterItem={handleMouseEnterItem}
+              onMouseLeaveItem={handleMouseLeaveItem}
+              onMouseMoveItem={handleMouseMoveItem}
+            />
+          </motion.div>
+        ))}
       </div>
 
       <AnimatePresence>

@@ -7,7 +7,7 @@ YTZA is a sophisticated AI-powered platform for creating high-quality YouTube th
 ## ✨ Key Features
 
 - **AI-Powered Generation**: Uses OpenAI's GPT models for intelligent thumbnail creation
-- **Multiple Styles**: Beast-style, Minimalist, Cinematic, Clickbait, and Aesthetic styles
+- **Multiple Styles**: Beast-style, Minimalist, Cinematic, and Clickbait styles
 - **Smart Error Handling**: Advanced content policy violation detection with automatic credit refunds
 - **Credit System**: One-time payment model with automatic credit management
 - **Real-time Feedback**: Instant generation results with comprehensive error recovery
