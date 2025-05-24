@@ -313,7 +313,7 @@ export default function DashboardPage() {
       {/* Top Left Fixed Element: Logo */}
       <div className="fixed top-6 left-6 z-50">
         <Link href="/dashboard" className="flex items-center">
-          <Image src="/ytza-logo.png" alt="YTZA Logo" width={120} height={38} className="object-contain" />
+          <Image src="/ytza-logo.png" alt="YTZA Logo" width={120} height={38} className="object-contain" style={{ width: "auto", height: "auto" }} priority />
         </Link>
       </div>
 

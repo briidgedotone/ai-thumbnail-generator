@@ -10,41 +10,59 @@ export const generateBeastStylePrompt = (description: string, themes: ExtractedT
   
   const beastStylePrompt: PromptSection = {
     composition: [
+      "Create PHOTOREALISTIC professional photography composition - not illustration, artwork, or cartoon style",
       "Use dynamic scale differences - make subjects prominent in frame, filling 60-80% of the composition",
       "Position elements for strong visual impact with clear focal hierarchy",
       "Create depth through layered composition - foreground subject, middle ground context, background environment",
       "Use diagonal lines and dynamic angles to create energy and movement",
-      "Frame subjects with environmental elements that enhance the story (doorways, windows, natural frames)"
+      "Frame subjects with environmental elements that enhance the story"
     ],
     subjects: [
-      "Focus on authentic, engaging facial expressions that match the content's emotional tone",
-      "Capture subjects in dynamic poses that suggest action or movement",
-      "Use hand gestures and body language to enhance the emotional message",
-      "Show subjects interacting with relevant objects or environment",
-      "Include multiple subjects when content involves comparisons or group dynamics"
+      "Photograph REAL HUMAN SUBJECTS with photorealistic skin textures, natural facial features, and realistic proportions",
+      "Focus on HIGHLY EXPRESSIVE facial expressions - wide genuine smiles, excited wide eyes, or pure amazement",
+      "Use energetic, enthusiastic expressions that convey excitement, joy, determination, or wonder",
+      "Capture subjects in dynamic poses that suggest action or movement with high energy",
+      "Use animated hand gestures and body language that amplifies the emotional message",
+      "Show subjects interacting with relevant objects or environment with visible enthusiasm",
+      "Include multiple subjects when content involves comparisons or group dynamics",
+      "Avoid neutral, serious, or concerned expressions - lean into positive, high-energy emotions"
     ],
     visualTreatment: [
-      "Apply high contrast lighting with dramatic shadows and highlights",
-      "Use warm, saturated colors with strategic color blocking for visual impact",
-      "Create visual hierarchy through scale, contrast, and strategic placement",
-      "Add environmental details that support and enhance the main narrative",
-      "Use practical lighting effects (neon signs, screen glow, fire light) for atmosphere"
+      "Apply professional photography lighting and color grading - never illustration or artistic rendering",
+      "Use EXTREMELY BRIGHT, almost overexposed lighting that makes subjects and environments glow",
+      "Don't use dark colors, Use bright colors",
+      "Create extreme color saturation that appears almost glowing",
+      "Apply strategic color blocking with at least 2-3 highly contrasting ELECTRIC colors",
+      "Use high contrast lighting with dramatic shadows and highlights to enhance the electric color vibrancy",
+      "Ensure EVERYTHING is brightly lit - no dark shadows or dim areas, make the entire scene luminous",
+      "Create bright, sunny, well-lit environments that appear almost glowing or overexposed",
+      "Ensure colors are so intensely bright they dominate the composition and grab immediate attention",
+      "Create strong color separation between subject and background - colors should literally 'pop off the screen'",
+      "Add environmental details that support the electric color scheme and enhance the main narrative"
     ],
     storytelling: [
-      "Show clear before/after or comparison elements when relevant to content",
+      "Show clear before/after or comparison elements when relevant to content using realistic photography",
       "Include visual props and environmental cues that hint at the video's topic",
       "Create visual tension through contrasting elements (luxury vs budget, new vs old)",
       "Use environmental storytelling - backgrounds that reinforce the main message",
       "Incorporate visual metaphors that make abstract concepts tangible"
     ],
     technical: [
+      "CRITICAL: Create PHOTOREALISTIC PHOTOGRAPHY ONLY - absolutely NO cartoon, illustration, digital art, or animated style",
+      "Use DSLR camera quality with realistic depth of field, professional lighting setup, and natural shadows",
+      "Apply BRIGHT, sunny lighting setup with multiple light sources to eliminate dark areas",
+      "Use extremely well-lit photography with almost overexposed brightness that makes everything luminous",
       "Maintain sharp focus on main subjects with subtle background blur for depth",
       "Use professional lighting setup with key light, fill light, and rim lighting",
-      "Apply color grading for consistency and enhanced visual appeal",
+      "Apply color grading for consistency and enhanced visual appeal with emphasis on color saturation",
       "Ensure all important elements stay within the safe viewing area",
-      "Optimize for mobile viewing - elements should be clearly visible at small sizes"
+      "Optimize for mobile viewing - elements should be clearly visible at small sizes",
+      "Create realistic human faces, skin textures, and natural proportions",
+      "Apply professional photography quality with realistic lighting and shadows",
+      "Ensure environments and objects appear realistic and three-dimensional",
+      "Render as if shot with professional camera equipment in real-world settings"
     ],
-    styleAdjective: "high-impact professional YouTube",
+    styleAdjective: "photorealistic high-impact professional YouTube",
     styleNoun: "thumbnail"
   };
 
