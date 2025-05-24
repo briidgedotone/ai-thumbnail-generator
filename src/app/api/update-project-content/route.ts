@@ -25,6 +25,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.log('Updating content for user:', user.email, 'style:', selectedStyleId);
+
     // Build the update object with only the provided fields
     const updateData: any = {
       updated_at: new Date().toISOString()
@@ -48,6 +50,8 @@ export async function POST(request: Request) {
       console.error('Error updating project content:', error);
       return NextResponse.json({ error: 'Failed to update content' }, { status: 500 });
     }
+
+    console.log('Successfully updated content:', data?.[0]);
 
     return NextResponse.json({ 
       success: true, 

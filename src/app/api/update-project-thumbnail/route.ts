@@ -20,6 +20,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.log('Updating thumbnail for user:', user.email, 'style:', selectedStyleId);
+
     // Update only the thumbnail in the most recent project for this user and style
     const { data, error } = await supabase
       .from('generated_projects')
@@ -37,6 +39,8 @@ export async function POST(request: Request) {
       console.error('Error updating project thumbnail:', error);
       return NextResponse.json({ error: 'Failed to update thumbnail' }, { status: 500 });
     }
+
+    console.log('Successfully updated thumbnail:', data?.[0]);
 
     return NextResponse.json({ 
       success: true, 
