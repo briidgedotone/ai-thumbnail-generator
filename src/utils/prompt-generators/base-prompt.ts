@@ -44,6 +44,8 @@ ${promptSection.storytelling.map(item => `- ${item}`).join('\n')}
 
 TECHNICAL SPECIFICATIONS:
 ${promptSection.technical.map(item => `- ${item}`).join('\n')}
+- CRITICAL SAFE ZONE: Keep all important elements (faces, main subjects, key objects) at least 20 pixels away from the top and bottom edges of the image
+- Ensure main focus elements are positioned in the central safe area to account for different aspect ratio displays
 
 KEY ELEMENTS FROM VIDEO:
 - Main subject: ${themes.mainSubject}

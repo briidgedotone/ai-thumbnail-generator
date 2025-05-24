@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 interface AIChatInputProps {
   onSubmit?: (value: string, thumbnailText?: string, textStyle?: string) => void;
+  onTextOverlayChange?: (thumbnailText: string, textStyle: string, includeText: boolean) => void;
 }
  
 const PLACEHOLDERS = [
@@ -20,7 +21,7 @@ const PLACEHOLDERS = [
   "Minimalist and clean thumbnail for a coding tutorial..."
 ];
  
-const AIChatInput = ({ onSubmit }: AIChatInputProps) => {
+const AIChatInput = ({ onSubmit, onTextOverlayChange }: AIChatInputProps) => {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
   const [isActive, setIsActive] = useState(false);
@@ -139,6 +140,13 @@ const AIChatInput = ({ onSubmit }: AIChatInputProps) => {
       },
     },
   };
+ 
+  // Call onTextOverlayChange whenever text overlay settings change
+  React.useEffect(() => {
+    if (onTextOverlayChange) {
+      onTextOverlayChange(thumbnailText, selectedTextStyle, includeTextOnThumbnail);
+    }
+  }, [thumbnailText, selectedTextStyle, includeTextOnThumbnail, onTextOverlayChange]);
  
   return (
     <div className="w-full">
