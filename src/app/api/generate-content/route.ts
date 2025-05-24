@@ -239,6 +239,39 @@ export async function POST(request: NextRequest) {
       
       const contentData = JSON.parse(jsonText);
       
+      // Filter out unwanted tags that reference the style or creator names
+      const unwantedTags = [
+        'beast style',
+        'mrbeast', 
+        'mr beast',
+        'beast',
+        'beast mode',
+        'beast-style',
+        'minimalist style',
+        'minimalist-style',
+        'cinematic style',
+        'cinematic-style',
+        'clickbait style',
+        'clickbait-style'
+      ];
+      
+      // Function to filter tags
+      const filterTags = (tags: string[]) => {
+        return tags.filter(tag => {
+          const lowercaseTag = tag.toLowerCase().trim();
+          return !unwantedTags.some(unwanted => 
+            lowercaseTag === unwanted || 
+            lowercaseTag.includes(unwanted) ||
+            unwanted.includes(lowercaseTag)
+          );
+        });
+      };
+      
+      // Apply tag filtering if tags exist
+      if (contentData.tags && Array.isArray(contentData.tags)) {
+        contentData.tags = filterTags(contentData.tags);
+      }
+      
       // Validate the response structure based on contentType
       if (contentType === 'titles') {
         if (!contentData.titles || !Array.isArray(contentData.titles)) {
