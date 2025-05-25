@@ -19,6 +19,7 @@ interface StudioViewProps {
   onPrepareNewGeneration?: () => void;
   onInsufficientCredits?: () => void;
   onCreditsUsed?: () => void;
+  onCloseDetailsPanel?: (closeFn: () => void) => void;
 }
 
 export function StudioView({
@@ -30,6 +31,7 @@ export function StudioView({
   onPrepareNewGeneration,
   onInsufficientCredits,
   onCreditsUsed,
+  onCloseDetailsPanel,
 }: StudioViewProps) {
   const [isDetailsPanelOpen, setIsDetailsPanelOpen] = useState(false);
   const [generatedData, setGeneratedData] = useState<{
@@ -539,12 +541,12 @@ export function StudioView({
     // No need to reset global generation state since we're not setting it
   };
 
-  const handleCloseDetailsPanel = () => {
+  const handleCloseDetailsPanel = useCallback(() => {
     setIsDetailsPanelOpen(false);
     if (onPrepareNewGeneration) {
       onPrepareNewGeneration();
     }
-  };
+  }, [onPrepareNewGeneration]);
 
   const handleChatSubmit = useCallback((prompt: string, thumbnailText?: string, textStyle?: string) => {
     // Update the video description first
@@ -583,6 +585,13 @@ export function StudioView({
       onDetailsPanelStateChange(isDetailsPanelOpen);
     }
   }, [isDetailsPanelOpen, onDetailsPanelStateChange]);
+
+  // Register the close function with parent component
+  useEffect(() => {
+    if (onCloseDetailsPanel) {
+      onCloseDetailsPanel(handleCloseDetailsPanel);
+    }
+  }, [onCloseDetailsPanel, handleCloseDetailsPanel]);
 
   return (
     <div className="relative w-full">

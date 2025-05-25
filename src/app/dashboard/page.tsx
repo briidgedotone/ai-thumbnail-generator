@@ -235,6 +235,14 @@ export default function DashboardPage() {
     setIsDetailsPanelOpen(isOpen);
   }, []); // Empty dependency array means this function is stable
 
+  // Handler to close details panel from parent (for logo click)
+  const [closeDetailsPanelTrigger, setCloseDetailsPanelTrigger] = useState<() => void>(() => () => {});
+
+  // Handler to register the close function from StudioView
+  const handleRegisterCloseDetailsPanel = useCallback((closeFn: () => void) => {
+    setCloseDetailsPanelTrigger(() => closeFn);
+  }, []);
+
   // Handler to reset inputs for a new generation, called by StudioView
   const handlePrepareNewGeneration = useCallback(() => {
     setVideoDescription("");
@@ -274,10 +282,27 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background relative grainy-background dashboard-backdrop-circle-container flex flex-col items-center justify-center px-4 pt-24 pb-8">
       {/* Top Left Fixed Element: Logo */}
-      <div className="fixed top-6 left-6 z-50">
-        <Link href="/dashboard" className="flex items-center">
+      <div className="fixed top-6 left-6 z-[60]">
+        <div 
+          onClick={() => {
+            // If video details panel is open, close it using the registered function
+            if (isDetailsPanelOpen) {
+              closeDetailsPanelTrigger();
+            }
+            // If project info panel is open, close it and return to studio view
+            if (isProjectInfoPanelOpen) {
+              setIsProjectInfoPanelOpen(false);
+              setActiveView('studio');
+            }
+            // If neither panel is open, just ensure we're on studio view
+            if (!isDetailsPanelOpen && !isProjectInfoPanelOpen) {
+              setActiveView('studio');
+            }
+          }}
+          className="flex items-center cursor-pointer"
+        >
           <Image src="/ytza-logo.png" alt="YTZA Logo" width={120} height={38} className="object-contain" style={{ width: "auto", height: "auto" }} priority />
-        </Link>
+        </div>
       </div>
 
       {/* Top Center Fixed Elements: Studio/Projects Button Group */}
@@ -449,6 +474,7 @@ export default function DashboardPage() {
             onPrepareNewGeneration={handlePrepareNewGeneration}
             onInsufficientCredits={handleInsufficientCredits}
             onCreditsUsed={refreshUserCredits}
+            onCloseDetailsPanel={handleRegisterCloseDetailsPanel}
           />
         ) : (
           <ProjectsView 
