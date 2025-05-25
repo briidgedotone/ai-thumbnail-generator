@@ -7,20 +7,42 @@ export async function middleware(req: NextRequest) {
   const supabase = createMiddlewareClient({ req, res })
 
   const { data: { session } } = await supabase.auth.getSession()
-
   const { pathname } = req.nextUrl
 
-  console.log(`[Middleware] Processing ${pathname}, session exists: ${!!session}`);
+  // Security: Check request size for API routes (prevent large payload attacks)
+  if (pathname.startsWith('/api/')) {
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) { // 10MB limit
+      return NextResponse.json(
+        { error: 'Request payload too large' },
+        { status: 413 }
+      );
+    }
+
+    // Security: Validate Content-Type for POST requests
+    if (req.method === 'POST') {
+      const contentType = req.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        return NextResponse.json(
+          { error: 'Invalid content type. Expected application/json' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Security: Add basic security headers to API responses
+    res.headers.set('X-Content-Type-Options', 'nosniff');
+    res.headers.set('X-Frame-Options', 'DENY');
+    res.headers.set('X-XSS-Protection', '1; mode=block');
+  }
 
   // If user is not authenticated and trying to access dashboard, select-plan or their sub-routes
   if (!session && (pathname.startsWith('/dashboard') || pathname.startsWith('/select-plan'))) {
-    console.log(`[Middleware] Unauthenticated user trying to access ${pathname} - redirecting to auth`);
     return NextResponse.redirect(new URL('/auth', req.url))
   }
 
   // If user is authenticated, check their plan status
   if (session && (pathname.startsWith('/dashboard') || pathname.startsWith('/select-plan'))) {
-    console.log(`[Middleware] Authenticated user trying to access ${pathname} - checking plan selection`);
     try {
       const { data: creditsData, error } = await supabase
         .from('user_credits')
@@ -28,30 +50,23 @@ export async function middleware(req: NextRequest) {
         .eq('user_id', session.user.id)
         .single();
       
-      console.log(`[Middleware] Credits data:`, creditsData, 'Error:', error);
-      
       const hasPlanSelected = creditsData && creditsData.subscription_tier && creditsData.subscription_tier.trim() !== '';
       
       if (pathname.startsWith('/dashboard')) {
         // Dashboard access: requires plan selection
         if (error || !hasPlanSelected) {
-          console.log(`[Middleware] User ${session.user.email} has no plan selected - redirecting to select-plan`);
           return NextResponse.redirect(new URL('/select-plan', req.url))
         }
-        console.log(`[Middleware] User ${session.user.email} has plan: ${creditsData.subscription_tier} - allowing dashboard access`);
       } 
       
       if (pathname.startsWith('/select-plan')) {
         // Select-plan access: only allowed if NO plan selected
         if (hasPlanSelected) {
-          console.log(`[Middleware] User ${session.user.email} already has plan: ${creditsData.subscription_tier} - redirecting to dashboard`);
           return NextResponse.redirect(new URL('/dashboard', req.url))
         }
-        console.log(`[Middleware] User ${session.user.email} has no plan - allowing select-plan access`);
       }
       
-    } catch (error) {
-      console.log(`[Middleware] Error checking user plan:`, error);
+    } catch {
       if (pathname.startsWith('/dashboard')) {
         return NextResponse.redirect(new URL('/select-plan', req.url))
       }
@@ -60,7 +75,6 @@ export async function middleware(req: NextRequest) {
 
   // If user is authenticated and trying to access auth page
   if (session && pathname === '/auth') {
-    console.log(`[Middleware] Authenticated user trying to access auth - redirecting to dashboard`);
     return NextResponse.redirect(new URL('/dashboard', req.url))
   }
 

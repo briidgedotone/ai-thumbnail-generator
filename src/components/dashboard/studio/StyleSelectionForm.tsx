@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { ThumbnailStyleSelector } from "@/components/dashboard/thumbnail-style-selector";
 import { AIChatInput } from "@/components/dashboard/ai-chat-input";
 import { VideoDescriptionInput } from "@/components/dashboard/video-description-input";

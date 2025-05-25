@@ -20,60 +20,49 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('Updating thumbnail for user:', user.email, 'style:', selectedStyleId);
-
-    // First, let's check if there are any projects for this user and style
+    // Fetch existing projects for this user and style
     const { data: existingProjects, error: fetchError } = await supabase
       .from('projects')
-      .select('id, created_at, thumbnail_storage_path')
+      .select('id')
       .eq('user_id', user.id)
       .eq('selected_style_id', selectedStyleId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(1);
 
     if (fetchError) {
       console.error('Error fetching existing projects:', fetchError);
       return NextResponse.json({ error: 'Failed to fetch existing projects' }, { status: 500 });
     }
 
-    console.log('Existing projects found:', existingProjects?.length, 'projects');
-    
     if (!existingProjects || existingProjects.length === 0) {
       console.error('No projects found for user:', user.email, 'style:', selectedStyleId);
       return NextResponse.json({ error: 'No projects found to update' }, { status: 404 });
     }
 
-    console.log('Updating project ID:', existingProjects[0].id);
-
-    // Update only the thumbnail in the most recent project for this user and style
+    // Update the thumbnail in the most recent project for this user and style
     const { data, error } = await supabase
       .from('projects')
       .update({ 
-        thumbnail_storage_path: imageUrl,
+        image_url: imageUrl,
         updated_at: new Date().toISOString()
       })
-      .eq('user_id', user.id)
-      .eq('selected_style_id', selectedStyleId)
-      .order('created_at', { ascending: false })
-      .limit(1)
+      .eq('id', existingProjects[0].id)
       .select();
 
     if (error) {
       console.error('Error updating project thumbnail:', error);
       console.error('Error details:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
+        userId: user.id,
+        projectId: existingProjects[0].id,
+        imageUrl,
+        error: error.message
       });
-      return NextResponse.json({ error: 'Failed to update thumbnail' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to update project thumbnail' }, { status: 500 });
     }
-
-    console.log('Successfully updated thumbnail:', data?.[0]);
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Thumbnail updated successfully',
-      data: data?.[0] 
+      project: data?.[0] 
     });
 
   } catch (error) {

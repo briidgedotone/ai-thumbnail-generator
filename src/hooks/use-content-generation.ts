@@ -22,10 +22,8 @@ interface UseContentGenerationReturn {
   handleSubmit: (
     videoDescription: string,
     selectedThumbnailStyle: string,
-    e?: React.FormEvent,
     thumbnailText?: string,
-    textStyle?: string,
-    aiChatInput?: string
+    textStyle?: string
   ) => Promise<void>;
   getThumbnailStylePath: (styleId: string | null) => string | null;
   handleCloseDetailsPanel: () => void;
@@ -65,40 +63,22 @@ export function useContentGeneration({
   };
 
   const handleSubmit = async (
-    videoDescription: string,
+    videoDescription: string, 
     selectedThumbnailStyle: string,
-    e?: React.FormEvent, 
-    thumbnailText?: string, 
-    textStyle?: string,
-    aiChatInput: string = ''
+    _thumbnailText?: string,
+    _textStyle?: string
   ) => {
-    if (e) e.preventDefault();
-    
-    if (videoDescription.trim() === '' || !selectedThumbnailStyle) return;
+    if (!videoDescription.trim() || !selectedThumbnailStyle) {
+      setError('Please provide a video description and select a style');
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
-    setAiGeneratedImageUrl(null); // Reset previous image
-
-    // Set initial generatedData for the panel to render with loading indicators
-    setGeneratedData({
-      thumbnail: getThumbnailStylePath(selectedThumbnailStyle) || '', 
-      title: `Generating prompt for: ${videoDescription.slice(0, 30)}${videoDescription.length > 30 ? '...' : ''}`,
-      description: videoDescription,
-      tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
-    });
-    setIsDetailsPanelOpen(true); // Open panel so it can show its loading state
 
     try {
       // Generate a style-specific structured prompt for thumbnail
-      const structuredPrompt = await generateThumbnailPrompt(
-        videoDescription, 
-        selectedThumbnailStyle, 
-        thumbnailText, 
-        textStyle,
-        aiChatInput
-      );
-      console.log('[TESTING - Structured Prompt from Gemini]', structuredPrompt);
+      await generateThumbnailPrompt(videoDescription, selectedThumbnailStyle);
 
       // First, generate the thumbnail image - TEMPORARILY COMMENTING OUT TO SAVE API CREDITS
       /*

@@ -1,7 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { checkRateLimit, rateLimitConfigs, getRateLimitHeaders } from '@/lib/rate-limiter';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+// Add CORS headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': process.env.NODE_ENV === 'production' 
+    ? 'https://yourdomain.com' // Replace with your actual domain
+    : 'http://localhost:3000',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Max-Age': '86400',
+};
+
+// Handle preflight requests
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: corsHeaders,
+  });
+}
+
+// Input sanitization function
+function sanitizeInput(input: string): string {
+  if (typeof input !== 'string') {
+    throw new Error('Input must be a string');
+  }
+  
+  const sanitized = input
+    .trim()
+    .slice(0, 2000) // Limit length
+    .replace(/[<>]/g, '') // Remove HTML-like tags
+    .replace(/javascript:/gi, '') // Remove javascript: protocols
+    .replace(/data:/gi, '') // Remove data: protocols
+    .replace(/vbscript:/gi, ''); // Remove vbscript: protocols
+  
+  if (sanitized.length === 0) {
+    throw new Error('Input cannot be empty after sanitization');
+  }
+  
+  return sanitized;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,10 +51,84 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { videoDescription, style, contentType } = body;
 
-    if (!videoDescription) {
+    // Input validation and sanitization
+    if (!videoDescription || !style) {
       return NextResponse.json(
-        { error: 'Missing required field: videoDescription' },
-        { status: 400 }
+        { error: 'Video description and style are required' },
+        { 
+          status: 400,
+          headers: corsHeaders 
+        }
+      );
+    }
+
+    let sanitizedDescription: string;
+    let sanitizedStyle: string;
+    
+    try {
+      sanitizedDescription = sanitizeInput(videoDescription);
+      sanitizedStyle = sanitizeInput(style);
+    } catch (sanitizationError) {
+      const errorMessage = sanitizationError instanceof Error ? sanitizationError.message : 'Invalid input format';
+      return NextResponse.json({ error: errorMessage }, { 
+        status: 400,
+        headers: corsHeaders 
+      });
+    }
+
+    // Validate style is one of the allowed values
+    const allowedStyles = ['beast-style', 'minimalist-style', 'cinematic-style', 'clickbait-style'];
+    if (!allowedStyles.includes(sanitizedStyle)) {
+      return NextResponse.json(
+        { error: 'Invalid style parameter' },
+        { 
+          status: 400,
+          headers: corsHeaders 
+        }
+      );
+    }
+
+    // Validate contentType if provided
+    if (contentType) {
+      const allowedContentTypes = ['titles', 'descriptions', 'tags'];
+      if (!allowedContentTypes.includes(contentType)) {
+        return NextResponse.json(
+          { error: 'Invalid content type parameter' },
+          { 
+            status: 400,
+            headers: corsHeaders 
+          }
+        );
+      }
+    }
+
+    // Create a Supabase client for server-side operations
+    const supabase = createRouteHandlerClient({ cookies });
+
+    // Verify user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      return NextResponse.json({ error: 'Unauthorized' }, { 
+        status: 401,
+        headers: corsHeaders 
+      });
+    }
+
+    // Apply rate limiting
+    const rateLimitResult = checkRateLimit(user.id, rateLimitConfigs.aiGeneration);
+    const rateLimitHeaders = getRateLimitHeaders(rateLimitResult.remaining, rateLimitResult.resetTime);
+    
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { 
+          error: 'Rate limit exceeded. Please wait before making another request.',
+          retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
+        }, 
+        { 
+          status: 429,
+          headers: { ...corsHeaders, ...rateLimitHeaders }
+        }
       );
     }
 
@@ -23,11 +139,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         success: false,
         message: 'API key not configured',
-        titles: [`${style || 'Video'}: ${videoDescription.slice(0, 30)}...`],
-        descriptions: [videoDescription],
-        tags: videoDescription.split(' ').slice(0, 5).map((tag: string) => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
+        titles: [`${style || 'Video'}: ${sanitizedDescription.slice(0, 30)}...`],
+        descriptions: [sanitizedDescription],
+        tags: sanitizedDescription.split(' ').slice(0, 5).map((tag: string) => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
         bestTitle: 0,
         bestDescription: 0
+      }, {
+        headers: { ...corsHeaders, ...rateLimitHeaders }
       });
     }
 
@@ -39,7 +157,7 @@ export async function POST(request: NextRequest) {
       geminiPrompt = `
       You are a YouTube content optimization expert. A content creator has provided a brief description of their video and needs help creating compelling titles for maximum engagement and SEO.
 
-      Video Description: "${videoDescription}"
+      Video Description: "${sanitizedDescription}"
       ${style ? `Style: ${style}` : ''}
 
       Please generate the following:
@@ -63,7 +181,7 @@ export async function POST(request: NextRequest) {
       geminiPrompt = `
       You are a YouTube content optimization expert. A content creator has provided a brief description of their video and needs help creating compelling descriptions for maximum engagement and SEO.
 
-      Video Description: "${videoDescription}"
+      Video Description: "${sanitizedDescription}"
       ${style ? `Style: ${style}` : ''}
 
       Please generate the following:
@@ -87,7 +205,7 @@ export async function POST(request: NextRequest) {
       geminiPrompt = `
       You are a YouTube content optimization expert. A content creator has provided a brief description of their video and needs help creating effective tags for maximum SEO.
 
-      Video Description: "${videoDescription}"
+      Video Description: "${sanitizedDescription}"
       ${style ? `Style: ${style}` : ''}
 
       Please generate the following:
@@ -110,7 +228,7 @@ export async function POST(request: NextRequest) {
       geminiPrompt = `
     You are a YouTube content optimization expert. A content creator has provided a brief description of their video and needs help creating compelling titles, descriptions, and tags for maximum engagement and SEO.
 
-    Video Description: "${videoDescription}"
+    Video Description: "${sanitizedDescription}"
     ${style ? `Style: ${style}` : ''}
 
     Please generate the following:
@@ -297,6 +415,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         success: true,
         ...contentData
+      }, {
+        headers: { ...corsHeaders, ...rateLimitHeaders }
       });
       
     } catch (parseError) {
@@ -306,14 +426,16 @@ export async function POST(request: NextRequest) {
     }
     
   } catch (error) {
-    console.error('Error generating content with Gemini:', error);
-    return NextResponse.json(
-      { 
-        error: 'Failed to generate content',
-        success: false,
-        message: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    console.error('Error in generate-content API:', error);
+    
+    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+    return NextResponse.json({ 
+      error: 'INTERNAL_SERVER_ERROR',
+      message: 'An unexpected error occurred while generating content.',
+      details: errorMessage
+    }, { 
+      status: 500,
+      headers: corsHeaders
+    });
   }
 } 

@@ -97,8 +97,6 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({
 interface YouTubePreviewGridProps {
   thumbnailStyleImagePath: string;
   title: string;
-  description: string;
-  tags: string[];
   generationPhase?: GenerationPhase | null;
   generationProgress?: number;
 }
@@ -106,8 +104,6 @@ interface YouTubePreviewGridProps {
 export function YouTubePreviewGrid({
   thumbnailStyleImagePath,
   title,
-  description,
-  tags,
   generationPhase = null,
   generationProgress = 0,
 }: YouTubePreviewGridProps) {

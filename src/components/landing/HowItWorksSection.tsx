@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { CheckCircle, Check } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -33,11 +32,6 @@ export function HowItWorksSection({ steps: stepsFromProps }: HowItWorksSectionPr
   // Prepare stepDetails by combining props and hardcoded arrays
   // This assumes the hardcoded arrays align with the number of steps passed in props
   const stepDetails: StepDetail[] = stepsFromProps.map((propStep, index) => {
-    const hardcodedFeatures = [
-      ["Real-time collaboration", "AI-powered suggestions", "Built-in templates"],
-      ["One-click generation", "Multi-format output", "Style customization"],
-      ["Multi-channel publishing", "Engagement analytics", "Scheduled releases"],
-    ];
     const hardcodedImageUrls = [
       "/placeholder1.png",
       "/placeholder2.png",

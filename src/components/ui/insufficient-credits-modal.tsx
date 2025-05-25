@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CreditCard, Zap, AlertCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface InsufficientCreditsModalProps {
   isOpen: boolean;

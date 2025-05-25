@@ -2,55 +2,18 @@
 
 import React, { useState, useEffect } from "react"; // Added useEffect, useState
 import { Button } from "@/components/ui/button";
-import { Menu as MenuIcon, Sparkles, Zap, Rocket, LogIn, LayoutDashboard } from "lucide-react"; // Added LogIn, LayoutDashboard
+import { Sparkles, Zap, Rocket, LogIn, LayoutDashboard } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
-import { cn } from "@/lib/utils";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
-import { PricingSection, type CreativePricingTier as PricingSectionTierType } from "@/components/landing/PricingSection";
+import { PricingSection } from "@/components/landing/PricingSection";
 import { FAQSection } from "@/components/landing/FAQSection";
 import { FooterSection } from "@/components/landing/FooterSection";
 
 import { createSupabaseClient } from "@/lib/supabase/client"; // Import Supabase client
 import type { Session } from "@supabase/supabase-js"; // Import Session type
-
-// Component for list items in navigation dropdown
-const ListItem = React.forwardRef<
-  React.ElementRef<"a">,
-  React.ComponentPropsWithoutRef<"a">
->(({ className, title, children, ...props }, ref) => {
-  return (
-    <li>
-      <NavigationMenuLink asChild>
-        <a
-          ref={ref}
-          className={cn(
-            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-            className
-          )}
-          {...props}
-        >
-          <div className="text-sm font-medium leading-none">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-            {children}
-          </p>
-        </a>
-      </NavigationMenuLink>
-    </li>
-  );
-});
-ListItem.displayName = "ListItem";
 
 // Update CreativePricingTier type definition
 export interface CreativePricingTier {
@@ -67,7 +30,6 @@ export interface CreativePricingTier {
 }
 
 export default function Home() {
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createSupabaseClient();
@@ -93,36 +55,6 @@ export default function Home() {
     };
   }, [supabase, loading]); // Added loading to dependency array to ensure setLoading(false) is called correctly after initial check
 
-  const handleProPlanCheckout = async () => {
-    // If user is not logged in, redirect to auth with Pro plan intent
-    if (!session) {
-      window.location.href = '/auth?plan=pro';
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create checkout session');
-      }
-
-      const { url } = await response.json();
-      
-      // Redirect to Stripe checkout
-      window.location.href = url;
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
-      alert('Failed to start checkout. Please try again.');
-    }
-  };
-
   const howItWorksSteps = [
     {
       year: "Step 1",
@@ -130,7 +62,7 @@ export default function Home() {
       content: (
         <>
           <p className="mb-4 text-lg">
-            Launch Your Creative Process by Entering Video Details and Tailoring Designs to Reflect Your Brand's Unique Identity
+            Launch Your Creative Process by Entering Video Details and Tailoring Designs to Reflect Your Brand&apos;s Unique Identity
           </p>
           <ul className="space-y-2 list-disc list-inside">
             <li>Input Your Vision</li>
@@ -179,7 +111,7 @@ export default function Home() {
       name: "Free",
       icon: <Sparkles className="h-6 w-6" />,
       price: 0,
-      description: "Perfect for individual creators.", // Corrected spelling
+      description: "Perfect for individual creators.",
       features: [
         "3 credits per month.",
         "1 iteration per thumbnail",

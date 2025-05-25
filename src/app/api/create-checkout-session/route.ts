@@ -7,7 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-04-30.basil',
 });
 
-export async function POST(request: Request) {
+export async function POST() {
   try {
     // Create a Supabase client for server-side operations
     const supabase = createRouteHandlerClient({ cookies });
@@ -39,9 +39,7 @@ export async function POST(request: Request) {
       },
     });
 
-    console.log(`Created one-time checkout session for user ${user.email}: ${session.id}`);
-
-    return NextResponse.json({ sessionId: session.id, url: session.url });
+    return NextResponse.json({ sessionId: session.id });
   } catch (error) {
     console.error('Error creating checkout session:', error);
     return NextResponse.json(

@@ -42,8 +42,6 @@ export function GenerationResults({
           <YouTubePreviewGrid
             thumbnailStyleImagePath={data.thumbnail}
             title={data.title}
-            description={data.description}
-            tags={data.tags}
             generationPhase={generationPhase}
             generationProgress={generationProgress}
           />

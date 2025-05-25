@@ -53,7 +53,7 @@ export function ContentPolicyModal({
             <DialogTitle>Content Policy Violation</DialogTitle>
           </div>
           <DialogDescription className="text-left">
-            Your thumbnail request was blocked by our safety system. Don't worry - we've refunded your credit!
+            Your thumbnail request was blocked by our safety system. Don&apos;t worry - we&apos;ve refunded your credit!
           </DialogDescription>
         </DialogHeader>
         

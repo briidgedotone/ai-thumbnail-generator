@@ -48,91 +48,65 @@ export async function POST(request: Request) {
       .single();
 
     let newBalance = 50;
-    let newTier = 'pro';
     let actionMessage = 'upgraded to Pro plan';
 
     if (!creditsCheckError && currentCreditsData) {
       if (currentCreditsData.subscription_tier === 'pro') {
         // User is already Pro, add 50 credits to existing balance
         newBalance = (currentCreditsData.balance || 0) + 50;
-        newTier = 'pro';
         actionMessage = 'added 50 credits to Pro account';
       } else {
         // User is Free, upgrade to Pro with 50 credits
         newBalance = 50;
-        newTier = 'pro';
         actionMessage = 'upgraded to Pro plan with 50 credits';
       }
     }
 
-    // Update user subscription and assign credits
+    // Update user subscription and credits
     const { error: updateError } = await supabase
       .from('user_credits')
-      .upsert({ 
-        user_id: user.id,
-        subscription_tier: newTier,
+      .update({ 
         balance: newBalance,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'user_id'
-      });
+        subscription_tier: 'pro'
+      })
+      .eq('user_id', user.id);
 
     if (updateError) {
       console.error('Error updating user subscription:', updateError);
       return NextResponse.json({ error: 'Failed to update subscription' }, { status: 500 });
     }
 
-    console.log(`Successfully ${actionMessage} for user ${user.email}. New balance: ${newBalance}`);
-
-    // Record purchase in history (don't fail payment if this fails)
-    try {
-      // Retrieve payment method info from session
-      const sessionWithPaymentMethod = await stripe.checkout.sessions.retrieve(sessionId, {
-        expand: ['payment_intent.payment_method']
-      });
-      
-      let paymentMethodLast4 = null;
-      let receiptUrl = null;
-      
-      if (sessionWithPaymentMethod.payment_intent && 
-          typeof sessionWithPaymentMethod.payment_intent === 'object' &&
-          sessionWithPaymentMethod.payment_intent.payment_method &&
-          typeof sessionWithPaymentMethod.payment_intent.payment_method === 'object' &&
-          sessionWithPaymentMethod.payment_intent.payment_method.card) {
-        paymentMethodLast4 = sessionWithPaymentMethod.payment_intent.payment_method.card.last4;
+    // Get receipt URL if available
+    let receiptUrl = null;
+    if (session.payment_intent && typeof session.payment_intent === 'object') {
+      const paymentIntent = session.payment_intent as { latest_charge?: { receipt_url?: string } };
+      if (paymentIntent.latest_charge?.receipt_url) {
+        receiptUrl = paymentIntent.latest_charge.receipt_url;
       }
+    }
 
-      // Get receipt URL from the charge object
-      if (sessionWithPaymentMethod.payment_intent && 
-          typeof sessionWithPaymentMethod.payment_intent === 'object' &&
-          sessionWithPaymentMethod.payment_intent.latest_charge) {
-        
-        const charge = await stripe.charges.retrieve(sessionWithPaymentMethod.payment_intent.latest_charge as string);
-        receiptUrl = charge.receipt_url;
-        console.log('Retrieved receipt URL:', receiptUrl);
-      }
-
-      await supabase.from('user_purchases').insert({
+    // Record purchase history
+    const { error: purchaseError } = await supabase
+      .from('purchase_history')
+      .insert({
         user_id: user.id,
         stripe_session_id: sessionId,
-        amount_cents: 2900, // Always $29
-        credits_added: 50,  // Always 50 credits  
-        purchase_type: currentCreditsData?.subscription_tier === 'pro' ? 'credits' : 'upgrade',
-        payment_method_last4: paymentMethodLast4,
-        receipt_url: receiptUrl
+        amount: session.amount_total || 0,
+        currency: session.currency || 'usd',
+        status: 'completed',
+        receipt_url: receiptUrl,
+        created_at: new Date().toISOString()
       });
 
-      console.log(`Purchase history recorded for user ${user.email}`);
-    } catch (purchaseError) {
+    if (purchaseError) {
       console.error('Failed to record purchase history (payment still successful):', purchaseError);
-      // Don't fail the entire payment - credits were already updated successfully
     }
 
     return NextResponse.json({ 
       success: true, 
-      message: `Payment verified and ${actionMessage}`,
-      plan: newTier,
-      balance: newBalance
+      message: `Successfully ${actionMessage}. New balance: ${newBalance}`,
+      newBalance,
+      receiptUrl
     });
 
   } catch (error) {

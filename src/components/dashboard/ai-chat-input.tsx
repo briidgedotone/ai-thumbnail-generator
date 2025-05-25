@@ -1,8 +1,7 @@
 "use client" 
 
-import * as React from "react"
-import { useState, useEffect, useRef } from "react";
-import { Paperclip, Send, Type as TypeIcon, ChevronDown } from "lucide-react";
+import React, { useState, useRef, useEffect } from 'react';
+import { Paperclip, Type as TypeIcon, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 interface AIChatInputProps {
@@ -29,8 +28,11 @@ const AIChatInput = ({ onSubmit, onTextOverlayChange }: AIChatInputProps) => {
   const [includeTextOnThumbnail, setIncludeTextOnThumbnail] = useState(false);
   const [thumbnailText, setThumbnailText] = useState("");
   const [selectedTextStyle, setSelectedTextStyle] = useState("Bold White");
+  const [isPaperclipHovered, setIsPaperclipHovered] = useState(false);
+  const [paperclipCursorPos, setPaperclipCursorPos] = useState({ x: 0, y: 0 });
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const paperclipRef = useRef<HTMLButtonElement>(null);
  
   const TEXT_STYLE_OPTIONS = [
     "Bold White",
@@ -147,9 +149,35 @@ const AIChatInput = ({ onSubmit, onTextOverlayChange }: AIChatInputProps) => {
       onTextOverlayChange(thumbnailText, selectedTextStyle, includeTextOnThumbnail);
     }
   }, [thumbnailText, selectedTextStyle, includeTextOnThumbnail, onTextOverlayChange]);
+
+  // Handle paperclip hover
+  const handlePaperclipMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
+    setIsPaperclipHovered(true);
+    if (wrapperRef.current) {
+      const wrapperRect = wrapperRef.current.getBoundingClientRect();
+      setPaperclipCursorPos({
+        x: e.clientX - wrapperRect.left,
+        y: e.clientY - wrapperRect.top,
+      });
+    }
+  };
+
+  const handlePaperclipMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (wrapperRef.current) {
+      const wrapperRect = wrapperRef.current.getBoundingClientRect();
+      setPaperclipCursorPos({
+        x: e.clientX - wrapperRect.left,
+        y: e.clientY - wrapperRect.top,
+      });
+    }
+  };
+
+  const handlePaperclipMouseLeave = () => {
+    setIsPaperclipHovered(false);
+  };
  
   return (
-    <div className="w-full">
+    <div className="w-full relative">
       <motion.div
         ref={wrapperRef}
         className="w-full max-w-3xl"
@@ -163,11 +191,13 @@ const AIChatInput = ({ onSubmit, onTextOverlayChange }: AIChatInputProps) => {
           {/* Input Row */}
           <div className="flex items-center gap-2 p-3 rounded-full bg-white max-w-3xl w-full">
             <button
+              ref={paperclipRef}
               className="p-3 rounded-full bg-gray-50 text-gray-400 cursor-not-allowed transition"
-              title="Coming Soon"
               type="button"
               tabIndex={-1}
-              disabled
+              onMouseEnter={handlePaperclipMouseEnter}
+              onMouseMove={handlePaperclipMouseMove}
+              onMouseLeave={handlePaperclipMouseLeave}
             >
               <Paperclip size={20} />
             </button>
@@ -313,6 +343,26 @@ const AIChatInput = ({ onSubmit, onTextOverlayChange }: AIChatInputProps) => {
           </motion.div>
         </div>
       </motion.div>
+
+      {/* Paperclip Tooltip */}
+      <AnimatePresence>
+        {isPaperclipHovered && (
+          <motion.div
+            className="absolute px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-xl text-gray-800 text-sm whitespace-nowrap pointer-events-none z-50"
+            style={{
+              left: paperclipCursorPos.x,
+              top: paperclipCursorPos.y,
+              transform: 'translate(-50%, -60px)', 
+            }}
+            initial={{ opacity: 0, scale: 0.8, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: -10 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            📎 Coming soon!
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -3,9 +3,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import Image from 'next/image';
-import { X, Tag, Copy, Check, Download, Eye, ArrowLeft, Clock } from 'lucide-react';
+import { X, Tag, Copy, Check, Download, Eye, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 // Define Project type - This should ideally be a shared type
@@ -28,17 +27,13 @@ interface ProjectInfoPanelProps {
 // Utility to format date (can be moved to a shared utils file)
 const formatDateForPanel = (dateString: string) => {
   if (!dateString) return 'N/A';
-  try {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(dateString));
-  } catch (e) {
-    return 'Invalid Date';
-  }
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(dateString));
 };
 
 export function ProjectInfoPanel({ project, isOpen, onClose }: ProjectInfoPanelProps) {
@@ -298,7 +293,7 @@ export function ProjectInfoPanel({ project, isOpen, onClose }: ProjectInfoPanelP
                     variants={itemVariants}
                   >
                     <div className="flex items-center">
-                      <Clock size={16} className="text-zinc-400 mr-2" />
+                      <Calendar size={16} className="text-zinc-400 mr-2" />
                       <div>
                         <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Created</h3>
                         <p className="text-sm text-zinc-700 dark:text-zinc-300">{formatDateForPanel(project.createdAt)}</p>

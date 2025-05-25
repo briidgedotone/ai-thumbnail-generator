@@ -7,13 +7,6 @@ import { GenerationResults } from "@/components/dashboard/studio/GenerationResul
 import { generateThumbnailPrompt } from '@/utils/prompt-generators';
 import { toast } from "sonner";
 import { checkUserCredits } from '@/utils/credit-utils';
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Sparkles as GenerateIcon, UploadCloud as UploadIcon, Palette, LayoutGrid } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useTextareaResize } from "@/hooks/use-textarea-resize";
-import { createSupabaseClient } from "@/lib/supabase/client";
-import { motion } from "framer-motion";
 import { ContentPolicyModal } from "@/components/ui/content-policy-modal";
 import { GenerationPhase, GENERATION_PHASES } from "@/types/generation";
 
@@ -45,23 +38,17 @@ export function StudioView({
     description: string;
     tags: string[];
   } | undefined>(undefined);
-  const [aiGeneratedImageUrl, setAiGeneratedImageUrl] = useState<string | null>(null);
   
   // Replace isLoading with phase-based generation state
   const [generationPhase, setGenerationPhase] = useState<GenerationPhase | null>(null);
   const [generationProgress, setGenerationProgress] = useState(0);
   
-  const [error, setError] = useState<string | null>(null);
   // State for storing text overlay parameters for regeneration
-  const [currentThumbnailText, setCurrentThumbnailText] = useState<string | undefined>(undefined);
-  const [currentTextStyle, setCurrentTextStyle] = useState<string | undefined>(undefined);
   // Add real-time text overlay data state
   const [realTimeTextOverlayData, setRealTimeTextOverlayData] = useState<{
     thumbnailText?: string;
     textStyle?: string;
   }>({});
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
 
   // New state for content policy modal
   const [isContentPolicyModalOpen, setIsContentPolicyModalOpen] = useState(false);
@@ -102,7 +89,7 @@ export function StudioView({
     setRealTimeTextOverlayData(data);
   }, []);
 
-  const handleSubmit = async (e?: React.FormEvent, thumbnailText?: string, textStyle?: string) => {
+  const handleSubmit = useCallback(async (e?: React.FormEvent, thumbnailText?: string, textStyle?: string) => {
     if (e) e.preventDefault();
     if (videoDescription.trim() === '' || !selectedThumbnailStyle) return;
 
@@ -117,8 +104,6 @@ export function StudioView({
 
     // Start generation process
     setGenerationState('initializing');
-    setError(null);
-    setAiGeneratedImageUrl(null);
     
     // Variables to store the result data for saving
     let newImageUrl: string | null = null;
@@ -203,9 +188,8 @@ export function StudioView({
       }
 
       const thumbnailResult = await thumbnailResponse.json();
-      newImageUrl = thumbnailResult.imageUrl; // Store the new image URL
-      setAiGeneratedImageUrl(newImageUrl); // Update state as well
-
+      newImageUrl = thumbnailResult.imageUrl;
+      
       // Refresh credits after successful generation
       if (onCreditsUsed) {
         onCreditsUsed();
@@ -290,26 +274,43 @@ export function StudioView({
       // Phase 3: Finalizing
       setGenerationState('finalizing');
 
+      // Save the project to database
+      if (newImageUrl && generatedTitle && generatedDescription && generatedTags) {
+        try {
+          const saveResponse = await fetch('/api/save-project', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              imageUrl: newImageUrl,
+              selectedStyleId: selectedThumbnailStyle,
+              generatedTitle,
+              generatedDescription,
+              generatedTags,
+            }),
+          });
+
+          if (!saveResponse.ok) {
+            const errorData = await saveResponse.json();
+            console.warn('Failed to save project:', errorData.error);
+            toast.error('Project generated but failed to save. You can still download your thumbnail.');
+          } else {
+            await saveResponse.json();
+            toast.success("Project saved successfully!");
+          }
+        } catch (saveError) {
+          console.error('Error saving project:', saveError);
+          toast.error('Project generated but failed to save. You can still download your thumbnail.');
+        }
+      }
+
       // Complete generation
       setGenerationState(null);
-
-      // Save the project in the background
-      if (newImageUrl) {
-        saveProject(
-          newImageUrl,
-          generatedTitle,
-          generatedDescription,
-          generatedTags.join(',')
-        ).catch(error => {
-            console.error('Background project save failed:', error);
-            toast.error(`Failed to save project in background: ${error.message}`);
-          });
-      }
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       console.error("Error during content generation:", errorMessage);
-      setError(errorMessage);
       
       setGeneratedData({
         thumbnail: getThumbnailStylePath(selectedThumbnailStyle) || '',
@@ -317,55 +318,11 @@ export function StudioView({
         description: videoDescription,
         tags: videoDescription.split(' ').slice(0, 5).map(tag => tag.toLowerCase().replace(/[^a-z0-9]/g, '')),
       });
-      setAiGeneratedImageUrl(null);
+
       setGenerationState(null);
+      toast.error(errorMessage);
     }
-  };
-
-  // New function to save the project to the database
-  const saveProject = async (
-    imageUrl: string, 
-    title: string, 
-    description: string, 
-    tags: string
-  ) => {
-    if (!imageUrl || !selectedThumbnailStyle) return;
-    
-    setIsSaving(true);
-    
-    try {
-      const response = await fetch('/api/save-project', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          imageUrl,
-          selectedStyleId: selectedThumbnailStyle,
-          generatedTitle: title,
-          generatedDescription: description,
-          generatedTags: tags
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save project');
-      }
-
-      const result = await response.json();
-      setIsSaved(true);
-      toast.success('Project saved successfully!');
-      console.log('Project saved:', result);
-      
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      console.error('Error saving project:', errorMessage);
-      toast.error(`Failed to save project: ${errorMessage}`);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  }, [videoDescription, selectedThumbnailStyle, onInsufficientCredits, onCreditsUsed]);
 
   // Handle regeneration of a new image using current settings
   const handleRegenerateImage = async () => {
@@ -382,7 +339,6 @@ export function StudioView({
 
     // Start the generation state for image regeneration
     setGenerationState('generating-thumbnail');
-    setError(null);
     let newImageUrl: string | null = null;
 
     try {
@@ -451,7 +407,6 @@ export function StudioView({
 
       const thumbnailResult = await thumbnailResponse.json();
       newImageUrl = thumbnailResult.imageUrl;
-      setAiGeneratedImageUrl(newImageUrl);
       
       // Refresh credits after successful generation
       if (onCreditsUsed) {
@@ -459,10 +414,12 @@ export function StudioView({
       }
 
       // Update ONLY the thumbnail in the generated data, keep everything else the same
-      const updatedData = {
-        ...generatedData,
-        thumbnail: newImageUrl || generatedData.thumbnail
+      const updatedData = { ...generatedData };
+      const updatePayload = { 
+        imageUrl: newImageUrl,
+        selectedStyleId: selectedThumbnailStyle 
       };
+      updatedData.thumbnail = newImageUrl || updatedData.thumbnail;
       setGeneratedData(updatedData);
       setGenerationState(null);
 
@@ -474,10 +431,7 @@ export function StudioView({
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              imageUrl: newImageUrl,
-              selectedStyleId: selectedThumbnailStyle
-            }),
+            body: JSON.stringify(updatePayload),
           });
 
           if (!response.ok) {
@@ -493,7 +447,6 @@ export function StudioView({
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred during image regeneration';
       console.error("Error during image regeneration:", errorMessage);
-      setError(errorMessage);
       setGenerationState(null); // Make sure to end loading state in case of error too
     }
   };
@@ -528,8 +481,8 @@ export function StudioView({
       const contentResult = await contentResponse.json();
       
       if (contentResult.success) {
-        let updatedData = { ...generatedData };
-        let updatePayload: any = { selectedStyleId: selectedThumbnailStyle };
+        const updatedData = { ...generatedData };
+        const updatePayload: Record<string, unknown> = { selectedStyleId: selectedThumbnailStyle };
 
         // Update only the specific content type that was regenerated
         if (contentType === 'titles' && contentResult.titles && contentResult.titles.length > 0) {
@@ -598,8 +551,10 @@ export function StudioView({
     onVideoDescriptionChange(prompt);
     
     // Store current text overlay data for potential use
-    setCurrentThumbnailText(thumbnailText);
-    setCurrentTextStyle(textStyle);
+    setRealTimeTextOverlayData({
+      thumbnailText,
+      textStyle,
+    });
     
     // Only proceed with submission if a style is selected
     if (selectedThumbnailStyle) {
@@ -608,7 +563,7 @@ export function StudioView({
         handleSubmit(undefined, thumbnailText, textStyle);
       }, 0);
     }
-  }, [selectedThumbnailStyle, onVideoDescriptionChange]);
+  }, [selectedThumbnailStyle, onVideoDescriptionChange, handleSubmit]);
 
   const handleContentPolicyRetry = async () => {
     setIsContentPolicyModalOpen(false);
@@ -623,7 +578,7 @@ export function StudioView({
   };
 
   // Notify parent component when details panel state changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (onDetailsPanelStateChange) {
       onDetailsPanelStateChange(isDetailsPanelOpen);
     }

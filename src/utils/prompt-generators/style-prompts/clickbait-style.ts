@@ -29,7 +29,6 @@ export const generateClickbaitStylePrompt = async (
     const result = await response.json();
     
     if (result.structuredPrompt) {
-      console.log('[Gemini Generated Clickbait Prompt]', result.structuredPrompt);
       return result.structuredPrompt;
     } else {
       console.warn('[Gemini Response Issue - Clickbait] No structured prompt returned, using basic fallback.');
@@ -68,8 +67,9 @@ TECHNICAL SPECIFICATIONS:
 The thumbnail should be instantly intriguing and communicate the curiosity of: "${description}"${aiChatInput ? `. Additional context: ${aiChatInput}` : ''}`;
     }
 
-  } catch (error: any) {
-    console.error('Error calling Gemini for clickbait prompt generation:', error.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error calling Gemini for clickbait prompt generation:', errorMessage);
     return `Error during clickbait prompt generation. Video content: "${description}". ${aiChatInput ? `Additional context: ${aiChatInput}` : ''}`;
   }
 }; 

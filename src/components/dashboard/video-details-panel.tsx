@@ -3,9 +3,8 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import Image from "next/image";
-import { X, Download, Copy, Tag, Eye, RefreshCw, Check, ArrowLeft } from "lucide-react";
+import { X, Download, Copy, Tag, Eye, RefreshCw, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ThumbnailSkeleton, TitleSkeleton, DescriptionSkeleton, TagsSkeleton } from "@/components/ui/skeletons";
 import { GenerationPhase } from "@/types/generation";
@@ -71,14 +70,12 @@ export function VideoDetailsPanel({
   const isGeneratingDescription = isContentRelatedPhase || isInitialThumbnailPhase || isRegeneratingDescription;  
   const isGeneratingTags = isContentRelatedPhase || isInitialThumbnailPhase || isRegeneratingTags;
 
-  const isGenerating = generationPhase !== null;
-
   // Function to download the thumbnail
   const handleDownload = async () => {
     if (!data?.thumbnail) return;
 
     try {
-      let imageUrl = data.thumbnail;
+      const imageUrl = data.thumbnail;
       
       // If it's a data URL, we can use it directly
       if (imageUrl.startsWith('data:image/')) {
@@ -118,7 +115,7 @@ export function VideoDetailsPanel({
       setCopied(true);
       toast.success("Copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch {
       toast.error("Failed to copy text");
     }
   };
@@ -173,22 +170,6 @@ export function VideoDetailsPanel({
         damping: 30,
         duration: 0.5,
       }
-    }
-  };
-
-  const backdropVariants = {
-    closed: { opacity: 0 },
-    open: { opacity: 1 }
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { 
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      } 
     }
   };
 
