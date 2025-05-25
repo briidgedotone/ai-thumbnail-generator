@@ -5,6 +5,7 @@ import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { useState } from "react";
 
 const footerLinksData = [
   { name: "Process", href: "#how-it-works" },
@@ -23,6 +24,53 @@ const FooterLink = ({ href, children }: { href: string; children: React.ReactNod
 );
 
 export function FooterSection() {
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !email.includes("@")) {
+      setMessage("Please enter a valid email address");
+      setIsSuccess(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setMessage(data.message);
+        setIsSuccess(true);
+        setEmail("");
+      } else {
+        setMessage(data.error || "Failed to subscribe. Please try again.");
+        setIsSuccess(false);
+      }
+    } catch (error) {
+      console.error("Newsletter subscription error:", error);
+      setMessage("Failed to subscribe. Please try again.");
+      setIsSuccess(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <footer className="pt-12 pb-8 relative bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] rounded-t-2xl">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
@@ -59,23 +107,33 @@ export function FooterSection() {
           
           {/* Right: Newsletter Input and Button */}
           <div className="flex-shrink-0 w-full sm:w-auto">
-            <div className="flex flex-col sm:flex-row gap-2">
+            <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-2">
               <div className="relative rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_#18181B] bg-white flex-grow sm:flex-grow-0">
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  className="w-full py-2.5 px-3 bg-transparent outline-none text-black text-sm"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full h-[44px] px-3 bg-transparent outline-none text-black text-sm"
+                  required
                 />
                 <div className="absolute inset-y-0 right-2 flex items-center">
                   <Mail className="h-4 w-4 text-gray-400" />
                 </div>
               </div>
               <Button 
-                className="rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white shadow-[3px_3px_0px_0px_#18181B] hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-300 px-5 py-2.5 text-sm"
+                type="submit"
+                disabled={isLoading}
+                className="rounded-lg border-2 border-black bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white shadow-[3px_3px_0px_0px_#18181B] hover:shadow-[5px_5px_0px_0px_#18181B] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-300 px-5 h-[44px] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Subscribe
+                {isLoading ? "Subscribing..." : "Subscribe"}
               </Button>
-            </div>
+            </form>
+            {message && (
+              <p className={`mt-2 text-xs ${isSuccess ? "text-green-100" : "text-red-100"}`}>
+                {message}
+              </p>
+            )}
           </div>
         </div>
         
