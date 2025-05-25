@@ -8,6 +8,11 @@ export const generateBeastStylePrompt = (description: string, themes: ExtractedT
   // If aiChatInput is provided, use it as additional context
   const effectiveDescription = aiChatInput ? `${description}. Additional context: ${aiChatInput}` : description;
   
+  // Strong text prevention instruction at the start
+  const textPreventionInstruction = `CRITICAL: This thumbnail must be COMPLETELY TEXT-FREE. Do not add any text, words, numbers, letters, or written content of any kind. Focus purely on visual elements.
+
+`;
+  
   const beastStylePrompt: PromptSection = {
     composition: [
       "Create PHOTOREALISTIC professional photography composition - not illustration, artwork, or cartoon style",
@@ -75,16 +80,17 @@ export const generateBeastStylePrompt = (description: string, themes: ExtractedT
   
   // Add special comparison guidance if price comparison is detected
   if (themes.hasPriceComparison) {
-    return promptTemplate + `\n\nCOMPARISON LAYOUT GUIDANCE:
+    return textPreventionInstruction + promptTemplate + `\n\nCOMPARISON LAYOUT GUIDANCE:
 - Use a split-screen layout with a clear diagonal or vertical line dividing the thumbnail
-- Make the comparison values prominent text elements in the thumbnail (e.g., "$1" vs "$500,000")
-- Left side: Show the lower value with more muted colors, concerned facial expressions, basic items
-- Right side: Show the higher value with bright colors, excited facial expressions, luxury items
+- Left side: Show the lower value scenario with more muted colors, concerned facial expressions, basic items
+- Right side: Show the higher value scenario with bright colors, excited facial expressions, luxury items
 - Use strong visual contrast - one side should look distinctly different from the other
 - Include visual props that clearly communicate the difference (basic items vs luxury items, old vs new)
 - Facial expressions should match each side - concerned/serious on lower side, happy/amazed on higher side
-- Make the dividing line prominent with contrasting colors or clear graphics`;
+- Make the dividing line prominent with contrasting colors or clear graphics
+- Focus on visual storytelling through objects, environments, and expressions rather than text
+- Use visual cues like quality differences, size differences, or environmental contrasts to show the comparison`;
   }
   
-  return promptTemplate;
+  return textPreventionInstruction + promptTemplate;
 }; 
