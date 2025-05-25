@@ -36,9 +36,9 @@ export function HeroSection() {
           </div>
         </div>
         <div className="mt-24 flex justify-center">
-          <div className="relative w-full max-w-7xl overflow-hidden rounded-2xl border border-2 border-border/40 bg-muted">
+          <div className="relative w-full max-w-7xl overflow-hidden rounded-2xl  border-2 border-border/40 bg-muted">
             <Image
-              src="/placeholder.png"
+              src="/placeholder.jpeg"
               alt="Abstract data visualization with charts and graphs"
               width={1280}
               height={665}

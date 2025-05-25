@@ -6,7 +6,7 @@ import { checkRateLimit, rateLimitConfigs, getRateLimitHeaders } from '@/lib/rat
 // Add CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': process.env.NODE_ENV === 'production' 
-    ? 'https://yourdomain.com' // Replace with your actual domain
+    ? process.env.NEXT_PUBLIC_APP_URL || 'https://localhost:3000'
     : 'http://localhost:3000',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',

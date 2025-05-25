@@ -24,7 +24,7 @@ export async function POST() {
       payment_method_types: ['card'],
       line_items: [
         {
-          price: 'price_1RRvCdEeRLuPHXL1ScLXucgY', // One-time payment price ID for YTZA Pro Plan
+          price: process.env.STRIPE_PRICE_ID_PRO || 'price_1RRvCdEeRLuPHXL1ScLXucgY', // One-time payment price ID for YTZA Pro Plan
           quantity: 1,
         },
       ],

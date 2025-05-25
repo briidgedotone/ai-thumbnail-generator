@@ -50,10 +50,10 @@ export const generateThumbnailPrompt = async (
         prompt += `\n\nVALUE COMPARISON GUIDANCE:
 - This appears to be a thumbnail comparing values, prices, or timeframes
 - Consider using a layout with clear division between the two sides
-- Make the numerical values prominent (like $1 vs $1000, Day 1 vs Day 30)
 - Use stark visual contrast between the sides (dull/bright, poor/luxurious, etc.)
 - Match facial expressions to each side - serious/concerned on the low value side, excited/happy on the high side
-- Add visual cues that enhance the comparison (worn objects vs new shiny objects, etc.)`;
+- Add visual cues that enhance the comparison (worn objects vs new shiny objects, etc.)
+- Focus on visual storytelling through objects, environments, and expressions rather than text`;
       }
       break;
       
@@ -79,15 +79,20 @@ export const generateThumbnailPrompt = async (
   }
 
   // Handle text overlay - either add specific text or explicitly prevent it
-  if (thumbnailText && textStyle) {
+  if (thumbnailText && thumbnailText.trim() !== '' && textStyle && textStyle.trim() !== '') {
     const textOverlayPrompt = generateTextOverlayPrompt(thumbnailText, textStyle);
     prompt += '\n\n' + textOverlayPrompt;
   } else {
     // Explicitly prevent text when not requested
-    prompt += `\n\nIMPORTANT TEXT INSTRUCTION:
-- Do NOT add any text, words, numbers, or written content to this thumbnail
-- Keep the image purely visual without any text overlays
-- Focus on visual storytelling through imagery, expressions, and composition only`;
+    prompt += `\n\nCRITICAL TEXT PREVENTION INSTRUCTIONS:
+- ABSOLUTELY NO TEXT, WORDS, NUMBERS, LETTERS, OR WRITTEN CONTENT OF ANY KIND
+- Do NOT add any text overlays, captions, titles, or labels
+- Do NOT include numerical values, percentages, time indicators, or any written elements
+- Do NOT add brand names, product names, or any textual information
+- Keep the image purely visual without any text overlays whatsoever
+- Focus ONLY on visual storytelling through imagery, expressions, and composition
+- Create a completely text-free thumbnail that relies entirely on visual elements
+- IGNORE any suggestions to add text, numbers, or written content from other parts of the prompt`;
   }
   
   return prompt;

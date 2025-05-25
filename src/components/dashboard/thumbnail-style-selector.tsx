@@ -4,6 +4,7 @@ import React, { useState, useCallback } from 'react';
 import Image from 'next/image'; // Import Next.js Image component
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion'; // Added motion and AnimatePresence
+import { BeastStyleInfoPopup } from './beast-style-info-popup';
 
 interface ThumbnailStyleSelectorProps {
   selectedStyle: string | null;
@@ -129,6 +130,7 @@ export function ThumbnailStyleSelector({ selectedStyle, onSelectStyle }: Thumbna
   const [hoveredItemName, setHoveredItemName] = useState('');
   const [hoveredItemEmoji, setHoveredItemEmoji] = useState('');
   const [selectedItemAnimating, setSelectedItemAnimating] = useState<string | null>(null);
+  const [showBeastStyleInfo, setShowBeastStyleInfo] = useState(false);
   
   // Ref for the main container to calculate relative mouse positions if needed
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -144,6 +146,11 @@ export function ThumbnailStyleSelector({ selectedStyle, onSelectStyle }: Thumbna
     if (styleId === selectedStyle) return; // Don't reselect the same style
     setSelectedItemAnimating(styleId);
     onSelectStyle(styleId);
+    
+    // Show Beast Style info popup when Beast Style is selected
+    if (styleId === 'beast-style') {
+      setShowBeastStyleInfo(true);
+    }
     
     // Clear the animation flag after animation completes
     setTimeout(() => {
@@ -176,57 +183,69 @@ export function ThumbnailStyleSelector({ selectedStyle, onSelectStyle }: Thumbna
     });
   }, []);
 
+  const handleCloseBeastStyleInfo = () => {
+    setShowBeastStyleInfo(false);
+  };
+
   return (
-    <div className="mb-4 w-full relative" ref={containerRef}> {/* Added relative positioning and ref */}
-      <div className="mb-3"> {/* Adjusted margin bottom for the new heading structure */}
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">Choose a Thumbnail Style</h2>
-        <p className="text-gray-500 text-sm">Select a style that best fits your video&apos;s content and audience.</p>
-      </div>
-      <div className="grid grid-cols-4 gap-3">
-        {thumbnailStyles.map((styleItem) => (
-          <motion.div
-            key={styleItem.id}
-            animate={
-              selectedItemAnimating === styleItem.id 
-              ? { 
-                  scale: [1, 1.08, 1.03],
-                  transition: { duration: 0.4, times: [0, 0.6, 1] }
-                }
-              : {}
-            }
-          >
-            <StyleItem
-              itemRef={itemRefs[styleItem.id]} // Pass the ref to the StyleItem
-              styleInfo={styleItem}
-              isSelected={selectedStyle === styleItem.id}
-              onSelect={handleStyleSelect}
-              onMouseEnterItem={handleMouseEnterItem}
-              onMouseLeaveItem={handleMouseLeaveItem}
-              onMouseMoveItem={handleMouseMoveItem}
-            />
-          </motion.div>
-        ))}
+    <>
+      <div className="mb-4 w-full relative" ref={containerRef}> {/* Added relative positioning and ref */}
+        <div className="mb-3"> {/* Adjusted margin bottom for the new heading structure */}
+          <h2 className="text-2xl font-bold text-gray-900 mb-1">Choose a Thumbnail Style</h2>
+          <p className="text-gray-500 text-sm">Select a style that best fits your video&apos;s content and audience.</p>
+        </div>
+        <div className="grid grid-cols-4 gap-3">
+          {thumbnailStyles.map((styleItem) => (
+            <motion.div
+              key={styleItem.id}
+              animate={
+                selectedItemAnimating === styleItem.id 
+                ? { 
+                    scale: [1, 1.08, 1.03],
+                    transition: { duration: 0.4, times: [0, 0.6, 1] }
+                  }
+                : {}
+              }
+            >
+              <StyleItem
+                itemRef={itemRefs[styleItem.id]} // Pass the ref to the StyleItem
+                styleInfo={styleItem}
+                isSelected={selectedStyle === styleItem.id}
+                onSelect={handleStyleSelect}
+                onMouseEnterItem={handleMouseEnterItem}
+                onMouseLeaveItem={handleMouseLeaveItem}
+                onMouseMoveItem={handleMouseMoveItem}
+              />
+            </motion.div>
+          ))}
+        </div>
+
+        <AnimatePresence>
+          {hoveredItemId && (
+            <motion.div
+              className="absolute px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-xl text-gray-800 text-sm whitespace-nowrap pointer-events-none z-30" // Changed to rounded-full, text-sm. Adjusted padding slightly.
+              style={{
+                left: cursorPos.x,
+                top: cursorPos.y,
+                translateX: '-50%',
+                translateY: '-40px', 
+              }}
+              initial={{ opacity: 0, scale: 0.8, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: -10 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              {hoveredItemEmoji} {hoveredItemName} 
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      <AnimatePresence>
-        {hoveredItemId && (
-          <motion.div
-            className="absolute px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-xl text-gray-800 text-sm whitespace-nowrap pointer-events-none z-30" // Changed to rounded-full, text-sm. Adjusted padding slightly.
-            style={{
-              left: cursorPos.x,
-              top: cursorPos.y,
-              translateX: '-50%',
-              translateY: '-40px', 
-            }}
-            initial={{ opacity: 0, scale: 0.8, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: -10 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-          >
-            {hoveredItemEmoji} {hoveredItemName} 
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+      {/* Beast Style Info Popup */}
+      <BeastStyleInfoPopup 
+        isOpen={showBeastStyleInfo}
+        onClose={handleCloseBeastStyleInfo}
+      />
+    </>
   );
 } 
