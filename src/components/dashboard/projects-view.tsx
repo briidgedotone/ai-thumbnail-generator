@@ -81,7 +81,26 @@ export function ProjectsView({ onCreateNew, onProjectClick }: ProjectsViewProps)
             thumbnailUrl: dbProject.thumbnail_storage_path || "/placeholder-thumbnail.png",
             selected_style_id: dbProject.selected_style_id || undefined,
             description: dbProject.generated_yt_description || "No description available.",
-            tags: dbProject.generated_yt_tags ? dbProject.generated_yt_tags.split(',').map(tag => tag.trim()).filter(tag => tag) : []
+            tags: dbProject.generated_yt_tags ? (() => {
+              try {
+                // First, try to parse as JSON array
+                if (typeof dbProject.generated_yt_tags === 'string' && dbProject.generated_yt_tags.startsWith('[')) {
+                  const parsed = JSON.parse(dbProject.generated_yt_tags);
+                  return Array.isArray(parsed) ? parsed.filter(tag => tag && tag.trim()) : [];
+                }
+                // If not JSON, treat as comma-separated string
+                return dbProject.generated_yt_tags
+                  .split(',')
+                  .map(tag => tag.trim().replace(/^["'\[]|["'\]]$/g, '')) // Remove quotes and brackets
+                  .filter(tag => tag);
+              } catch (error) {
+                // Fallback: treat as comma-separated string and clean up
+                return dbProject.generated_yt_tags
+                  .split(',')
+                  .map(tag => tag.trim().replace(/^["'\[]|["'\]]$/g, '')) // Remove quotes and brackets
+                  .filter(tag => tag);
+              }
+            })() : []
           }));
           setProjects(mappedProjects);
         } else {
