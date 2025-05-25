@@ -40,11 +40,15 @@ export async function POST(request: Request) {
 
     if (updateError) {
       console.error('Error updating user subscription tier:', updateError);
-      return NextResponse.json({ error: 'Failed to save plan selection' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to update subscription tier' }, { status: 500 });
     }
 
-    console.log(`User ${user.email} selected plan: ${planName} with ${credits} credits - stored in user_credits`);
-    return NextResponse.json({ success: true, planName, credits });
+    return NextResponse.json({ 
+      success: true, 
+      message: `Plan selected: ${planName}`,
+      tier: planName.toLowerCase(),
+      credits: credits
+    });
 
   } catch (error) {
     console.error('Error in select-plan API:', error);

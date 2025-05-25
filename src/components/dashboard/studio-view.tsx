@@ -296,9 +296,8 @@ export function StudioView({
             console.warn('Failed to save project:', errorData.error);
             toast.error('Project generated but failed to save. You can still download your thumbnail.');
           } else {
-            const saveResult = await saveResponse.json();
-            console.log('Project saved successfully:', saveResult.projectId);
-            toast.success('Project saved successfully!');
+            await saveResponse.json();
+            toast.success("Project saved successfully!");
           }
         } catch (saveError) {
           console.error('Error saving project:', saveError);

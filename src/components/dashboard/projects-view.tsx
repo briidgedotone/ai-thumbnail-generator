@@ -106,8 +106,6 @@ export function ProjectsView({ onCreateNew, onProjectClick }: ProjectsViewProps)
   const handleCreateNew = () => {
     if (onCreateNew) {
       onCreateNew();
-    } else {
-      console.log("Create new project");
     }
   };
 

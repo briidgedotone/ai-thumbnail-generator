@@ -70,10 +70,8 @@ export default function DashboardPage() {
     setIsProfileDropdownOpen(prev => !prev);
   };
 
-  const handleOpenSettings = () => {
+  const handleOpenSettingsModal = () => {
     setIsSettingsModalOpen(true);
-    setIsProfileDropdownOpen(false); // Close dropdown when opening modal
-    // console.log("Open settings modal clicked"); // Already logs when button is clicked
   };
 
   const handleCloseSettings = () => {
@@ -414,7 +412,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="h-px bg-gray-200/70 my-1"></div>
                   <button
-                    onClick={handleOpenSettings}
+                    onClick={handleOpenSettingsModal}
                     className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100/70 hover:text-gray-900 transition-colors duration-150"
                   >
                     <SettingsIcon size={16} className="mr-2.5 text-gray-500" />

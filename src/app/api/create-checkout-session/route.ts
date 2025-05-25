@@ -39,9 +39,7 @@ export async function POST() {
       },
     });
 
-    console.log(`Created one-time checkout session for user ${user.email}: ${session.id}`);
-
-    return NextResponse.json({ sessionId: session.id, url: session.url });
+    return NextResponse.json({ sessionId: session.id });
   } catch (error) {
     console.error('Error creating checkout session:', error);
     return NextResponse.json(
