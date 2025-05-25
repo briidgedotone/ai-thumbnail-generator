@@ -44,8 +44,6 @@ function sanitizePrompt(prompt: string): string {
 }
 
 export async function POST(request: Request) {
-  let originalBalance: number | null = null; // Declare in broader scope for refund logic
-  
   try {
     const { prompt } = await request.json();
 
@@ -108,7 +106,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check user credits and deduct with race condition protection
+    // Check user credits
     const { data: creditsData, error: creditsError } = await supabase
       .from('user_credits')
       .select('balance')
@@ -124,21 +122,18 @@ export async function POST(request: Request) {
     }
 
     // Store original balance for potential refund
-    originalBalance = creditsData.balance;
+    const originalBalance = creditsData.balance;
 
-    // Deduct 1 credit with optimistic locking check
-    const { data: updateData, error: updateError } = await supabase
+    // Deduct 1 credit
+    const { error: updateError } = await supabase
       .from('user_credits')
       .update({ balance: creditsData.balance - 1 })
-      .eq('user_id', user.id)
-      .eq('balance', creditsData.balance) // Only update if balance hasn't changed
-      .select('balance')
-      .single();
+      .eq('user_id', user.id);
 
-    if (updateError || !updateData) {
-      console.error('Error updating credits or balance changed:', updateError);
-      return NextResponse.json({ error: 'Credit deduction failed, please try again' }, { 
-        status: 409, // Conflict status for race condition
+    if (updateError) {
+      console.error('Error updating credits:', updateError);
+      return NextResponse.json({ error: 'Failed to update credits' }, { 
+        status: 500,
         headers: { ...corsHeaders, ...rateLimitHeaders }
       });
     }
@@ -250,12 +245,20 @@ export async function POST(request: Request) {
       const supabase = createRouteHandlerClient({ cookies });
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (user && originalBalance !== null) {
-        // Refund using original balance to avoid race conditions
-        await supabase
+      if (user) {
+        // Get current balance and refund if it was deducted
+        const { data: creditsData } = await supabase
           .from('user_credits')
-          .update({ balance: originalBalance })
-          .eq('user_id', user.id);
+          .select('balance')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (creditsData) {
+          await supabase
+            .from('user_credits')
+            .update({ balance: creditsData.balance + 1 })
+            .eq('user_id', user.id);
+        }
       }
     } catch (refundError) {
       console.error('Failed to refund credit on error:', refundError);

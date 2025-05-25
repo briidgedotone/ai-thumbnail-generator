@@ -162,25 +162,6 @@ export function StudioView({
           return;
         }
         
-        // Handle race condition (409 status)
-        if (thumbnailResponse.status === 409) {
-          // Retry once for race conditions
-          toast.info("Retrying generation...", {
-            description: "Multiple requests detected, retrying automatically."
-          });
-          
-          // Refresh credits and retry after a short delay
-          if (onCreditsUsed) {
-            onCreditsUsed();
-          }
-          
-          setTimeout(() => {
-            handleSubmit(e, thumbnailText, textStyle);
-          }, 1000);
-          
-          return;
-        }
-        
         // Handle other API errors with user-friendly messages
         let userFriendlyMessage = '';
         if (errorData.error === 'OPENAI_API_ERROR') {
@@ -395,25 +376,6 @@ export function StudioView({
           if (onCreditsUsed && errorData.creditRefunded) {
             onCreditsUsed();
           }
-          
-          return;
-        }
-        
-        // Handle race condition (409 status)
-        if (thumbnailResponse.status === 409) {
-          // Retry once for race conditions
-          toast.info("Retrying regeneration...", {
-            description: "Multiple requests detected, retrying automatically."
-          });
-          
-          // Refresh credits and retry after a short delay
-          if (onCreditsUsed) {
-            onCreditsUsed();
-          }
-          
-          setTimeout(() => {
-            handleRegenerateImage();
-          }, 1000);
           
           return;
         }
