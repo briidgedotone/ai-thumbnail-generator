@@ -7,8 +7,34 @@ export async function middleware(req: NextRequest) {
   const supabase = createMiddlewareClient({ req, res })
 
   const { data: { session } } = await supabase.auth.getSession()
-
   const { pathname } = req.nextUrl
+
+  // Security: Check request size for API routes (prevent large payload attacks)
+  if (pathname.startsWith('/api/')) {
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) { // 10MB limit
+      return NextResponse.json(
+        { error: 'Request payload too large' },
+        { status: 413 }
+      );
+    }
+
+    // Security: Validate Content-Type for POST requests
+    if (req.method === 'POST') {
+      const contentType = req.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        return NextResponse.json(
+          { error: 'Invalid content type. Expected application/json' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Security: Add basic security headers to API responses
+    res.headers.set('X-Content-Type-Options', 'nosniff');
+    res.headers.set('X-Frame-Options', 'DENY');
+    res.headers.set('X-XSS-Protection', '1; mode=block');
+  }
 
   // If user is not authenticated and trying to access dashboard, select-plan or their sub-routes
   if (!session && (pathname.startsWith('/dashboard') || pathname.startsWith('/select-plan'))) {

@@ -274,6 +274,38 @@ export function StudioView({
       // Phase 3: Finalizing
       setGenerationState('finalizing');
 
+      // Save the project to database
+      if (newImageUrl && generatedTitle && generatedDescription && generatedTags) {
+        try {
+          const saveResponse = await fetch('/api/save-project', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              imageUrl: newImageUrl,
+              selectedStyleId: selectedThumbnailStyle,
+              generatedTitle,
+              generatedDescription,
+              generatedTags,
+            }),
+          });
+
+          if (!saveResponse.ok) {
+            const errorData = await saveResponse.json();
+            console.warn('Failed to save project:', errorData.error);
+            toast.error('Project generated but failed to save. You can still download your thumbnail.');
+          } else {
+            const saveResult = await saveResponse.json();
+            console.log('Project saved successfully:', saveResult.projectId);
+            toast.success('Project saved successfully!');
+          }
+        } catch (saveError) {
+          console.error('Error saving project:', saveError);
+          toast.error('Project generated but failed to save. You can still download your thumbnail.');
+        }
+      }
+
       // Complete generation
       setGenerationState(null);
 
