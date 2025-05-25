@@ -39,7 +39,8 @@ export async function POST() {
       },
     });
 
-    return NextResponse.json({ sessionId: session.id });
+    // Return the URL instead of sessionId
+    return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error('Error creating checkout session:', error);
     return NextResponse.json(
