@@ -40,6 +40,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Payment not completed' }, { status: 400 });
     }
 
+    // Check if this session has already been processed
+    const { data: existingPurchase, error: purchaseCheckError } = await supabase
+      .from('user_purchases')
+      .select('id')
+      .eq('stripe_session_id', sessionId)
+      .single();
+
+    if (existingPurchase) {
+      console.log(`Payment session ${sessionId} already processed`);
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Payment already processed',
+        alreadyProcessed: true
+      });
+    }
+
+    // Ignore error if no existing purchase found (expected case)
+    if (purchaseCheckError && purchaseCheckError.code !== 'PGRST116') {
+      console.error('Error checking existing purchases:', purchaseCheckError);
+      return NextResponse.json({ error: 'Failed to verify payment status' }, { status: 500 });
+    }
+
     // Check user's current tier to determine action
     const { data: currentCreditsData, error: creditsCheckError } = await supabase
       .from('user_credits')
@@ -56,8 +78,8 @@ export async function POST(request: Request) {
         newBalance = (currentCreditsData.balance || 0) + 50;
         actionMessage = 'added 50 credits to Pro account';
       } else {
-        // User is Free, upgrade to Pro with 50 credits
-        newBalance = 50;
+        // User is Free, upgrade to Pro and add 50 credits to existing balance
+        newBalance = (currentCreditsData.balance || 0) + 50;
         actionMessage = 'upgraded to Pro plan with 50 credits';
       }
     }
@@ -87,13 +109,13 @@ export async function POST(request: Request) {
 
     // Record purchase history
     const { error: purchaseError } = await supabase
-      .from('purchase_history')
+      .from('user_purchases')
       .insert({
         user_id: user.id,
         stripe_session_id: sessionId,
-        amount: session.amount_total || 0,
-        currency: session.currency || 'usd',
-        status: 'completed',
+        amount_cents: session.amount_total || 0,
+        credits_added: 50,
+        purchase_type: currentCreditsData?.subscription_tier === 'pro' ? 'credits' : 'upgrade',
         receipt_url: receiptUrl,
         created_at: new Date().toISOString()
       });
