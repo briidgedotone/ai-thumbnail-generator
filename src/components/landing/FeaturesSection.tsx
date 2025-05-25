@@ -61,7 +61,7 @@ export function FeaturesSection() {
           </Card>
 
           {/* Card 3: For Founders - Full Width, 60%ish height concept */}
-          <Card className="md:col-span-2 bg-white p-8 rounded-xl border-2 border-black flex flex-col shadow-none h-[617px]">
+          <Card className="md:col-span-2 bg-white p-8 rounded-xl border-2 border-black flex flex-col shadow-none">
             <div className="mb-6">
               <span className="inline-block text-white text-xs font-semibold px-3 py-1 rounded-md bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] shadow-[3px_3px_0px_0px_#18181B] border-2 border-black">
                 FOR FOUNDERS
@@ -69,11 +69,11 @@ export function FeaturesSection() {
             </div>
             <div className="flex flex-col md:flex-row gap-8 flex-grow">
               {/* Text content on the left */}
-              <div className="md:w-1/2 flex flex-col">
+              <div className="md:w-1/2 flex flex-col justify-center">
                 <h3 className="text-3xl md:text-4xl font-semibold text-black mb-4 leading-tight">
                   Scale Your Content Empire
                 </h3>
-                <p className="text-gray-700 text-base leading-relaxed mb-auto">
+                <p className="text-gray-700 text-base leading-relaxed">
                   Manage high-volume thumbnail needs effortlessly, saving time and ensuring quality across your portfolio or agency.
                 </p>
               </div>
@@ -81,9 +81,9 @@ export function FeaturesSection() {
               <div className="md:w-1/2 flex-grow rounded-lg overflow-hidden min-h-[200px] md:min-h-full">
                 <Image
                   src="/founders.jpeg"
-                  alt="Oven with YouTube video thumbnails being baked at 350 degrees, representing the content creation process"
+                  alt="Performance analytics showing +40% retention, +3.2% CTR, +500 videos, +98K views, and +22 mins watch time"
                   width={600}
-                  height={400}
+                  height={450}
                   className="w-full h-full object-cover rounded-lg"
                   priority
                 />
