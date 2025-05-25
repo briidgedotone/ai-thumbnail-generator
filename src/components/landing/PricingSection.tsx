@@ -145,19 +145,31 @@ export function PricingSection({ tiers }: PricingSectionProps) {
 
                 <Button
                   className={cn(
-                    "w-full h-12 text-lg relative mt-auto",
+                    "w-full h-12 text-lg relative mt-auto cursor-pointer group",
                     "border-2 border-black",
                     "transition-all duration-300",
                     "shadow-[4px_4px_0px_0px_#18181B]",
                     "hover:shadow-[6px_6px_0px_0px_#18181B]",
                     "hover:translate-x-[-2px] hover:translate-y-[-2px]",
-                    "bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white",
-                    "hover:bg-gradient-to-br hover:from-[#FF5C8D] hover:via-[#FF0000] hover:to-[#FFA600]"
+                    tier.popular 
+                      ? "bg-gradient-to-br from-[#FF5C8D] via-[#FF0000] to-[#FFA600] text-white hover:bg-gradient-to-br hover:from-[#FF5C8D] hover:via-[#FF0000] hover:to-[#FFA600]"
+                      : tier.name === "Studio"
+                        ? "bg-white text-black hover:bg-gray-300 hover:text-gray-600"
+                        : "bg-white text-black hover:bg-gray-50"
                   )}
-                  onClick={tier.onClick}
-                  {...(tier.onClick ? {} : { asChild: true })}
+                  onClick={tier.name === "Studio" ? () => {} : tier.onClick}
+                  {...(tier.onClick && tier.name !== "Studio" ? {} : tier.name !== "Studio" ? { asChild: true } : {})}
                 >
-                  {tier.onClick ? tier.ctaText : <Link href={tier.ctaLink}>{tier.ctaText}</Link>}
+                  {tier.name === "Studio" ? (
+                    <>
+                      <span className="group-hover:hidden">{tier.ctaText}</span>
+                      <span className="hidden group-hover:inline">Coming soon!</span>
+                    </>
+                  ) : tier.onClick ? (
+                    tier.ctaText
+                  ) : (
+                    <Link href={tier.ctaLink}>{tier.ctaText}</Link>
+                  )}
                 </Button>
               </div>
             </motion.div>

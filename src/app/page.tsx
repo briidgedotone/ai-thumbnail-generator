@@ -113,14 +113,14 @@ export default function Home() {
       price: 0,
       description: "Perfect for individual creators.",
       features: [
-        "3 credits per month.",
-        "1 iteration per thumbnail",
-        "YouTube-ready resolution (1280x720px).",
-        "Standard email support."
+        "3 credits",
+        "Thumbnail, video title, description, tags generation",
+        "YouTube-ready resolution (1280x720px)",
+        "Standard email support"
       ],
       popular: false,
       color: "blue",
-      ctaText: "Get Started Free",
+      ctaText: "Continue for Free",
       ctaLink: "/auth"
     },
     {
@@ -130,15 +130,13 @@ export default function Home() {
       description: "One-time purchase for growing creators.",
       features: [
         "50 credits included",
-        "5 iterations per thumbnail",
-        "Upload images for inspiration",
         "YouTube-ready resolution (1280x720px)",
         "Priority email support",
         "Lifetime Pro access"
       ],
       popular: true,
       color: "purple",
-      ctaText: "Buy Pro Once",
+      ctaText: "Buy Pro",
       ctaLink: "/auth"
     },
     {
@@ -147,11 +145,11 @@ export default function Home() {
       price: -1, // Sentinel for Custom Pricing
       description: "Built for agencies, multi-channel creators, or businesses.",
       features: [
-        "Everything in Pro.",
-        "Bulk thumbnail generation for multiple videos.",
-        "White-label options for client branding.",
-        "Multi-channel management dashboard.",
-        "Dedicated account manager and priority support."
+        "Everything in Pro",
+        "Bulk thumbnail generation for multiple videos",
+        "White-label options for client branding",
+        "Multi-channel management dashboard",
+        "Dedicated account manager and priority support"
       ],
       popular: false,
       color: "green",
