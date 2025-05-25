@@ -11,7 +11,6 @@ import { StudioView } from "@/components/dashboard/studio-view"; // Import the n
 import { motion, AnimatePresence } from "framer-motion"; // Ensure framer-motion is imported
 import { SettingsModal } from "@/components/dashboard/settings-modal"; // Import the new SettingsModal component
 import Image from "next/image"; // Import Next.js Image component
-import Link from "next/link"; // Import Next.js Link component
 import { createSupabaseClient } from "@/lib/supabase/client"; // Import Supabase client
 import { useRouter } from "next/navigation"; // Import useRouter for redirects
 import { ProjectInfoPanel } from "@/components/dashboard/ProjectInfoPanel"; // Import the new panel

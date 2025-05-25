@@ -1,15 +1,7 @@
 "use client"
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { AlertTriangle, Lightbulb, RefreshCw } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertTriangle, Lightbulb } from "lucide-react";
 
 interface ContentPolicyModalProps {
   isOpen: boolean;
@@ -22,19 +14,10 @@ interface ContentPolicyModalProps {
 export function ContentPolicyModal({
   isOpen,
   onClose,
-  onRetry,
+  onRetry: _onRetry,
   suggestions = [],
   creditRefunded = false
 }: ContentPolicyModalProps) {
-  const [isRetrying, setIsRetrying] = useState(false);
-
-  const handleRetry = async () => {
-    setIsRetrying(true);
-    await onRetry();
-    setIsRetrying(false);
-    onClose();
-  };
-
   const defaultSuggestions = [
     'Remove references to specific copyrighted characters (e.g., Spider-Man, Marvel characters)',
     'Avoid violent or shocking language',

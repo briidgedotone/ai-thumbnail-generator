@@ -86,7 +86,7 @@ export function BeastStyleInfoPopup({ isOpen, onClose }: BeastStyleInfoPopupProp
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <p className="text-sm text-gray-700 font-medium mb-1">Example prompt:</p>
                       <p className="text-sm text-gray-600 italic">
-                        "in a submarine surrounded with orcas"
+                        &ldquo;in a submarine surrounded with orcas&rdquo;
                       </p>
                     </div>
                   </div>
@@ -95,7 +95,7 @@ export function BeastStyleInfoPopup({ isOpen, onClose }: BeastStyleInfoPopupProp
                   <div className="space-y-3">
                     <div className="text-center">
                       <h4 className="font-semibold text-gray-900 mb-1">Without Person</h4>
-                      <p className="text-sm text-gray-600">Add "(NO PERSON)" to prompt</p>
+                      <p className="text-sm text-gray-600">Add &ldquo;(NO PERSON)&rdquo; to prompt</p>
                     </div>
                     <div className="relative aspect-video rounded-xl overflow-hidden shadow-lg">
                       <Image
@@ -108,7 +108,7 @@ export function BeastStyleInfoPopup({ isOpen, onClose }: BeastStyleInfoPopupProp
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <p className="text-sm text-gray-700 font-medium mb-1">Example prompt:</p>
                       <p className="text-sm text-gray-600 italic">
-                        "in a submarine surrounded with orcas <span className="font-mono bg-yellow-100 px-1 rounded">(NO PERSON)</span>"
+                        &ldquo;in a submarine surrounded with orcas <span className="font-mono bg-yellow-100 px-1 rounded">(NO PERSON)</span>&rdquo;
                       </p>
                     </div>
                   </div>
@@ -118,7 +118,7 @@ export function BeastStyleInfoPopup({ isOpen, onClose }: BeastStyleInfoPopupProp
                 <div className="mt-6 p-4 bg-green-50 rounded-xl border border-green-200">
                   <h4 className="text-green-900 font-semibold mb-2">💡 Pro Tips</h4>
                   <ul className="text-green-800 text-sm space-y-1">
-                    <li>• Use "(NO PERSON)" when you want to focus on objects, landscapes, or concepts</li>
+                    <li>• Use &ldquo;(NO PERSON)&rdquo; when you want to focus on objects, landscapes, or concepts</li>
                     <li>• Regular prompts work best for reaction-based or personality-driven content</li>
                     <li>• Both styles maintain the high-impact, bright, and energetic Beast aesthetic</li>
                   </ul>
