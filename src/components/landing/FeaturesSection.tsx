@@ -1,6 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
+import Image from "next/image";
 // Removed CardContent and CardHeader imports as they are not explicitly used in the new structure
 // import { cn } from "@/lib/utils"; // cn is not used
 
@@ -22,8 +23,15 @@ export function FeaturesSection() {
             <p className="text-gray-700 mb-8 text-base leading-relaxed">
               Craft professional thumbnails in seconds to boost your views and build a loyal audience. Focus on creating content while our AI handles the visuals.
             </p>
-            <div className="flex-grow bg-gray-200/50 border border-gray-300 rounded-lg p-6 flex items-center justify-center min-h-[300px]">
-              <p className="text-gray-500">Thumbnail Customization UI Placeholder</p>
+            <div className="flex-grow rounded-lg overflow-hidden min-h-[300px]">
+              <Image
+                src="/creators.jpeg"
+                alt="Creator using AI to craft professional thumbnails with performance metrics showing +40%, +30%, and +25% improvements"
+                width={600}
+                height={400}
+                className="w-full h-full object-cover rounded-lg"
+                priority
+              />
             </div>
           </Card>
 
@@ -40,8 +48,15 @@ export function FeaturesSection() {
             <p className="text-gray-700 mb-8 text-base leading-relaxed">
               Our AI creates data-driven thumbnails that fit your marketing strategy, helping you engage audiences and hit campaign goals.
             </p>
-            <div className="flex-grow bg-gray-200/50 border border-gray-300 rounded-lg p-6 flex items-center justify-center min-h-[300px]">
-              <p className="text-gray-500">Marketing Campaign UI Placeholder</p>
+            <div className="flex-grow rounded-lg overflow-hidden min-h-[300px]">
+              <Image
+                src="/marketers.jpeg"
+                alt="Marketing performance analytics showing +40% retention, +3.2% CTR, +500 videos, +98K views, and +22 mins watch time"
+                width={600}
+                height={400}
+                className="w-full h-full object-cover rounded-lg"
+                priority
+              />
             </div>
           </Card>
 
@@ -62,9 +77,16 @@ export function FeaturesSection() {
                   Manage high-volume thumbnail needs effortlessly, saving time and ensuring quality across your portfolio or agency.
                 </p>
               </div>
-              {/* Image placeholder on the right */}
-              <div className="md:w-1/2 flex-grow bg-gray-200/50 border border-gray-300 rounded-lg p-6 flex items-center justify-center min-h-[200px] md:min-h-full">
-                <p className="text-gray-500">Founder Dashboard/Analytics UI Placeholder</p>
+              {/* Image on the right */}
+              <div className="md:w-1/2 flex-grow rounded-lg overflow-hidden min-h-[200px] md:min-h-full">
+                <Image
+                  src="/founders.jpeg"
+                  alt="Oven with YouTube video thumbnails being baked at 350 degrees, representing the content creation process"
+                  width={600}
+                  height={400}
+                  className="w-full h-full object-cover rounded-lg"
+                  priority
+                />
               </div>
             </div>
           </Card>
