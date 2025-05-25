@@ -50,18 +50,18 @@ export async function POST(request: Request) {
     console.log('Updating project ID:', existingProjects[0].id);
 
     // Build the update object with only the provided fields
-    const updateData: any = {
+    const updatePayload: Record<string, unknown> = {
       updated_at: new Date().toISOString()
     };
 
-    if (generatedTitle) updateData.generated_yt_title = generatedTitle;
-    if (generatedDescription) updateData.generated_yt_description = generatedDescription;
-    if (generatedTags) updateData.generated_yt_tags = generatedTags;
+    if (generatedTitle) updatePayload.generated_yt_title = generatedTitle;
+    if (generatedDescription) updatePayload.generated_yt_description = generatedDescription;
+    if (generatedTags) updatePayload.generated_yt_tags = generatedTags;
 
     // Update only the content fields in the most recent project for this user and style
     const { data, error } = await supabase
       .from('projects')
-      .update(updateData)
+      .update(updatePayload)
       .eq('user_id', user.id)
       .eq('selected_style_id', selectedStyleId)
       .order('created_at', { ascending: false })

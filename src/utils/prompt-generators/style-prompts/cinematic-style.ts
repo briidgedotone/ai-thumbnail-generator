@@ -29,15 +29,15 @@ export const generateCinematicStylePrompt = async (
     const result = await response.json();
     
     if (result.structuredPrompt) {
-      console.log('[Gemini Generated Cinematic Prompt]', result.structuredPrompt);
       return result.structuredPrompt;
     } else {
       console.warn('[Gemini Response Issue - Cinematic] No structured prompt returned, using basic fallback.');
       return `Cinematic style thumbnail for: "${description}". ${aiChatInput ? `Additional context: ${aiChatInput}` : ''}`;
     }
 
-  } catch (error: any) {
-    console.error('Error calling Gemini for cinematic prompt generation:', error.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error calling Gemini for cinematic prompt generation:', errorMessage);
     return `Error during cinematic prompt generation. Video content: "${description}". ${aiChatInput ? `Additional context: ${aiChatInput}` : ''}`;
   }
 }; 

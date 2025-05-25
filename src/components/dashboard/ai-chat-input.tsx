@@ -1,8 +1,7 @@
 "use client" 
 
-import * as React from "react"
-import { useState, useEffect, useRef } from "react";
-import { Paperclip, Send, Type as TypeIcon, ChevronDown } from "lucide-react";
+import React, { useState, useRef, useEffect } from 'react';
+import { Paperclip, Type as TypeIcon, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 interface AIChatInputProps {

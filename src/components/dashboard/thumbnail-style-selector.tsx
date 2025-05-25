@@ -21,9 +21,9 @@ interface StyleItemProps {
   styleInfo: { id: string; name: string; emoji: string; imagePath: string };
   isSelected: boolean;
   onSelect: (styleId: string) => void;
-  onMouseEnterItem: (styleId: string, rect: DOMRect) => void;
+  onMouseEnterItem: (styleId: string) => void;
   onMouseLeaveItem: () => void;
-  onMouseMoveItem: (e: React.MouseEvent<HTMLDivElement>, itemRect: DOMRect) => void;
+  onMouseMoveItem: (e: React.MouseEvent<HTMLDivElement>) => void;
   itemRef: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -38,13 +38,13 @@ const StyleItem: React.FC<StyleItemProps> = React.memo(({
 }) => {
   const handleMouseEnter = () => {
     if (itemRef.current) {
-      onMouseEnterItem(styleInfo.id, itemRef.current.getBoundingClientRect());
+      onMouseEnterItem(styleInfo.id);
     }
   };
   
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (itemRef.current) {
-        onMouseMoveItem(e, itemRef.current.getBoundingClientRect());
+        onMouseMoveItem(e);
     }
   };
 
@@ -151,7 +151,7 @@ export function ThumbnailStyleSelector({ selectedStyle, onSelectStyle }: Thumbna
     }, 800);
   };
 
-  const handleMouseEnterItem = useCallback((styleId: string, itemRect: DOMRect) => {
+  const handleMouseEnterItem = useCallback((styleId: string) => {
     setHoveredItemId(styleId);
     const style = thumbnailStyles.find(s => s.id === styleId);
     if (style) {
@@ -164,7 +164,7 @@ export function ThumbnailStyleSelector({ selectedStyle, onSelectStyle }: Thumbna
     setHoveredItemId(null);
   }, []);
 
-  const handleMouseMoveItem = useCallback((e: React.MouseEvent<HTMLDivElement>, itemRect: DOMRect) => {
+  const handleMouseMoveItem = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
     const containerRect = containerRef.current.getBoundingClientRect();
     // Calculate position relative to the containerRef for the tooltip
@@ -180,7 +180,7 @@ export function ThumbnailStyleSelector({ selectedStyle, onSelectStyle }: Thumbna
     <div className="mb-4 w-full relative" ref={containerRef}> {/* Added relative positioning and ref */}
       <div className="mb-3"> {/* Adjusted margin bottom for the new heading structure */}
         <h2 className="text-2xl font-bold text-gray-900 mb-1">Choose a Thumbnail Style</h2>
-        <p className="text-gray-500 text-sm">Select a style that best fits your video's content and audience.</p>
+        <p className="text-gray-500 text-sm">Select a style that best fits your video&apos;s content and audience.</p>
       </div>
       <div className="grid grid-cols-4 gap-3">
         {thumbnailStyles.map((styleItem) => (

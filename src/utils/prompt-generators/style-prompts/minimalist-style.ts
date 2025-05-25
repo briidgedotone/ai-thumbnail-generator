@@ -26,15 +26,15 @@ export const generateMinimalistStylePrompt = async (description: string, aiChatI
     const result = await response.json();
     
     if (result.structuredPrompt) {
-      console.log('[Gemini Generated Minimalist Prompt]', result.structuredPrompt);
       return result.structuredPrompt;
     } else {
       console.warn('[Gemini Response Issue - Minimalist] No structured prompt returned, using basic fallback.');
       return `Minimalist style thumbnail for: "${description}". ${aiChatInput ? `Additional context: ${aiChatInput}` : ''}`;
     }
 
-  } catch (error: any) {
-    console.error('Error calling Gemini for minimalist prompt generation:', error.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error calling Gemini for minimalist prompt generation:', errorMessage);
     return `Error during minimalist prompt generation. Video content: "${description}". ${aiChatInput ? `Additional context: ${aiChatInput}` : ''}`;
   }
 }; 

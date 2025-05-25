@@ -3,11 +3,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 // import { ChatInput } from "@/components/ui/chat-input"; // No longer needed directly here
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Sparkles as GenerateIcon, UploadCloud as UploadIcon, Palette, LayoutGrid, LogOut, SettingsIcon, Loader2 } from "lucide-react";
+import { Palette, LayoutGrid, LogOut, SettingsIcon, Loader2 } from "lucide-react";
 import Avatar from 'boring-avatars'; // Added import for Boring Avatars
 import { cn } from "@/lib/utils";
-import { useTextareaResize } from "@/hooks/use-textarea-resize";
 import { ProjectsView } from "@/components/dashboard/projects-view";
 import { StudioView } from "@/components/dashboard/studio-view"; // Import the new StudioView component
 import { motion, AnimatePresence } from "framer-motion"; // Ensure framer-motion is imported
@@ -17,9 +15,7 @@ import Link from "next/link"; // Import Next.js Link component
 import { createSupabaseClient } from "@/lib/supabase/client"; // Import Supabase client
 import { useRouter } from "next/navigation"; // Import useRouter for redirects
 import { ProjectInfoPanel } from "@/components/dashboard/ProjectInfoPanel"; // Import the new panel
-import { toast } from "sonner"; // Import toast for notifications
 import { InsufficientCreditsModal } from "@/components/ui/insufficient-credits-modal"; // Import the new modal
-import { checkUserCredits } from "@/utils/credit-utils"; // Import the credit check utility
 
 // Define Project type locally (as defined in ProjectInfoPanel and used for state)
 interface Project {
@@ -70,31 +66,6 @@ export default function DashboardPage() {
 
   // handleChatSubmit is removed as the new component handles its own submission/logic.
 
-  const handleGenerate = () => {
-    // Temporarily remove chatInputValue check. We will need to find a way to get this value from AIChatInput if it moves out of StudioView.
-    if (/*!chatInputValue.trim() ||*/ !videoDescription.trim() || !selectedThumbnailStyle) {
-      console.log("Cannot generate, inputs or style selection missing");
-      if (!videoDescription.trim()) {
-        toast.warning("Please describe your video.");
-      }
-      if (!selectedThumbnailStyle) {
-        toast.warning("Please select a thumbnail style before generating.");
-      }
-      return;
-    }
-    console.log("Generating thumbnails with:");
-    console.log("Video Description:", videoDescription);
-    console.log("Selected Style:", selectedThumbnailStyle);
-    // AIChatInput state might need to be accessed here if it's not self-contained for generation logic
-  };
-
-  const handleUploadStyle = () => {
-    console.log("Upload your style button clicked");
-  };
-
-  // Temporarily remove chatInputValue from canGenerate logic
-  const canGenerate = /*chatInputValue.trim() !== "" &&*/ videoDescription.trim() !== "" && selectedThumbnailStyle !== null;
-
   const handleProfileClick = () => {
     setIsProfileDropdownOpen(prev => !prev);
   };
@@ -131,7 +102,6 @@ export default function DashboardPage() {
   // New handler to switch from Projects to Studio view
   const handleCreateNew = () => {
     setActiveView('studio');
-    console.log("Switching to Studio view to create new thumbnail");
   };
 
   useEffect(() => {
@@ -188,7 +158,7 @@ export default function DashboardPage() {
     // Initial fetch
     fetchUserData();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
       if (!isMounted.current) return; // Don't do anything if component unmounted
 
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
@@ -264,13 +234,11 @@ export default function DashboardPage() {
 
   // Handler for details panel visibility state change from StudioView
   const handleDetailsPanelVisibilityChange = useCallback((isOpen: boolean) => {
-    console.log("[DashboardPage] handleDetailsPanelVisibilityChange called. isOpen:", isOpen);
     setIsDetailsPanelOpen(isOpen);
   }, []); // Empty dependency array means this function is stable
 
   // Handler to reset inputs for a new generation, called by StudioView
   const handlePrepareNewGeneration = useCallback(() => {
-    console.log("[DashboardPage] handlePrepareNewGeneration called, clearing videoDescription.");
     setVideoDescription("");
     // We decided to keep the style selected, so setSelectedThumbnailStyle(null) remains commented out.
     // If you want to reset the style as well, uncomment the line below:
@@ -279,14 +247,12 @@ export default function DashboardPage() {
 
   // Handler to open the project info panel
   const handleOpenProjectInfoPanel = useCallback((project: Project) => {
-    console.log("[DashboardPage] Opening project info panel for:", project.title);
     setProjectToView(project);
     setIsProjectInfoPanelOpen(true);
   }, []);
 
   // Handler to close the project info panel
   const handleCloseProjectInfoPanel = useCallback(() => {
-    console.log("[DashboardPage] Closing project info panel.");
     setIsProjectInfoPanelOpen(false);
     // Delay clearing projectToView to allow for panel exit animation
     // The ProjectInfoPanel itself handles not rendering if project is null during animation
@@ -294,7 +260,6 @@ export default function DashboardPage() {
 
   // Handler for insufficient credits
   const handleInsufficientCredits = useCallback(() => {
-    console.log("[DashboardPage] User has insufficient credits, showing modal.");
     setIsInsufficientCreditsModalOpen(true);
   }, []);
 
@@ -343,7 +308,6 @@ export default function DashboardPage() {
                 )}
                 onClick={() => {
                   setActiveView('studio');
-                  console.log("Studio view selected");
                 }}
               >
                 {activeView === 'studio' && (
@@ -370,7 +334,6 @@ export default function DashboardPage() {
                 )}
                 onClick={() => {
                   setActiveView('projects');
-                  console.log("Projects view selected");
                 }}
               >
                 {activeView === 'projects' && (

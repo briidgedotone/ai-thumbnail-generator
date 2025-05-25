@@ -43,28 +43,27 @@ export async function POST(request: Request) {
       const binaryData = Buffer.from(base64Data, 'base64');
       
       // Generate a unique filename
-      const filename = `thumbnail_${user.id}_${Date.now()}.png`;
-      const storagePath = `thumbnails/${filename}`;
+      const timestamp = Date.now();
+      const fileName = `thumbnail-${timestamp}.png`;
       
-      // Upload the image to Supabase Storage
-      const { data: storageData, error: storageError } = await supabase
-        .storage
-        .from('thumbnails') // The bucket name - make sure this exists in your Supabase project
-        .upload(storagePath, binaryData, {
+      // Upload image to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('thumbnails')
+        .upload(fileName, binaryData, {
           contentType: 'image/png',
           upsert: false
         });
-      
-      if (storageError) {
-        console.error('Storage error:', storageError);
-        return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 });
+
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        return NextResponse.json({ error: 'Failed to upload thumbnail' }, { status: 500 });
       }
       
       // Get the public URL for the uploaded image
       const { data: publicUrlData } = supabase
         .storage
         .from('thumbnails')
-        .getPublicUrl(storagePath);
+        .getPublicUrl(fileName);
       
       const publicUrl = publicUrlData.publicUrl;
       

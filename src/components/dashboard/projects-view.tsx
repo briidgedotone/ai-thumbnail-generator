@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
-import { Plus, Video, Search, ArrowUpRight } from "lucide-react";
+import { Plus, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { createSupabaseClient } from "@/lib/supabase/client";
 
@@ -33,58 +32,6 @@ interface SupabaseProject {
   selected_style_id: string | null;
   user_id: string;
 }
-
-// Mock data for projects - will be replaced by API call
-// Note: This mock data should also be updated to reflect the new Project interface if used for testing.
-const mockProjectsData: Project[] = [
-  {
-    id: "p1",
-    title: "Gaming Highlights Montage",
-    createdAt: "2024-07-01T12:00:00Z",
-    thumbnailUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=250&q=80",
-  },
-  {
-    id: "p2",
-    title: "Cooking Tutorial: Italian Pasta",
-    createdAt: "2024-06-28T15:30:00Z",
-    thumbnailUrl: "https://images.unsplash.com/photo-1498579397066-22750a3cb424?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=250&q=80",
-  },
-  {
-    id: "p3",
-    title: "Travel Vlog: Bali Adventures",
-    createdAt: "2024-06-20T09:15:00Z",
-    thumbnailUrl: "https://images.unsplash.com/photo-1539367628448-4bc5c9d171c8?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=250&q=80",
-  },
-  {
-    id: "p4",
-    title: "Productivity Tips For Devs",
-    createdAt: "2024-06-10T14:00:00Z",
-    thumbnailUrl: "https://images.unsplash.com/photo-1484417894907-623942c8ee29?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=250&q=80",
-  },
-];
-
-// Format date for display
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(date);
-};
-
-// Get relative time (e.g., "2 weeks ago")
-const getRelativeTime = (dateString: string) => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
-  if (diffInSeconds < 60) return 'just now';
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-  return `${Math.floor(diffInSeconds / 604800)} weeks ago`;
-};
 
 interface ProjectsViewProps {
   onCreateNew?: () => void;
@@ -203,7 +150,7 @@ export function ProjectsView({ onCreateNew, onProjectClick }: ProjectsViewProps)
 
       {!isLoading && error && (
         <div className="flex flex-col items-center justify-center text-center p-6 bg-red-50 border border-red-200 rounded-lg">
-          <Video size={32} className="text-red-500 mb-3" />
+          <Calendar size={32} className="text-red-500 mb-3" />
           <h3 className="text-xl font-semibold text-red-700 mb-2">Error Loading Projects</h3>
           <p className="text-red-600 max-w-md mb-4">{error}</p>
           <Button 
@@ -280,7 +227,7 @@ export function ProjectsView({ onCreateNew, onProjectClick }: ProjectsViewProps)
           <div className="flex flex-col items-center justify-center text-center">
             <div className="mb-6 relative">
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                <Video size={32} className="text-gray-500" />
+                <Calendar size={32} className="text-gray-500" />
               </div>
               <div className="absolute w-10 h-10 -right-1 -bottom-1 rounded-full bg-white shadow-md flex items-center justify-center">
                 <Plus size={20} className="text-gray-400" />

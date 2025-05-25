@@ -17,7 +17,7 @@ export function FeaturesSection() {
               </span>
             </div>
             <h3 className="text-3xl md:text-4xl font-semibold text-black mb-4 leading-tight">
-              Skyrocket Your Channel's Growth
+              Skyrocket Your Channel&apos;s Growth
             </h3>
             <p className="text-gray-700 mb-8 text-base leading-relaxed">
               Craft professional thumbnails in seconds to boost your views and build a loyal audience. Focus on creating content while our AI handles the visuals.

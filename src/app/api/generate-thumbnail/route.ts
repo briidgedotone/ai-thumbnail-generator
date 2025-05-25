@@ -52,15 +52,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to update credits' }, { status: 500 });
   }
 
-  // Check if the prompt includes text overlay instructions
-  const hasTextOverlay = prompt.includes('TEXT OVERLAY INSTRUCTIONS');
-  
-  console.log('[API Route] Generating image with prompt:', prompt);
-  console.log('[API Route] Model: gpt-image-1, Size: 1536x1024'); 
-  if (hasTextOverlay) {
-    console.log('[API Route] Text overlay detected in prompt');
-  }
-
   try {
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
@@ -94,8 +85,6 @@ export async function POST(request: Request) {
           .update({ balance: originalBalance })
           .eq('user_id', user.id);
         
-        console.log(`[API Route] Refunded credit to user ${user.email} due to content policy violation`);
-        
         return NextResponse.json({ 
           error: 'CONTENT_POLICY_VIOLATION',
           message: 'Your request was blocked by our safety system. Please try rephrasing your description to avoid references to copyrighted characters, violent content, or inappropriate material.',
@@ -117,8 +106,6 @@ export async function POST(request: Request) {
         .from('user_credits')
         .update({ balance: originalBalance })
         .eq('user_id', user.id);
-      
-      console.log(`[API Route] Refunded credit to user ${user.email} due to OpenAI API error`);
       
       return NextResponse.json({ 
         error: 'OPENAI_API_ERROR',
@@ -142,8 +129,6 @@ export async function POST(request: Request) {
         .update({ balance: originalBalance })
         .eq('user_id', user.id);
       
-      console.log(`[API Route] Refunded credit to user ${user.email} due to missing image data`);
-      
       return NextResponse.json({ 
         error: 'IMAGE_GENERATION_FAILED',
         message: 'Image generation completed but no image data was returned. Your credit has been refunded.',
@@ -164,8 +149,6 @@ export async function POST(request: Request) {
       .from('user_credits')
       .update({ balance: originalBalance })
       .eq('user_id', user.id);
-    
-    console.log(`[API Route] Refunded credit to user ${user.email} due to unexpected error`);
     
     // Check if error is an instance of Error to safely access message property
     const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';

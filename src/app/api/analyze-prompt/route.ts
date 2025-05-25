@@ -4,13 +4,16 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 // const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent'; // Old URL
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'; // Updated URL with gemini-2.0-flash
 
+interface RequestBody {
+  description: string;
+  style: string;
+  themes?: string | Record<string, unknown>;
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Parse the request body
-    const body = await request.json();
-    // Assuming 'description' from the client IS the detailed visual brief for the thumbnail.
-    // If there's a separate "overall video topic/title", that needs to be passed separately.
-    const { description, style, themes } = body;
+    const { description, style, themes }: RequestBody = await request.json();
 
     if (!description || !style) {
       return NextResponse.json(
@@ -26,7 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ structuredPrompt: null });
     }
 
-    let parsedThemes: any = {}; // Default to empty object
+    let parsedThemes: Record<string, unknown> = {}; // Default to empty object
 
     if (typeof themes === 'string') {
       try {

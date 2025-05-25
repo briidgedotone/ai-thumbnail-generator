@@ -4,7 +4,6 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle2, Loader2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from "@/lib/utils";
 
 function PaymentSuccessContent() {
   const router = useRouter();

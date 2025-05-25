@@ -10,11 +10,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { User, Shield, Gem, CreditCard, CheckCircle, Calendar, ChevronRight, Lock, KeyRound, Mail, CircleAlert, Loader2, Eye, EyeOff, AlertCircle, Download } from "lucide-react";
+import { User, Shield, Gem, CreditCard, CheckCircle, CircleAlert, Loader2, Eye, EyeOff, AlertCircle, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Avatar from 'boring-avatars';
 import { createSupabaseClient } from "@/lib/supabase/client";
-import { Toaster, toast } from "sonner";
+import { toast } from "sonner";
 
 interface Purchase {
   id: string;
@@ -189,8 +189,8 @@ export function SettingsModal({
       return;
     }
 
-    let accumulatedErrors: string[] = [];
-    let accumulatedSuccessMessages: string[] = [];
+    const accumulatedErrors: string[] = [];
+    const accumulatedSuccessMessages: string[] = [];
 
     if (nameInput.trim() !== (initialUserName || "")) {
       const { error: profileError } = await supabase
@@ -491,7 +491,7 @@ export function SettingsModal({
                 <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
                   <p className="text-sm text-orange-700 flex items-center">
                     <AlertCircle size={16} className="mr-2" />
-                    You're out of credits! {isProUser ? 'Purchase more to continue creating.' : 'Upgrade to Pro to get 50 credits.'}
+                    You&apos;re out of credits! {isProUser ? 'Purchase more to continue creating.' : 'Upgrade to Pro to get 50 credits.'}
                   </p>
                 </div>
               )}
