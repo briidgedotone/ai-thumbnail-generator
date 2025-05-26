@@ -21,9 +21,7 @@ interface UseContentGenerationReturn {
   error: string | null;
   handleSubmit: (
     videoDescription: string,
-    selectedThumbnailStyle: string,
-    thumbnailText?: string,
-    textStyle?: string
+    selectedThumbnailStyle: string
   ) => Promise<void>;
   getThumbnailStylePath: (styleId: string | null) => string | null;
   handleCloseDetailsPanel: () => void;
@@ -64,9 +62,7 @@ export function useContentGeneration({
 
   const handleSubmit = async (
     videoDescription: string, 
-    selectedThumbnailStyle: string,
-    _thumbnailText?: string,
-    _textStyle?: string
+    selectedThumbnailStyle: string
   ) => {
     if (!videoDescription.trim() || !selectedThumbnailStyle) {
       setError('Please provide a video description and select a style');

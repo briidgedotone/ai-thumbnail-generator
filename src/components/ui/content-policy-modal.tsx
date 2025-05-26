@@ -1,6 +1,7 @@
 "use client"
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { AlertTriangle, Lightbulb } from "lucide-react";
 
 interface ContentPolicyModalProps {
@@ -14,7 +15,7 @@ interface ContentPolicyModalProps {
 export function ContentPolicyModal({
   isOpen,
   onClose,
-  onRetry: _onRetry,
+  onRetry,
   suggestions = [],
   creditRefunded = false
 }: ContentPolicyModalProps) {
@@ -63,6 +64,22 @@ export function ContentPolicyModal({
                 </li>
               ))}
             </ul>
+          </div>
+
+          <div className="flex gap-2 pt-4">
+            <Button
+              onClick={onClose}
+              variant="outline"
+              className="flex-1"
+            >
+              Close
+            </Button>
+            <Button
+              onClick={onRetry}
+              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+            >
+              Try Again
+            </Button>
           </div>
         </div>
       </DialogContent>
