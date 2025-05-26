@@ -9,6 +9,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST() {
   try {
+    // Validate required environment variables
+    if (!process.env.STRIPE_PRICE_ID_PRO) {
+      console.error('STRIPE_PRICE_ID_PRO environment variable not configured');
+      return NextResponse.json({ error: 'Payment configuration error' }, { status: 500 });
+    }
+
     // Create a Supabase client for server-side operations
     const supabase = createRouteHandlerClient({ cookies });
 
@@ -24,7 +30,7 @@ export async function POST() {
       payment_method_types: ['card'],
       line_items: [
         {
-          price: process.env.STRIPE_PRICE_ID_PRO || 'price_1RRvCdEeRLuPHXL1ScLXucgY', // One-time payment price ID for YTZA Pro Plan
+          price: process.env.STRIPE_PRICE_ID_PRO,
           quantity: 1,
         },
       ],

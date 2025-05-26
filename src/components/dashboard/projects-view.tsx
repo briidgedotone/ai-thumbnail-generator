@@ -93,7 +93,7 @@ export function ProjectsView({ onCreateNew, onProjectClick }: ProjectsViewProps)
                   .split(',')
                   .map(tag => tag.trim().replace(/^["'\[]|["'\]]$/g, '')) // Remove quotes and brackets
                   .filter(tag => tag);
-              } catch (error) {
+              } catch {
                 // Fallback: treat as comma-separated string and clean up
                 return dbProject.generated_yt_tags
                   .split(',')
